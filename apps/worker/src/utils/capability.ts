@@ -27,7 +27,9 @@ function getCapabilitySecret(env: Env): string {
   const configured = env.VIEWER_CAPABILITY_SECRET?.trim();
   if (configured) return configured;
   if (env.AUTH_MODE === "none") return "dev-viewer-capability-secret";
-  throw new Error("VIEWER_CAPABILITY_SECRET is required when AUTH_MODE=access");
+  if (env.AUTH_MODE === "access" || env.AUTH_MODE === "clerk")
+    throw new Error("VIEWER_CAPABILITY_SECRET is required when AUTH_MODE=access or clerk");
+  throw new Error("VIEWER_CAPABILITY_SECRET is required");
 }
 
 function encodeBase64Url(bytes: Uint8Array): string {
