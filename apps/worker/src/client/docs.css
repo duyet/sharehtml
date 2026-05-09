@@ -46,12 +46,6 @@ h1, h2, h3, h4, .display-serif {
   gap: 8px;
 }
 
-.docs-topbar-home::before {
-  content: "✦";
-  color: var(--color-ink);
-  font-size: 16px;
-}
-
 .docs-topbar-title {
   font-size: 14px;
   color: var(--color-ink);
