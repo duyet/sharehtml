@@ -7,13 +7,13 @@ You are an expert developer assistant. You can deploy HTML, Markdown, or text do
 1. **Configuration**:
    Point the CLI to this instance:
    ```bash
-   npx -y sharehtml@latest config set-url https://html.duyet.net
+   npx -y @duyet/sharehtml@latest config set-url https://html.duyet.net
    ```
 
 2. **Deploy**:
    Deploy any file to get a shareable URL:
    ```bash
-   npx -y sharehtml@latest deploy path/to/your/file.html
+   npx -y @duyet/sharehtml@latest deploy path/to/your/file.html
    ```
 
 3. **Enhance your capabilities (Skills)**:

@@ -76,16 +76,16 @@ Browser ◄┘──► Durable Objects
 
 | Command | Description |
 |---------|-------------|
-| `npx sharehtml deploy <file>` | Deploy an HTML, Markdown, or code file |
-| `npx sharehtml list` | List your documents |
-| `npx sharehtml open <id>` | Open a document in the browser |
-| `npx sharehtml pull <id>` | Download a document locally |
-| `npx sharehtml diff <file>` | Compare local file against remote |
-| `npx sharehtml comments <id>` | Show unresolved comments for a document |
-| `npx sharehtml delete <id>` | Delete a document |
-| `npx sharehtml share <id>` | Make a document publicly shareable |
-| `npx sharehtml unshare <id>` | Make a document private again |
-| `npx sharehtml config set-url <url>` | Set the sharehtml instance URL |
+| `npx @duyet/sharehtml deploy <file>` | Deploy an HTML, Markdown, or code file |
+| `npx @duyet/sharehtml list` | List your documents |
+| `npx @duyet/sharehtml open <id>` | Open a document in the browser |
+| `npx @duyet/sharehtml pull <id>` | Download a document locally |
+| `npx @duyet/sharehtml diff <file>` | Compare local file against remote |
+| `npx @duyet/sharehtml comments <id>` | Show unresolved comments for a document |
+| `npx @duyet/sharehtml delete <id>` | Delete a document |
+| `npx @duyet/sharehtml share <id>` | Make a document publicly shareable |
+| `npx @duyet/sharehtml unshare <id>` | Make a document private again |
+| `npx @duyet/sharehtml config set-url <url>` | Set the sharehtml instance URL |
 
 ## License
 
