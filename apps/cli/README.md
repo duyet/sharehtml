@@ -30,9 +30,32 @@ npx -y skills@latest add duyet/sharehtml
 | `npx @duyet/sharehtml diff <file>` | Compare local file against the deployed version |
 | `npx @duyet/sharehtml comments <id>` | Show unresolved comments for a document |
 | `npx @duyet/sharehtml delete <id>` | Delete a document |
+| `npx @duyet/sharehtml login` | Authenticate with your sharehtml instance |
 | `npx @duyet/sharehtml config set-url <url>` | Set the sharehtml URL |
 
 ## Self-Hosting
 
 See the main repository for self-hosting instructions:
 https://github.com/duyet/sharehtml
+
+## Authentication
+
+The `login` command authenticates you with a self-hosted sharehtml instance that requires authentication.
+
+> **Note:** Make sure you've set your instance URL first with `npx @duyet/sharehtml config set-url <url>`.
+
+### Clerk Authentication
+
+When your instance uses Clerk:
+
+1. Run `npx @duyet/sharehtml login`
+2. Visit the displayed URL in your browser (opens `/cli-token`)
+3. Sign in with Clerk (if prompted)
+4. Copy the session token shown on the page
+5. Paste it back in your terminal
+
+The CLI validates the token with the `/api/auth/verify` endpoint and stores it locally for future requests.
+
+### Detection
+
+The CLI automatically detects which authentication method your instance uses (Clerk, Cloudflare Access, or none) and prompts accordingly.

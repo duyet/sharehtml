@@ -54,6 +54,66 @@ pnpm run setup
 
 The setup script handles R2 provisioning, Durable Objects, and worker deployment.
 
+## Authentication
+
+sharehtml supports three authentication modes:
+
+| Mode | Description | Use Case |
+|------|-------------|----------|
+| **Clerk** | Full-featured auth with sign-in UI, user accounts | Recommended for production |
+| **Cloudflare Access** | Zero Trust JWT authentication | Corporate deployments |
+| **None** | No authentication (dev mode) | Local development |
+
+### Setting up Clerk Authentication
+
+Clerk is the recommended auth provider for self-hosted instances. The setup script (`pnpm run setup`) will guide you through the configuration:
+
+1. **Create a Clerk Application** at [dashboard.clerk.com](https://dashboard.clerk.com)
+2. **Get your API Keys** from API Keys section:
+   - Publishable Key (starts with `pk_`)
+   - Secret Key (starts with `sk_`)
+   - JWT Verification Key (PEM format, optional but recommended)
+
+3. **Run the setup script:**
+   ```bash
+   pnpm run setup
+   # Select "1. Clerk" when prompted
+   ```
+
+4. **The script will:**
+   - Store `CLERK_SECRET_KEY` and `CLERK_JWT_KEY` as Wrangler secrets
+   - Set `AUTH_MODE=clerk` and `CLERK_PUBLISHABLE_KEY` in production vars
+   - Deploy your worker
+
+### Environment Variables
+
+| Variable | Type | Description |
+|----------|------|-------------|
+| `AUTH_MODE` | Var | `"clerk"`, `"access"`, or `"none"` |
+| `CLERK_PUBLISHABLE_KEY` | Var | Public key for frontend (starts with `pk_`) |
+| `CLERK_SECRET_KEY` | Secret | Server-side API key (starts with `sk_`) |
+| `CLERK_JWT_KEY` | Secret | PEM public key for JWT verification |
+| `VIEWER_CAPABILITY_SECRET` | Secret | Required when auth is enabled |
+
+### CLI Authentication
+
+When your instance uses Clerk authentication, the CLI will automatically detect it and guide you through login:
+
+```bash
+npx @duyet/sharehtml login
+```
+
+The login flow:
+1. CLI displays a URL to visit in your browser
+2. Sign in with Clerk (if not already authenticated)
+3. Copy the session token from the page
+4. Paste it back in the CLI
+5. CLI validates the token and stores it locally
+
+> **Note:** Make sure you've set your instance URL first with `npx @duyet/sharehtml config set-url <url>`.
+
+To change authentication mode, run `pnpm run setup` again and select a different option.
+
 ## Architecture
 
 ```
@@ -85,6 +145,7 @@ Browser ◄┘──► Durable Objects
 | `npx @duyet/sharehtml delete <id>` | Delete a document |
 | `npx @duyet/sharehtml share <id>` | Make a document publicly shareable |
 | `npx @duyet/sharehtml unshare <id>` | Make a document private again |
+| `npx @duyet/sharehtml login` | Authenticate with your sharehtml instance |
 | `npx @duyet/sharehtml config set-url <url>` | Set the sharehtml instance URL |
 
 ## License
