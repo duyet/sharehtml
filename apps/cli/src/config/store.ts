@@ -4,6 +4,7 @@ interface Config {
   workerUrl: string;
   documentMappings: Record<string, string>;
   authToken?: string;
+  apiKey?: string;
 }
 
 const config = new Conf<Config>({
@@ -58,4 +59,16 @@ export function setAuthToken(token: string): void {
 
 export function clearAuthToken(): void {
   config.delete("authToken");
+}
+
+export function getApiKey(): string | undefined {
+  return config.get("apiKey");
+}
+
+export function setApiKey(key: string): void {
+  config.set("apiKey", key);
+}
+
+export function clearApiKey(): void {
+  config.delete("apiKey");
 }
