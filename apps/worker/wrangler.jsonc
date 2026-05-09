@@ -70,7 +70,8 @@
       },
       "vars": {
         "AUTH_MODE": "clerk",
-        "CLERK_PUBLISHABLE_KEY": "pk_live_Y2xlcmsuaHRtbC5kdXlldC5uZXQk"
+        "CLERK_PUBLISHABLE_KEY": "pk_live_Y2xlcmsuaHRtbC5kdXlldC5uZXQk",
+        "VIEWER_CAPABILITY_SECRET": "clerk-prod-viewer-capability-secret-v1-20260509"
       },
       "assets": {
         "not_found_handling": "none",
