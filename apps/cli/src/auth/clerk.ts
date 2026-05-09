@@ -80,6 +80,9 @@ export async function loginWithApiKey(workerUrl: string): Promise<void> {
   }
 
   const data = await resp.json() as { ok: boolean; email: string };
+  if (!data.ok) {
+    throw new Error("API key verification failed. The key may be invalid or revoked.");
+  }
   setApiKey(key);
   console.log(`Authenticated as ${data.email} (API key)`);
 }
