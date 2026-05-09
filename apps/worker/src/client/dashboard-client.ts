@@ -248,6 +248,9 @@ function initDashboard(): void {
     }
   });
 
+  // Render initial pagination controls for SSR content
+  renderPagination(config.page, config.totalCount, config.pageSize);
+
   // Delete button delegation
   const grid = document.getElementById("doc-grid");
   if (grid) {
@@ -274,8 +277,11 @@ function initDashboard(): void {
         if (card) card.remove();
         config!.totalCount--;
         updateDocCount(config!.totalCount);
+        const remainingCards = document.querySelectorAll("[data-doc-id]").length;
         if (config!.totalCount === 0) {
           loadDocuments(1);
+        } else if (remainingCards === 0) {
+          loadDocuments(Math.max(1, config!.page - 1));
         }
       }
       hideDeleteModal();
