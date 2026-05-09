@@ -3,7 +3,7 @@
 import { raw } from "hono/utils/html";
 import type { AssetUrls } from "../utils/assets.js";
 import { formatDocumentSize, formatRelativeTime } from "../utils/home-view.js";
-import type { DocumentRow, RecentViewRow } from "../types.js";
+import type { AuthMode, DocumentRow, RecentViewRow } from "../types.js";
 import { toHtml, safeJsonForScript } from "./jsx.js";
 
 interface HomeParams {
@@ -16,6 +16,8 @@ interface HomeParams {
   pageSize: number;
   requiresLogin: boolean;
   homeCapabilityToken: string;
+  authMode: AuthMode;
+  clerkPublishableKey?: string;
 }
 
 interface DocCardProps {
@@ -100,8 +102,11 @@ export function HomeView({
   pageSize,
   requiresLogin,
   homeCapabilityToken,
+  authMode,
+  clerkPublishableKey,
   cfBeaconToken,
 }: HomeParams & { cfBeaconToken?: string }): string {
+  const isClerk = authMode === "clerk";
   const jsx = (
     <html lang="en">
       <head>
@@ -124,7 +129,9 @@ export function HomeView({
             sharehtml
           </a>
           <div class="topbar-right">
-            <span class="topbar-email">{email}</span>
+            {isClerk
+              ? <div id="clerk-user-btn"></div>
+              : <span class="topbar-email">{email}</span>}
           </div>
         </div>
         
@@ -170,9 +177,19 @@ export function HomeView({
               page,
               pageSize,
               homeCapabilityToken,
+              requiresLogin,
+              clerkPublishableKey: isClerk ? clerkPublishableKey : undefined,
             })}`,
           )}
         </script>
+        {isClerk && clerkPublishableKey && (
+          <script
+            async
+            crossorigin="anonymous"
+            data-clerk-publishable-key={clerkPublishableKey}
+            src="https://cdn.jsdelivr.net/npm/@clerk/clerk-js@5/dist/clerk.browser.js"
+          ></script>
+        )}
         {assets.homeClientJs && <script type="module" src={assets.homeClientJs}></script>}
       </body>
     </html>

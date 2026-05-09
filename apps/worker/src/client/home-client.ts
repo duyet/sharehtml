@@ -28,6 +28,8 @@ interface HomeClientConfig {
   page: number;
   pageSize: number;
   homeCapabilityToken: string;
+  requiresLogin?: boolean;
+  clerkPublishableKey?: string;
 }
 
 interface HomeClientElements {
@@ -98,6 +100,8 @@ function getHomeClientConfig(): HomeClientConfig | null {
     page: config.page,
     pageSize: config.pageSize,
     homeCapabilityToken: config.homeCapabilityToken,
+    requiresLogin: typeof config.requiresLogin === "boolean" ? config.requiresLogin : undefined,
+    clerkPublishableKey: typeof config.clerkPublishableKey === "string" ? config.clerkPublishableKey : undefined,
   };
 }
 
@@ -280,6 +284,31 @@ function initHomeClient(): void {
   input.addEventListener("keydown", handleSearchKeydown);
   form.addEventListener("submit", handleSearchSubmit);
   pagination.addEventListener("click", handlePaginationClick);
+
+  // Clerk user button initialization
+  if (config.clerkPublishableKey) {
+    initClerkUserButton(config.requiresLogin ?? false);
+  }
+}
+
+function initClerkUserButton(requiresLogin: boolean): void {
+  const clerk = (window as unknown as Record<string, unknown>).Clerk as
+    | { load: () => Promise<void>; isSignedIn: boolean; mountUserButton: (node: HTMLDivElement) => void; openSignIn: () => void; addListener: (fn: (state: unknown) => void) => () => void }
+    | undefined;
+
+  if (!clerk) return;
+
+  clerk.load().then(() => {
+    const node = document.getElementById("clerk-user-btn");
+    if (node instanceof HTMLDivElement) {
+      clerk.mountUserButton(node);
+    }
+    if (!clerk.isSignedIn && requiresLogin) {
+      clerk.openSignIn();
+    }
+  }).catch(() => {
+    // Clerk load failed silently — user button won't be mounted
+  });
 }
 
 initHomeClient();
