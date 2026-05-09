@@ -9,9 +9,12 @@ declare namespace Cloudflare {
 	interface ProductionEnv {
 		DOCUMENTS_BUCKET: R2Bucket;
 		ASSETS: Fetcher;
-		AUTH_MODE: "access";
+		AUTH_MODE: "access" | "clerk";
 		ACCESS_AUD: "";
 		ACCESS_TEAM: "";
+		CLERK_SECRET_KEY: string;
+		CLERK_PUBLISHABLE_KEY: string;
+		CLERK_JWT_KEY: string;
 		VIEWER_CAPABILITY_SECRET: string;
 		DOCUMENT_DO: DurableObjectNamespace<import("./src/index").DocumentDO>;
 		REGISTRY_DO: DurableObjectNamespace<import("./src/index").RegistryDO>;
@@ -19,9 +22,12 @@ declare namespace Cloudflare {
 	interface Env {
 		DOCUMENTS_BUCKET: R2Bucket;
 		ASSETS: Fetcher;
-		AUTH_MODE: "access" | "none";
+		AUTH_MODE: "access" | "none" | "clerk";
 		ACCESS_AUD?: "";
 		ACCESS_TEAM?: "";
+		CLERK_SECRET_KEY?: string;
+		CLERK_PUBLISHABLE_KEY?: string;
+		CLERK_JWT_KEY?: string;
 		VIEWER_CAPABILITY_SECRET?: string;
 		DOCUMENT_DO: DurableObjectNamespace<import("./src/index").DocumentDO>;
 		REGISTRY_DO: DurableObjectNamespace<import("./src/index").RegistryDO>;

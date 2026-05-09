@@ -1,4 +1,5 @@
 {
+{
   "$schema": "./node_modules/wrangler/config-schema.json",
   "name": "sharehtml-dev",
   "main": "src/index.ts",
