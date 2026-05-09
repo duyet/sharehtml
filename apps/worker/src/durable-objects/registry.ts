@@ -324,6 +324,14 @@ export class RegistryDO extends DurableObject<Env> {
       .toArray();
   }
 
+  async listPublicDocuments(): Promise<DocumentRow[]> {
+    return this.sql
+      .exec<DocumentRow>(
+        "SELECT * FROM documents WHERE is_shared = 1 ORDER BY created_at DESC LIMIT 50",
+      )
+      .toArray();
+  }
+
   async deleteDocument(id: string) {
     this.sql.exec("DELETE FROM shared_emails WHERE doc_id = ?", id);
     this.sql.exec("DELETE FROM documents WHERE id = ?", id);

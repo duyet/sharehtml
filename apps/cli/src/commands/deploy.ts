@@ -25,13 +25,15 @@ function confirm(question: string): Promise<boolean> {
 }
 
 export const deployCmd = new Command("deploy")
+  .alias("publish")
   .description("Deploy an HTML, Markdown, or code file and get a shareable link")
   .argument("<file>", "Path to HTML, Markdown, or code file")
   .option("-t, --title <title>", "Document title (defaults to filename)")
   .option("-u, --update", "Update existing document without prompting")
   .option("--share", "Make the document shareable after deploy")
   .option("--private", "Keep the document private after deploy")
-  .action(async (file: string, opts: { title?: string; update?: boolean; share?: boolean; private?: boolean }) => {
+  .option("--slug <slug>", "Custom slug for the document")
+  .action(async (file: string, opts: { title?: string; update?: boolean; share?: boolean; private?: boolean; slug?: string }) => {
     const filePath = resolve(file);
 
     if (opts.share && opts.private) {
@@ -105,7 +107,7 @@ export const deployCmd = new Command("deploy")
         console.log(`  share: ${isShared ? "shareable" : "private"}`);
       } else {
         console.log(`Deploying ${file}...`);
-        const result = await deployDocument(filePath, opts.title);
+        const result = await deployDocument(filePath, opts.title, opts.slug);
         let isShared = result.isShared;
         if ((opts.share || opts.private) && supportsPrivateDocuments) {
           const updated = await updateDocumentSharing(result.id, Boolean(opts.share));

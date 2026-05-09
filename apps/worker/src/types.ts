@@ -101,7 +101,7 @@ export function parseDocumentSnapshot(value: unknown): DocumentSnapshot | null {
 }
 
 export type AppBindings = {
-  Bindings: Env;
+  Bindings: Env & { CF_BEACON_TOKEN?: string };
   Variables: {
     authUser: import("./utils/auth.js").AuthUser;
   };

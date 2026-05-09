@@ -100,7 +100,8 @@ export function HomeView({
   pageSize,
   requiresLogin,
   homeCapabilityToken,
-}: HomeParams): string {
+  cfBeaconToken,
+}: HomeParams & { cfBeaconToken?: string }): string {
   const jsx = (
     <html lang="en">
       <head>
@@ -109,6 +110,13 @@ export function HomeView({
         <title>sharehtml</title>
         <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
         {assets.homeCss && <link rel="stylesheet" href={assets.homeCss} />}
+        {cfBeaconToken && (
+          <script
+            defer
+            src="https://static.cloudflareinsights.com/beacon.min.js"
+            data-cf-beacon={`{"token": "${cfBeaconToken}"}`}
+          ></script>
+        )}
       </head>
       <body>
         <div class="topbar">

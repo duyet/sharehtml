@@ -58,6 +58,7 @@ viewer.get("/d/:id", async (c) => {
       canManageSharing: c.env.AUTH_MODE === "access" && emailsMatch(doc.owner_email, email),
       assets,
       viewerCapabilityToken,
+      cfBeaconToken: c.env.CF_BEACON_TOKEN,
     }),
   );
 });

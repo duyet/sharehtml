@@ -172,6 +172,7 @@ async function requestWithAccess(
 function buildUploadFormData(
   prepared: Awaited<ReturnType<typeof prepareDocumentUpload>>,
   title?: string,
+  slug?: string,
 ): FormData {
   const formData = new FormData();
   formData.append("file", prepared.renderedBlob, prepared.renderedFilename);
@@ -181,18 +182,20 @@ function buildUploadFormData(
     formData.append("sourceLanguage", prepared.sourceLanguage);
   }
   if (title) formData.append("title", title);
+  if (slug) formData.append("slug", slug);
   return formData;
 }
 
 export async function deployDocument(
   filePath: string,
   title?: string,
+  slug?: string,
 ): Promise<DeployResult> {
   const prepared = await prepareDocumentUpload(filePath, title);
   const resp = await requestWithAccess("Upload", {
     path: "/api/documents",
     method: "POST",
-    body: buildUploadFormData(prepared, title),
+    body: buildUploadFormData(prepared, title, slug),
   });
   return parseJson<DeployResult>(resp, "Upload");
 }
