@@ -1,5 +1,5 @@
 import { Hono } from "hono";
-import { shareModeFromInt, type AppBindings, isSourceKind } from "../types.js";
+import { isAuthEnabled, shareModeFromInt, type AppBindings, isSourceKind } from "../types.js";
 import { ShellView } from "../frontend/shell.js";
 import { getAssetUrls } from "../utils/assets.js";
 import { createCapabilityToken } from "../utils/capability.js";
@@ -61,7 +61,7 @@ viewer.get("/d/:id", async (c) => {
       email,
       authMode: c.env.AUTH_MODE,
       shareMode: shareModeFromInt(doc.is_shared),
-      canManageSharing: c.env.AUTH_MODE === "access" && emailsMatch(doc.owner_email, email),
+      canManageSharing: isAuthEnabled(c.env.AUTH_MODE) && emailsMatch(doc.owner_email, email),
       assets,
       viewerCapabilityToken,
       cfBeaconToken: c.env.CF_BEACON_TOKEN,

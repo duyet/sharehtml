@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import { HTTPException } from "hono/http-exception";
-import type { AppBindings } from "./types.js";
+import { isAuthEnabled, type AppBindings } from "./types.js";
 import { getAuthMiddleware } from "./utils/auth.js";
 import { api } from "./routes/api.js";
 import { viewer } from "./routes/viewer.js";
@@ -91,7 +91,7 @@ app.get("/", async (c) => {
       page: documentsPage.page,
       pageSize,
       totalCount: documentsPage.totalCount,
-      requiresLogin: c.env.AUTH_MODE === "access",
+      requiresLogin: isAuthEnabled(c.env.AUTH_MODE),
       homeCapabilityToken,
       cfBeaconToken: c.env.CF_BEACON_TOKEN,
     }),

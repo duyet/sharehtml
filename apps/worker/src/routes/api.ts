@@ -1,5 +1,5 @@
 import { Hono } from "hono";
-import { isRecord, isShareMode, isSourceKind, parseDocumentSnapshot, shareModeFromInt, shareModeToInt, type AppBindings, type DocumentSnapshot, type ShareMode, type SourceKind } from "../types.js";
+import { isAuthEnabled, isRecord, isShareMode, isSourceKind, parseDocumentSnapshot, shareModeFromInt, shareModeToInt, type AppBindings, type DocumentSnapshot, type ShareMode, type SourceKind } from "../types.js";
 import { nanoid, generateSlug } from "../utils/ids.js";
 import { loadDocWithAccessCheck } from "../utils/document-access.js";
 import { getRegistry } from "../utils/registry.js";
@@ -216,7 +216,7 @@ api.post("/documents", async (c) => {
       filename: sourceFilename,
       size: file.size,
       owner_email: normalizeEmail(ownerEmail),
-      is_shared: c.env.AUTH_MODE === "access" ? 0 : 1,
+      is_shared: isAuthEnabled(c.env.AUTH_MODE) ? 0 : 1,
       rendered_filename: renderedFilename,
       source_filename: source && sourceKind ? sourceFilename : null,
       source_kind: sourceKind,
@@ -244,7 +244,7 @@ api.post("/documents", async (c) => {
     title: resolvedTitle,
     filename: sourceFilename,
     size: file.size,
-    isShared: c.env.AUTH_MODE !== "access",
+    isShared: !isAuthEnabled(c.env.AUTH_MODE),
   });
 });
 
@@ -562,7 +562,7 @@ api.put("/documents/:id/share", async (c) => {
   const protectedResponse = await requireViewerBrowserCapability(c, id);
   if (protectedResponse) return protectedResponse;
 
-  if (c.env.AUTH_MODE !== "access") {
+  if (!isAuthEnabled(c.env.AUTH_MODE)) {
     return c.json({ error: "Cloudflare Access is required for document sharing controls" }, 400);
   }
 
