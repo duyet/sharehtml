@@ -4,6 +4,7 @@ import { createRemoteJWKSet, jwtVerify } from "jose";
 import { createClerkClient } from "@clerk/backend";
 import type { Context } from "hono";
 import type { AppBindings } from "../types.js";
+import { getRegistry } from "../utils/registry.js";
 
 export interface AuthUser {
   id: string;
@@ -11,7 +12,7 @@ export interface AuthUser {
   source: AuthSource;
 }
 
-export type AuthSource = "access-jwt-header" | "cf-access-token" | "cookie" | "bearer-token" | "dev";
+export type AuthSource = "access-jwt-header" | "cf-access-token" | "cookie" | "bearer-token" | "api-key" | "dev";
 
 const DEV_USER: AuthUser = Object.freeze({ id: "dev", email: "dev@localhost", source: "dev" });
 
@@ -78,7 +79,45 @@ async function verifyAccessJWT(jwt: string, env: Env): Promise<AuthUser | null> 
   }
 }
 
+export async function authenticateViaApiKey(c: Context<AppBindings>): Promise<AuthUser | null> {
+  const authHeader = c.req.header("Authorization");
+  if (!authHeader || !authHeader.startsWith("Bearer shk_")) {
+    return null;
+  }
+
+  const apiKey = authHeader.slice(7); // Remove "Bearer "
+  const keyHash = await hashApiKey(apiKey);
+
+  const registry = getRegistry(c.env);
+  const keyRow = await registry.getApiKeyByHash(keyHash);
+  if (!keyRow) {
+    return null;
+  }
+
+  return {
+    id: `apikey:${keyRow.id}`,
+    email: keyRow.user_email,
+    source: "api-key",
+  };
+}
+
+export async function hashApiKey(key: string): Promise<string> {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(key);
+  const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+
 export const authMiddleware = createMiddleware<AppBindings>(async (c, next) => {
+  // Try API key auth first
+  const apiUser = await authenticateViaApiKey(c);
+  if (apiUser) {
+    c.set("authUser", apiUser);
+    await next();
+    return;
+  }
+
   // Fail closed: only skip auth when explicitly set to "none"
   if (c.env.AUTH_MODE === "none") {
     c.set("authUser", DEV_USER);
@@ -114,7 +153,22 @@ export interface ClerkAuthState {
 
 export const clerkAuthMiddleware = createMiddleware<AppBindings>(async (c, next) => {
   if (c.env.AUTH_MODE === "none") {
+    // Still check for API key auth in dev mode
+    const apiUser = await authenticateViaApiKey(c);
+    if (apiUser) {
+      c.set("authUser", apiUser);
+      await next();
+      return;
+    }
     c.set("authUser", DEV_USER);
+    await next();
+    return;
+  }
+
+  // Try API key auth first (works alongside Clerk)
+  const apiUser = await authenticateViaApiKey(c);
+  if (apiUser) {
+    c.set("authUser", apiUser);
     await next();
     return;
   }
@@ -197,6 +251,13 @@ export async function handleClerkAuth(
 }
 
 const devMiddleware = createMiddleware<AppBindings>(async (c, next) => {
+  // Check API key auth even in dev mode
+  const apiUser = await authenticateViaApiKey(c);
+  if (apiUser) {
+    c.set("authUser", apiUser);
+    await next();
+    return;
+  }
   c.set("authUser", DEV_USER);
   await next();
 });

@@ -4,6 +4,7 @@ import { nanoid, generateSlug } from "../utils/ids.js";
 import { loadDocWithAccessCheck } from "../utils/document-access.js";
 import { getRegistry } from "../utils/registry.js";
 import { extractDocumentTextFromHtml } from "../utils/document-text.js";
+import { hashApiKey } from "../utils/auth.js";
 import {
   getLegacyDocumentKey,
   getRenderedDocumentKey,
@@ -29,6 +30,127 @@ api.get("/auth/verify", async (c) => {
 function isAuthenticated(user: { id: string }): boolean {
   return user.id !== "unauthenticated";
 }
+
+// Dashboard endpoint - returns all documents for authenticated user with pagination
+api.get("/dashboard", async (c) => {
+  const user = c.get("authUser");
+  if (!isAuthenticated(user)) {
+    return c.json({ error: "Authentication required" }, 401);
+  }
+
+  const ownerEmail = normalizeEmail(user.email);
+  const registry = getRegistry(c.env);
+
+  const pageQuery = Number.parseInt(c.req.query("page") || "1", 10);
+  const pageSizeQuery = Number.parseInt(c.req.query("pageSize") || "10", 10);
+  const page = Number.isFinite(pageQuery) && pageQuery > 0 ? pageQuery : 1;
+  const pageSize = Number.isFinite(pageSizeQuery) && pageSizeQuery > 0 && pageSizeQuery <= 100 ? pageSizeQuery : 10;
+
+  const result = await registry.listDocumentsPage(ownerEmail, { limit: pageSize, page });
+
+  const documents = result.documents.map((doc) => ({
+    id: doc.id,
+    title: doc.title,
+    filename: doc.filename,
+    size: doc.size,
+    created_at: doc.created_at,
+    updated_at: doc.created_at,
+    share_mode: shareModeFromInt(doc.is_shared),
+  }));
+
+  return c.json({
+    documents,
+    totalCount: result.totalCount,
+    page: result.page,
+    pageSize,
+  });
+});
+
+// API Key CRUD
+
+function generateApiKey(): string {
+  const chars = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+  const bytes = crypto.getRandomValues(new Uint8Array(32));
+  let key = "shk_";
+  for (let i = 0; i < 32; i++) {
+    key += chars[bytes[i] % chars.length];
+  }
+  return key;
+}
+
+// Create API key
+api.post("/keys", async (c) => {
+  const user = c.get("authUser");
+  if (!isAuthenticated(user)) {
+    return c.json({ error: "Authentication required" }, 401);
+  }
+
+  // API key management requires session-based auth, not API key auth
+  if (user.source === "api-key") {
+    return c.json({ error: "Cannot create API keys using API key authentication" }, 403);
+  }
+
+  const body = await c.req.json();
+  const name = isRecord(body) && typeof body.name === "string" ? body.name.trim() : "";
+
+  const rawKey = generateApiKey();
+  const keyHash = await hashApiKey(rawKey);
+  const id = nanoid(12);
+
+  const registry = getRegistry(c.env);
+  await registry.createApiKey({
+    id,
+    keyHash,
+    userEmail: user.email,
+    name,
+  });
+
+  return c.json({
+    id,
+    key: rawKey,
+    name,
+    created_at: new Date().toISOString(),
+  }, 201);
+});
+
+// List API keys
+api.get("/keys", async (c) => {
+  const user = c.get("authUser");
+  if (!isAuthenticated(user)) {
+    return c.json({ error: "Authentication required" }, 401);
+  }
+
+  if (user.source === "api-key") {
+    return c.json({ error: "Cannot list API keys using API key authentication" }, 403);
+  }
+
+  const registry = getRegistry(c.env);
+  const keys = await registry.listApiKeys(user.email);
+
+  return c.json({ keys });
+});
+
+// Delete API key
+api.delete("/keys/:id", async (c) => {
+  const user = c.get("authUser");
+  if (!isAuthenticated(user)) {
+    return c.json({ error: "Authentication required" }, 401);
+  }
+
+  if (user.source === "api-key") {
+    return c.json({ error: "Cannot delete API keys using API key authentication" }, 403);
+  }
+
+  const id = c.req.param("id");
+  const registry = getRegistry(c.env);
+  const deleted = await registry.deleteApiKey(id, user.email);
+
+  if (!deleted) {
+    return c.json({ error: "not found" }, 404);
+  }
+
+  return c.json({ ok: true });
+});
 
 function inferSourceKind(filename: string): SourceKind {
   if (/\.(md|markdown)$/i.test(filename)) {
