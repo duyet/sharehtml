@@ -1,4 +1,9 @@
 export type AuthMode = Env["AUTH_MODE"];
+
+export function isAuthEnabled(authMode: AuthMode): boolean {
+  return authMode === "access" || authMode === "clerk";
+}
+
 export type ShareMode = "private" | "link" | "emails";
 export type SourceKind = "html" | "markdown" | "code";
 
