@@ -24,7 +24,7 @@ function createContext(
     method?: string;
     url?: string;
     headers?: Record<string, string>;
-    authUser: { email: string; source: "cookie" | "cf-access-token" | "access-jwt-header" | "dev" };
+    authUser: { email: string; source: "cookie" | "cf-access-token" | "access-jwt-header" | "bearer-token" | "dev" };
   },
 ): Context<AppBindings> {
   const requestHeaders = new Headers(headers);
@@ -442,5 +442,82 @@ describe("browser capability enforcement", () => {
     );
 
     expect(response).toBeNull();
+  });
+
+  describe("bearer-token auth source", () => {
+    it("allows bearer-token auth without browser capability checks on viewer routes", async () => {
+      const response = await requireViewerBrowserCapability(
+        createContext({
+          method: "DELETE",
+          headers: {
+            Origin: "https://evil.example",
+          },
+          authUser: { email: "api@example.com", source: "bearer-token" },
+        }),
+        "doc-1",
+      );
+
+      expect(response).toBeNull();
+    });
+
+    it("allows bearer-token auth on sensitive GETs without browser capability checks", async () => {
+      const response = await requireViewerBrowserCapability(
+        createContext({
+          method: "GET",
+          url: "https://example.com/api/documents/doc-1/raw",
+          authUser: { email: "api@example.com", source: "bearer-token" },
+        }),
+        "doc-1",
+        { requireOrigin: false },
+      );
+
+      expect(response).toBeNull();
+    });
+
+    it("allows bearer-token auth on home routes without browser capability checks", async () => {
+      const env = createEnv();
+      const response = await requireHomeBrowserCapability(
+        createContext({
+          method: "POST",
+          url: "https://example.com/api/documents",
+          headers: {
+            Origin: "https://evil.example",
+          },
+          authUser: { email: "api@example.com", source: "bearer-token" },
+        }),
+      );
+
+      expect(response).toBeNull();
+    });
+
+    it("allows bearer-token auth even without a capability token header", async () => {
+      const response = await requireViewerBrowserCapability(
+        createContext({
+          authUser: { email: "api@example.com", source: "bearer-token" },
+        }),
+        "doc-1",
+        { requireOrigin: false },
+      );
+
+      expect(response).toBeNull();
+    });
+
+    it("allows bearer-token auth on websocket routes without capability checks", async () => {
+      const response = await requireViewerBrowserCapability(
+        createContext({
+          method: "GET",
+          url: "https://example.com/d/doc-1/ws",
+          headers: {
+            Origin: "https://example.com",
+            Host: "example.com",
+          },
+          authUser: { email: "api@example.com", source: "bearer-token" },
+        }),
+        "doc-1",
+        { requireOrigin: true, responseType: "text" },
+      );
+
+      expect(response).toBeNull();
+    });
   });
 });
