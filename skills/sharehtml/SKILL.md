@@ -1,6 +1,11 @@
 ---
 name: sharehtml
-description: Deploy, update, and manage HTML, Markdown, and code documents on sharehtml (https://html.duyet.net). Supports reviewing comments, diffing local changes, and managing sharing permissions. Use when asked to: (1) Deploy or update a document, (2) Share or unshare a document, (3) Pull a remote document locally, (4) Review and address feedback/comments, or (5) List and find existing documents.
+description: >
+  Deploy, update, and manage HTML, Markdown, and code documents on sharehtml (https://html.duyet.net).
+  Supports reviewing comments, diffing local changes, and managing sharing permissions.
+  Use when asked to: (1) Deploy or update a document, (2) Share or unshare a document,
+  (3) Pull a remote document locally, (4) Review and address feedback/comments,
+  or (5) List and find existing documents.
 ---
 
 ## Setup
