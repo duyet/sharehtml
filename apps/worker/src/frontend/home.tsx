@@ -34,7 +34,7 @@ interface SetupBlockProps {
 
 function DocCard({ doc, subtitle }: DocCardProps): JSX.Element {
   return (
-    <a class="doc-card" href={`/d/${doc.id}`}>
+    <a class="doc-card" href={`/d/${doc.id}.html`}>
       <div class="doc-card-top">
         <span class="doc-card-title">{doc.title}</span>
         <span class="doc-card-filename">{doc.filename}</span>
@@ -50,7 +50,7 @@ function RecentDocCard({ doc }: RecentDocCardProps): JSX.Element {
   const viewedAt = doc.last_viewed_at || doc.created_at;
 
   return (
-    <a class="recent-card" href={`/d/${doc.id}`}>
+    <a class="recent-card" href={`/d/${doc.id}.html`}>
       <div class="recent-card-title">{doc.title}</div>
       <div class="recent-card-filename">{doc.filename}</div>
       <div class="recent-card-meta">viewed {formatRelativeTime(viewedAt)}</div>
