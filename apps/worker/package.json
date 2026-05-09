@@ -11,7 +11,8 @@
     "test:watch": "vitest",
     "e2e": "playwright test",
     "typecheck": "tsc --noEmit",
-    "setup": "bun scripts/setup.ts"
+    "setup": "bun scripts/setup.ts",
+    "setup:secrets": "bun scripts/setup-secrets.ts"
   },
   "dependencies": {
     "@clerk/backend": "^3.4.7",
