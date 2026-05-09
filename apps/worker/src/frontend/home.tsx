@@ -183,14 +183,6 @@ export function HomeView({
             })}`,
           )}
         </script>
-        {isClerk && clerkPublishableKey && (
-          <script
-            async
-            crossorigin="anonymous"
-            data-clerk-publishable-key={clerkPublishableKey}
-            src="https://cdn.jsdelivr.net/npm/@clerk/clerk-js@5/dist/clerk.browser.js"
-          ></script>
-        )}
         {assets.homeClientJs && <script type="module" src={assets.homeClientJs}></script>}
       </body>
     </html>
