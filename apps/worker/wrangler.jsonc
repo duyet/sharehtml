@@ -1,98 +1,113 @@
 {
-  "$schema": "./node_modules/wrangler/config-schema.json",
-  "name": "sharehtml-dev",
-  "main": "src/index.ts",
-  "compatibility_date": "2025-04-01",
-  "workers_dev": false,
-  "preview_urls": false,
-  "vars": {
-    "AUTH_MODE": "none",
-  },
-  "assets": {
-    "not_found_handling": "none",
-    "binding": "ASSETS",
-    "run_worker_first": ["/d/*", "/api/*", "/health", "/"],
-  },
-  "r2_buckets": [
-    {
-      "binding": "DOCUMENTS_BUCKET",
-      "bucket_name": "sharehtml-documents-dev",
-    },
-  ],
-  "durable_objects": {
-    "bindings": [
-      {
-        "name": "DOCUMENT_DO",
-        "class_name": "DocumentDO",
-      },
-      {
-        "name": "REGISTRY_DO",
-        "class_name": "RegistryDO",
-      },
-    ],
-  },
-  "upload_source_maps": true,
-  "observability": {
-    "logs": {
-      "enabled": true,
-      "invocation_logs": true,
-    },
-    "traces": {
-      "enabled": true,
-    },
-  },
-  "migrations": [
-    {
-      "tag": "v1",
-      "new_sqlite_classes": ["DocumentDO", "RegistryDO"],
-    },
-  ],
-  "env": {
-    "production": {
-      "name": "sharehtml",
-      "workers_dev": true,
-      "preview_urls": false,
-      "upload_source_maps": true,
-      "observability": {
-        "logs": {
-          "enabled": true,
-          "invocation_logs": true,
-        },
-        "traces": {
-          "enabled": true,
-        },
-      },
-      "vars": {
-        "AUTH_MODE": "access",
-        "ACCESS_AUD": "",
-        "ACCESS_TEAM": "",
-      },
-      "secrets": {
-        "required": ["VIEWER_CAPABILITY_SECRET"],
-      },
-      "assets": {
-        "not_found_handling": "none",
-        "binding": "ASSETS",
-        "run_worker_first": ["/d/*", "/api/*", "/health", "/"],
-      },
-      "r2_buckets": [
-        {
-          "binding": "DOCUMENTS_BUCKET",
-          "bucket_name": "sharehtml-documents",
-        },
-      ],
-      "durable_objects": {
-        "bindings": [
-          {
-            "name": "DOCUMENT_DO",
-            "class_name": "DocumentDO",
-          },
-          {
-            "name": "REGISTRY_DO",
-            "class_name": "RegistryDO",
-          },
-        ],
-      },
-    },
-  },
+	"$schema": "./node_modules/wrangler/config-schema.json",
+	"name": "sharehtml-dev",
+	"main": "src/index.ts",
+	"compatibility_date": "2025-04-01",
+	"workers_dev": false,
+	"preview_urls": false,
+	"vars": {
+		"AUTH_MODE": "none",
+	},
+	"assets": {
+		"not_found_handling": "none",
+		"binding": "ASSETS",
+		"run_worker_first": [
+			"/d/*",
+			"/api/*",
+			"/health",
+			"/"
+		],
+	},
+	"r2_buckets": [
+		{
+			"binding": "DOCUMENTS_BUCKET",
+			"bucket_name": "sharehtml-documents",
+		},
+	],
+	"durable_objects": {
+		"bindings": [
+			{
+				"name": "DOCUMENT_DO",
+				"class_name": "DocumentDO",
+			},
+			{
+				"name": "REGISTRY_DO",
+				"class_name": "RegistryDO",
+			},
+		],
+	},
+	"upload_source_maps": true,
+	"observability": {
+		"logs": {
+			"enabled": true,
+			"invocation_logs": true,
+		},
+		"traces": {
+			"enabled": true,
+		},
+	},
+	"migrations": [
+		{
+			"tag": "v1",
+			"new_sqlite_classes": [
+				"DocumentDO",
+				"RegistryDO"
+			],
+		},
+	],
+	"env": {
+		"production": {
+		  "name": "sharehtml",
+		  "workers_dev": false,
+		  "routes": [
+		    {
+		      "pattern": "html.duyet.net",
+		      "custom_domain": true
+		    }
+		  ],
+		  "preview_urls": false,			"upload_source_maps": true,
+			"observability": {
+				"logs": {
+					"enabled": true,
+					"invocation_logs": true,
+				},
+				"traces": {
+					"enabled": true,
+				},
+			},
+			"vars": {
+			  "AUTH_MODE": "none",
+			  "ACCESS_AUD": "",
+			  "ACCESS_TEAM": "",
+			},
+			"assets": {
+				"not_found_handling": "none",
+				"binding": "ASSETS",
+				"run_worker_first": [
+					"/d/*",
+					"/api/*",
+					"/health",
+					"/"
+				],
+			},
+			"r2_buckets": [
+				{
+					"binding": "DOCUMENTS_BUCKET",
+					"bucket_name": "sharehtml-documents",
+				},
+			],
+			"durable_objects": {
+				"bindings": [
+					{
+						"name": "DOCUMENT_DO",
+						"class_name": "DocumentDO",
+					},
+					{
+						"name": "REGISTRY_DO",
+						"class_name": "RegistryDO",
+					},
+				],
+			},
+		},
+	},
 }

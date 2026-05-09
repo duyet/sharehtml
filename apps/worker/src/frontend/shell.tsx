@@ -1,3 +1,4 @@
+/** @jsxRuntime automatic */
 /** @jsxImportSource hono/jsx */
 import { raw } from "hono/utils/html";
 import type { AssetUrls } from "../utils/assets.js";

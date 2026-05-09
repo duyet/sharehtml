@@ -1,7 +1,8 @@
+/** @jsxRuntime automatic */
 /** @jsxImportSource hono/jsx */
 import { raw } from "hono/utils/html";
 import type { AssetUrls } from "../utils/assets.js";
-import { buildHomePath, formatDocumentSize, formatDocumentsResultsLabel, formatRelativeTime } from "../utils/home-view.js";
+import { formatDocumentSize, formatRelativeTime } from "../utils/home-view.js";
 import type { DocumentRow, RecentViewRow } from "../types.js";
 import { toHtml, safeJsonForScript } from "./jsx.js";
 
@@ -36,13 +37,12 @@ interface SetupBlockProps {
 function DocCard({ doc, subtitle }: DocCardProps): JSX.Element {
   return (
     <a class="doc-card" href={`/d/${doc.id}`}>
-      <div class="doc-card-top">
+      <div>
         <span class="doc-card-title">{doc.title}</span>
         <span class="doc-card-filename">{doc.filename}</span>
       </div>
-      <div class="doc-card-bottom">
-        <span class="doc-card-meta">{subtitle}</span>
-        <span class="doc-card-meta">{formatRelativeTime(doc.created_at)}</span>
+      <div class="doc-card-meta">
+        {subtitle} • {formatRelativeTime(doc.created_at)}
       </div>
     </a>
   );
@@ -64,19 +64,23 @@ function SetupBlock({ workerUrl, requiresLogin }: SetupBlockProps): JSX.Element 
   return (
     <div class="setup-block">
       <p>
-        Deploy HTML, Markdown, or code files with the{" "}
-        <a href="https://github.com/jonesphillip/sharehtml">sharehtml CLI</a>.{" "}
-        Requires <a href="https://bun.sh">Bun</a>.
+        Deploy HTML, Markdown, or code files instantly with the{" "}
+        <a href="https://github.com/duyet/sharehtml">sharehtml CLI</a>.
       </p>
       <pre>
-        {raw(`<span class="cmd-comment"># install the CLI</span>\n`)}
-        bun install -g sharehtml{"\n\n"}
         {raw(`<span class="cmd-comment"># configure</span>\n`)}
-        sharehtml config set-url {workerUrl}{"\n"}
-        {requiresLogin ? "sharehtml login\n" : ""}
+        npx -y sharehtml@latest config set-url {workerUrl}{"\n"}
+        {requiresLogin ? "npx -y sharehtml@latest login\n" : ""}
         {"\n"}
         {raw(`<span class="cmd-comment"># deploy a file</span>\n`)}
-        sharehtml deploy example/coffee-report.html
+        npx -y sharehtml@latest deploy path/to/file.html
+      </pre>
+
+      <p style="margin-top: 32px">
+        Add <b>sharehtml skills</b> to your AI Agent (Claude Code, etc.)
+      </p>
+      <pre>
+        npx -y skills@latest add duyet/sharehtml
       </pre>
     </div>
   );
@@ -88,20 +92,11 @@ export function HomeView({
   workerUrl,
   documents,
   recentViews,
-  query,
   page,
   pageSize,
-  totalCount,
   requiresLogin,
   homeCapabilityToken,
 }: HomeParams): string {
-  const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
-  const hasDocuments = totalCount > 0;
-  const hasQuery = query.length > 0;
-  const previousPageHref = buildHomePath(query, page - 1);
-  const nextPageHref = buildHomePath(query, page + 1);
-  const resultsLabel = formatDocumentsResultsLabel(totalCount, hasQuery ? query : "");
-
   const jsx = (
     <html lang="en">
       <head>
@@ -120,70 +115,43 @@ export function HomeView({
             <span class="topbar-email">{email}</span>
           </div>
         </div>
+        
         <div class="content">
-          <div class="section">
-            <div class="section-label">recently viewed</div>
-            <div class="recent-grid">
-              {recentViews.length > 0 ? (
-                recentViews.map((d) => <RecentDocCard doc={d} />)
-              ) : (
-                <div class="section-empty">no recently viewed documents</div>
-              )}
-            </div>
+          <div class="hero">
+            <h1>Deploy your ideas instantly.</h1>
+            <p>
+              A simple, editorial platform for sharing HTML reports, Markdown notes, 
+              and code snippets with the world.
+            </p>
+            <a href="https://github.com/duyet/sharehtml" class="btn-primary">
+              View on GitHub
+            </a>
           </div>
+
           <div class="section">
-            <div class="section-header">
-              <div class="section-label">my documents</div>
-              <div class="section-meta" id="documents-meta">{resultsLabel}</div>
-            </div>
-            <form class="docs-search-form" method="get" action="/">
-              <input
-                class="docs-search-input"
-                type="text"
-                name="q"
-                value={query}
-                placeholder="search by title or filename"
-                autocomplete="off"
-              />
-            </form>
-            <div class="doc-list" id="documents-list">
-              {documents.length > 0 ? (
-                documents.map((d) => <DocCard doc={d} subtitle={formatDocumentSize(d.size)} />)
-              ) : hasQuery ? (
-                <div class="section-empty">no documents match "{query}"</div>
-              ) : (
-                <SetupBlock workerUrl={workerUrl} requiresLogin={requiresLogin} />
-              )}
-            </div>
-            <template id="documents-setup-template">
-              <SetupBlock workerUrl={workerUrl} requiresLogin={requiresLogin} />
-            </template>
-            {hasDocuments && totalPages > 1 && (
-              <div class="docs-pagination" id="documents-pagination">
-                {page > 1 ? (
-                  <a class="docs-pagination-link" href={previousPageHref} data-page={page - 1}>
-                    previous
-                  </a>
-                ) : (
-                  <div class="docs-pagination-spacer"></div>
-                )}
-                <div class="docs-pagination-status">
-                  page {page} of {totalPages}
-                </div>
-                {page < totalPages ? (
-                  <a class="docs-pagination-link" href={nextPageHref} data-page={page + 1}>
-                    next
-                  </a>
-                ) : (
-                  <div class="docs-pagination-spacer"></div>
-                )}
+            <div class="section-label">Quick Start</div>
+            <SetupBlock workerUrl={workerUrl} requiresLogin={requiresLogin} />
+          </div>
+
+          {recentViews.length > 0 && (
+            <div class="section">
+              <div class="section-label">Recently Viewed</div>
+              <div class="recent-grid">
+                {recentViews.map((d) => <RecentDocCard doc={d} />)}
               </div>
-            )}
-            {!hasDocuments || totalPages <= 1 ? (
-              <div class="docs-pagination" id="documents-pagination"></div>
-            ) : null}
-          </div>
+            </div>
+          )}
+
+          {documents.length > 0 && (
+            <div class="section">
+              <div class="section-label">My Documents</div>
+              <div class="doc-list">
+                {documents.map((d) => <DocCard doc={d} subtitle={formatDocumentSize(d.size)} />)}
+              </div>
+            </div>
+          )}
         </div>
+
         <script>
           {raw(
             `window.__HOME_CONFIG__ = ${safeJsonForScript({

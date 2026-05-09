@@ -32,8 +32,8 @@ function bold(text: string): string {
 
 function getSkillSourcePath(): string {
   const candidates = [
-    resolve(import.meta.dirname, "../../../skills/sharehtml-collaboration"),
-    resolve(import.meta.dirname, "../../../../skills/sharehtml-collaboration"),
+    resolve(import.meta.dirname, "../../../skills/sharehtml"),
+    resolve(import.meta.dirname, "../../../../skills/sharehtml"),
   ];
 
   for (const candidate of candidates) {
@@ -42,7 +42,7 @@ function getSkillSourcePath(): string {
     }
   }
 
-  throw new Error("could not locate skills/sharehtml-collaboration");
+  throw new Error("could not locate skills/sharehtml");
 }
 
 function getTargets(): AgentTarget[] {
@@ -51,19 +51,19 @@ function getTargets(): AgentTarget[] {
       name: "claude",
       label: "Claude Code",
       detected: existsSync(resolve(homedir(), ".claude")),
-      destination: resolve(homedir(), ".claude/skills/sharehtml-collaboration"),
+      destination: resolve(homedir(), ".claude/skills/sharehtml"),
     },
     {
       name: "codex",
       label: "Codex",
       detected: existsSync(resolve(homedir(), ".codex")),
-      destination: resolve(homedir(), ".codex/skills/sharehtml-collaboration"),
+      destination: resolve(homedir(), ".codex/skills/sharehtml"),
     },
     {
       name: "opencode",
       label: "OpenCode",
       detected: existsSync(resolve(homedir(), ".config/opencode")) || existsSync(resolve(homedir(), ".opencode")),
-      destination: resolve(homedir(), ".config/opencode/skills/sharehtml-collaboration"),
+      destination: resolve(homedir(), ".config/opencode/skills/sharehtml"),
     },
   ];
 }
@@ -224,7 +224,7 @@ const installSkillCmd = new Command("install")
         await rm(target.destination, { recursive: true, force: true });
         await mkdir(resolve(target.destination, ".."), { recursive: true });
         await cp(sourcePath, target.destination, { recursive: true });
-        console.log(`  Installed ${bold("sharehtml-collaboration")} for ${target.label}`);
+        console.log(`  Installed ${bold("sharehtml")} for ${target.label}`);
         console.log(`    ${dim(target.destination)}`);
       }
       console.log();
