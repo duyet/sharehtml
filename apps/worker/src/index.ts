@@ -46,8 +46,8 @@ async function renderHomeFromTemplate(c: any, email: string) {
   let html = await templateResponse.text();
 
   // Replace placeholders with data
-  html = html.replace(/\{\{assets_css\}\}/g, assets.css || "");
-  html = html.replace(/\{\{assets_js\}\}/g, assets.js || "");
+  html = html.replace(/\{\{assets_css\}\}/g, assets.homeCss || "");
+  html = html.replace(/\{\{assets_js\}\}/g, assets.homeClientJs || "");
   html = html.replace(/\{\{email\}\}/g, email);
   html = html.replace(/\{\{user_doc_count\}\}/g, String(userStats.docCount));
   html = html.replace(/\{\{storage_used\}\}/g, formatBytes(userStats.storageUsed));
@@ -62,6 +62,7 @@ async function renderHomeFromTemplate(c: any, email: string) {
   html = html.replace(/\{\{#authenticated\}\}([\s\S]*?)\{\{\/authenticated\}\}/g, isAuthenticated ? "$1" : "");
   html = html.replace(/\{\{#clerk_button\}\}([\s\S]*?)\{\{\/clerk_button\}\}/g, c.env.CLERK_PUBLISHABLE_KEY ? "$1" : "");
   html = html.replace(/\{\{#requires_login\}\}([\s\S]*?)\{\{\/requires_login\}\}/g, isAuthEnabled(c.env.AUTH_MODE) ? "$1" : "");
+  html = html.replace(/\{\{#global_stats\}\}([\s\S]*?)\{\{\/global_stats\}\}/g, "$1");
 
   // Build recent views HTML
   const recentViewsHtml = recentViews.map(doc => {
@@ -113,7 +114,7 @@ async function renderHomeFromTemplate(c: any, email: string) {
     requiresLogin: isAuthEnabled(c.env.AUTH_MODE),
     ...(c.env.CLERK_PUBLISHABLE_KEY && { clerkPublishableKey: c.env.CLERK_PUBLISHABLE_KEY }),
   };
-  html = html.replace(/\{\{\{\{home_config\}\}\}\}/g, safeJsonForScript(homeConfig));
+  html = html.replace(/\{\{\{home_config\}\}\}/g, safeJsonForScript(homeConfig));
 
   return html;
 }
@@ -172,10 +173,7 @@ app.get("/dashboard", async (c) => {
 
   const registry = getRegistry(c.env);
 
-  const [documentsPage, globalStats] = await Promise.all([
-    registry.listDocumentsPage(email, { query: "", limit: pageSize, page }),
-    registry.getGlobalStats(),
-  ]);
+  const documentsPage = await registry.listDocumentsPage(email, { query: "", limit: pageSize, page });
 
   const workerUrl = `${url.protocol}//${url.host}`;
   const assets = await getAssetUrls(c.env.ASSETS);
@@ -195,7 +193,6 @@ app.get("/dashboard", async (c) => {
       pageSize,
       totalCount: documentsPage.totalCount,
       homeCapabilityToken,
-      globalStats,
       authMode: c.env.AUTH_MODE,
       clerkPublishableKey: c.env.CLERK_PUBLISHABLE_KEY,
     }),
