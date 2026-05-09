@@ -99,6 +99,54 @@ h1, h2, h3, .display-serif {
   line-height: 1.05;
 }
 
+.eyebrow {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--gray-500);
+  margin-bottom: 10px;
+}
+
+.tldr {
+  border: 1.5px solid var(--gray-300);
+  border-left: 3px solid var(--clay);
+  border-radius: 10px;
+  background: var(--canvas);
+  padding: 16px 18px;
+  margin: 24px auto;
+  max-width: 680px;
+  text-align: left;
+}
+
+.tldr b {
+  color: var(--slate);
+}
+
+.hero-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  margin-top: 24px;
+}
+
+.btn-secondary {
+  display: inline-block;
+  background: var(--canvas);
+  color: var(--slate);
+  padding: 12px 24px;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 16px;
+  border: 1px solid var(--gray-300);
+  transition: border-color 0.2s ease;
+}
+
+.btn-secondary:hover {
+  border-color: var(--slate);
+}
+
 .hero p {
   font-size: 18px;
   color: var(--gray-700);

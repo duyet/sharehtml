@@ -139,14 +139,17 @@ export function HomeView({
         
         <div class="content">
           <div class="hero">
-            <h1>Deploy your ideas instantly.</h1>
-            <p>
-              Built for AI Agents. A simple, editorial platform for sharing HTML reports, Markdown notes, 
-              and code snippets with the world.
-            </p>
-            <a href="https://github.com/duyet/sharehtml" class="btn-primary">
-              View on GitHub
-            </a>
+            <div class="eyebrow">Documentation · Platform Overview</div>
+            <h1>Deploy files instantly with sharehtml</h1>
+            <div class="tldr">
+              <b>TL;DR</b> — Deploy HTML, Markdown, or code files in seconds. No signup required.
+              Anonymous documents expire after 24 hours; authenticate for persistent storage.
+              Built for AI agents and developers.
+            </div>
+            <div class="hero-actions">
+              <a href="/docs" class="btn-primary">Read the Docs</a>
+              <a href="https://github.com/duyet/sharehtml" class="btn-secondary">View on GitHub</a>
+            </div>
           </div>
 
           <div class="section">
