@@ -11,6 +11,7 @@ import { normalizeEmail } from "./utils/email.js";
 import { getRegistry } from "./utils/registry.js";
 import { formatRelativeTime, formatDocumentSize, formatBytes, formatAccountAge, buildHomePath } from "./utils/home-view.js";
 import { toHtml, safeJsonForScript } from "./frontend/jsx.js";
+import { DashboardView } from "./frontend/dashboard.js";
 
 export { DocumentDO } from "./durable-objects/document.js";
 export { RegistryDO } from "./durable-objects/registry.js";
@@ -71,7 +72,7 @@ async function renderHomeFromTemplate(c: any, email: string) {
       <div class="recent-card-meta">viewed ${formatRelativeTime(viewedAt)}</div>
     </a>`;
   }).join("\n");
-  html = html.replace(/\{\{#has_recent_views\}\}[\s\S]*?\{\{recent_views_html\}\}[\s\S]*?\{\{\/has_recent_views\}\}/g, recentViews.length > 0 ? `<div class="recent-grid">${recentViewsHtml}</div>` : "");
+  html = html.replace(/\{\{#has_recent_views\}\}[\s\S]*?\{\{\{recent_views_html\}\}\}[\s\S]*?\{\{\/has_recent_views\}\}/g, recentViews.length > 0 ? `<div class="recent-grid">${recentViewsHtml}</div>` : "");
 
   // Build documents HTML
   const documentsHtml = documentsPage.documents.map(doc => {
@@ -85,7 +86,7 @@ async function renderHomeFromTemplate(c: any, email: string) {
       </div>
     </a>`;
   }).join("\n");
-  html = html.replace(/\{\{documents_html\}\}/g, documentsHtml);
+  html = html.replace(/\{\{\{documents_html\}\}\}/g, documentsHtml);
 
   // Build pagination HTML
   let paginationHtml = "";
@@ -102,7 +103,7 @@ async function renderHomeFromTemplate(c: any, email: string) {
       <a class="pagination-link ${nextDisabled}" href="${buildHomePath(query, nextPage)}">Next →</a>
     </div>`;
   }
-  html = html.replace(/\{\{pagination_html\}\}/g, paginationHtml);
+  html = html.replace(/\{\{\{pagination_html\}\}\}/g, paginationHtml);
 
   // Build home config JSON
   const homeConfig = {
@@ -112,7 +113,7 @@ async function renderHomeFromTemplate(c: any, email: string) {
     requiresLogin: isAuthEnabled(c.env.AUTH_MODE),
     ...(c.env.CLERK_PUBLISHABLE_KEY && { clerkPublishableKey: c.env.CLERK_PUBLISHABLE_KEY }),
   };
-  html = html.replace(/\{\{\{home_config\}\}\}/g, safeJsonForScript(homeConfig));
+  html = html.replace(/\{\{\{\{home_config\}\}\}\}/g, safeJsonForScript(homeConfig));
 
   return html;
 }
@@ -161,6 +162,44 @@ app.get("/llms.txt", async (c) => {
   ];
   
   return c.text(lines.join("\n"));
+});
+
+app.get("/dashboard", async (c) => {
+  const email = normalizeEmail(c.get("authUser").email);
+  const url = new URL(c.req.url);
+  const page = Number.parseInt(url.searchParams.get("page") || "1", 10);
+  const pageSize = 10;
+
+  const registry = getRegistry(c.env);
+
+  const [documentsPage, globalStats] = await Promise.all([
+    registry.listDocumentsPage(email, { query: "", limit: pageSize, page }),
+    registry.getGlobalStats(),
+  ]);
+
+  const workerUrl = `${url.protocol}//${url.host}`;
+  const assets = await getAssetUrls(c.env.ASSETS);
+  const homeCapabilityToken = await createCapabilityToken(c.env, {
+    scope: "home",
+    email,
+    documentId: null,
+  });
+
+  return c.html(
+    DashboardView({
+      assets,
+      email,
+      workerUrl,
+      documents: documentsPage.documents,
+      page: documentsPage.page,
+      pageSize,
+      totalCount: documentsPage.totalCount,
+      homeCapabilityToken,
+      globalStats,
+      authMode: c.env.AUTH_MODE,
+      clerkPublishableKey: c.env.CLERK_PUBLISHABLE_KEY,
+    }),
+  );
 });
 
 app.get("/", async (c) => {
