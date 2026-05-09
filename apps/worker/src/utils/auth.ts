@@ -123,7 +123,39 @@ export const clerkAuthMiddleware = createMiddleware<AppBindings>(async (c, next)
     secretKey: c.env.CLERK_SECRET_KEY,
     publishableKey: c.env.CLERK_PUBLISHABLE_KEY,
   });
-  return handleClerkAuth(clerkClient, c, next);
+
+  // Try to authenticate, but allow unauthenticated requests through
+  // Clerk.js will handle sign-in on the client side
+  const requestState = await clerkClient.authenticateRequest(c.req.raw);
+
+  if (requestState.isAuthenticated) {
+    const auth = requestState.toAuth();
+    const userId = auth.userId;
+    if (userId) {
+      const claims = auth.sessionClaims as Record<string, unknown> | undefined;
+      let email =
+        claims && typeof claims.primaryEmail === "string"
+          ? claims.primaryEmail
+          : null;
+
+      if (!email) {
+        const user = await clerkClient.users.getUser(userId);
+        email = user.primaryEmailAddress?.emailAddress ?? null;
+      }
+
+      if (email) {
+        const source: AuthSource = c.req.header("Authorization") ? "bearer-token" : "cookie";
+        c.set("authUser", { id: userId, email, source });
+        await next();
+        return;
+      }
+    }
+  }
+
+  // Unauthenticated: set placeholder user so page can render
+  // Clerk.js will handle sign-in on the client
+  c.set("authUser", { id: "unauthenticated", email: "unauthenticated@clerk", source: "dev" });
+  await next();
 });
 
 export async function handleClerkAuth(

@@ -19,8 +19,16 @@ const api = new Hono<AppBindings>();
 
 api.get("/auth/verify", async (c) => {
   const user = c.get("authUser");
+  if (user.id === "unauthenticated") {
+    return c.json({ ok: false, error: "Not authenticated" }, 401);
+  }
   return c.json({ ok: true, email: user.email });
 });
+
+// Helper to check if user is authenticated (not placeholder)
+function isAuthenticated(user: { id: string }): boolean {
+  return user.id !== "unauthenticated";
+}
 
 function inferSourceKind(filename: string): SourceKind {
   if (/\.(md|markdown)$/i.test(filename)) {
@@ -170,10 +178,15 @@ async function restoreDocumentSnapshot(
 }
 
 api.post("/documents", async (c) => {
+  const user = c.get("authUser");
+  if (!isAuthenticated(user)) {
+    return c.json({ error: "Authentication required" }, 401);
+  }
+
   const protectedResponse = await requireHomeBrowserCapability(c);
   if (protectedResponse) return protectedResponse;
 
-  const ownerEmail = normalizeEmail(c.get("authUser").email);
+  const ownerEmail = normalizeEmail(user.email);
   const formData = await c.req.formData();
   const rawFile = formData.get("file");
   const file = rawFile instanceof File ? rawFile : null;
@@ -404,6 +417,11 @@ api.get("/documents/:id", async (c) => {
 });
 
 api.put("/documents/:id", async (c) => {
+  const user = c.get("authUser");
+  if (!isAuthenticated(user)) {
+    return c.json({ error: "Authentication required" }, 401);
+  }
+
   const id = c.req.param("id");
   const protectedResponse = await requireViewerBrowserCapability(c, id);
   if (protectedResponse) return protectedResponse;
@@ -558,12 +576,17 @@ api.get("/documents/:id/share", async (c) => {
 });
 
 api.put("/documents/:id/share", async (c) => {
+  const user = c.get("authUser");
+  if (!isAuthenticated(user)) {
+    return c.json({ error: "Authentication required" }, 401);
+  }
+
   const id = c.req.param("id");
   const protectedResponse = await requireViewerBrowserCapability(c, id);
   if (protectedResponse) return protectedResponse;
 
   if (!isAuthEnabled(c.env.AUTH_MODE)) {
-    return c.json({ error: "Cloudflare Access is required for document sharing controls" }, 400);
+    return c.json({ error: "Authentication is required for document sharing controls" }, 400);
   }
 
   const parsedBody = parseShareRequestBody(await c.req.json());
@@ -596,6 +619,11 @@ api.put("/documents/:id/share", async (c) => {
 
 // Delete document
 api.delete("/documents/:id", async (c) => {
+  const user = c.get("authUser");
+  if (!isAuthenticated(user)) {
+    return c.json({ error: "Authentication required" }, 401);
+  }
+
   const id = c.req.param("id");
   const protectedResponse = await requireViewerBrowserCapability(c, id);
   if (protectedResponse) return protectedResponse;
