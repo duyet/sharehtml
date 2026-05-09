@@ -13,6 +13,7 @@ export default defineConfig({
         "home.css": "src/client/home.css",
         "shell-client": "src/client/shell-client.ts",
         "shell-client.css": "src/client/styles.css",
+        "dashboard-client": "src/client/dashboard-client.ts",
         "collab-client": "src/client/collab-client.ts",
         "docs.css": "src/client/docs.css",
       },

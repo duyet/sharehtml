@@ -6,6 +6,7 @@ import { api } from "./routes/api.js";
 import { viewer } from "./routes/viewer.js";
 import { docs } from "./routes/docs.js";
 import { HomeView } from "./frontend/home.js";
+import { DashboardView } from "./frontend/dashboard.js";
 import { createCapabilityToken } from "./utils/capability.js";
 import { getAssetUrls } from "./utils/assets.js";
 import { normalizeEmail } from "./utils/email.js";
@@ -42,6 +43,40 @@ app.use("/*", async (c, next) => {
 app.route("/api", api);
 app.route("/docs", docs);
 app.route("/", viewer);
+
+app.get("/dashboard", async (c) => {
+  const email = normalizeEmail(c.get("authUser").email);
+  const url = new URL(c.req.url);
+  const requestedPage = Number.parseInt(url.searchParams.get("page") || "1", 10);
+  const page = Number.isFinite(requestedPage) && requestedPage > 0 ? requestedPage : 1;
+  const pageSize = 12;
+
+  const registry = getRegistry(c.env);
+
+  const documentsPage = await registry.listDocumentsPage(email, { query: "", limit: pageSize, page });
+
+  const assets = await getAssetUrls(c.env.ASSETS);
+  const homeCapabilityToken = await createCapabilityToken(c.env, {
+    scope: "home",
+    email,
+    documentId: null,
+  });
+  return c.html(
+    DashboardView({
+      assets,
+      email,
+      workerUrl: `${url.protocol}//${url.host}`,
+      documents: documentsPage.documents,
+      page: documentsPage.page,
+      pageSize,
+      totalCount: documentsPage.totalCount,
+      homeCapabilityToken,
+      authMode: c.env.AUTH_MODE,
+      clerkPublishableKey: c.env.CLERK_PUBLISHABLE_KEY,
+      cfBeaconToken: c.env.CF_BEACON_TOKEN,
+    }),
+  );
+});
 
 app.get("/llms.txt", async (c) => {
   const registry = getRegistry(c.env);
