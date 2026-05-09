@@ -166,6 +166,11 @@ app.get("/llms.txt", async (c) => {
 });
 
 app.get("/dashboard", async (c) => {
+  // Redirect unauthenticated users to home
+  if (c.get("authUser").id === "unauthenticated") {
+    return c.redirect("/");
+  }
+
   const email = normalizeEmail(c.get("authUser").email);
   const url = new URL(c.req.url);
   const page = Number.parseInt(url.searchParams.get("page") || "1", 10);
