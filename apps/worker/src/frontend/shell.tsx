@@ -24,9 +24,7 @@ function getShareDescription(authMode: AuthMode, shareMode: ShareMode): string {
   }
   switch (shareMode) {
     case "link":
-      return authMode === "access"
-        ? "anyone allowed by your Cloudflare Access policy can view and comment"
-        : "anyone with the link can view and comment";
+      return "anyone with the link can view and comment";
     case "emails":
       return "add people to share this document";
     case "private":
