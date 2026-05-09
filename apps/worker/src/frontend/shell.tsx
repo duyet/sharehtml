@@ -3,7 +3,7 @@
 import { raw } from "hono/utils/html";
 import type { AssetUrls } from "../utils/assets.js";
 import type { AuthMode, ShareMode } from "../types.js";
-import { toHtml, escapeScriptContent, safeJsonForScript } from "./jsx.js";
+import { toHtml, escapeScriptContent, safeJsonForScript, ClerkScripts } from "./jsx.js";
 
 interface ShellParams {
   docId: string;
@@ -15,6 +15,7 @@ interface ShellParams {
   canManageSharing: boolean;
   assets: AssetUrls;
   viewerCapabilityToken: string;
+  clerkPublishableKey?: string;
 }
 
 function getShareDescription(authMode: AuthMode, shareMode: ShareMode): string {
@@ -42,6 +43,7 @@ export function ShellView(
     canManageSharing,
     assets,
     viewerCapabilityToken,
+    clerkPublishableKey,
     cfBeaconToken,
   }: ShellParams & { cfBeaconToken?: string },
 ) {
@@ -63,6 +65,7 @@ export function ShellView(
             data-cf-beacon={`{"token": "${cfBeaconToken}"}`}
           ></script>
         )}
+        {authMode === "clerk" && clerkPublishableKey && <ClerkScripts publishableKey={clerkPublishableKey} />}
         <script>
           {raw(escapeScriptContent(
             `if(localStorage.getItem('comment_sidebar_${docId}')==='collapsed'){document.documentElement.classList.add('sidebar-start-collapsed')}`,

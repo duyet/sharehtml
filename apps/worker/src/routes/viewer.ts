@@ -64,6 +64,7 @@ viewer.get("/d/:id", async (c) => {
       canManageSharing: isAuthEnabled(c.env.AUTH_MODE) && emailsMatch(doc.owner_email, email),
       assets,
       viewerCapabilityToken,
+      clerkPublishableKey: c.env.CLERK_PUBLISHABLE_KEY,
       cfBeaconToken: c.env.CF_BEACON_TOKEN,
     }),
   );

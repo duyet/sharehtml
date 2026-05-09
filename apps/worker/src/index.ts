@@ -93,6 +93,8 @@ app.get("/", async (c) => {
       totalCount: documentsPage.totalCount,
       requiresLogin: isAuthEnabled(c.env.AUTH_MODE),
       homeCapabilityToken,
+      authMode: c.env.AUTH_MODE,
+      clerkPublishableKey: c.env.CLERK_PUBLISHABLE_KEY,
       cfBeaconToken: c.env.CF_BEACON_TOKEN,
     }),
   );
