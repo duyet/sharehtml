@@ -1,7 +1,7 @@
 import { Hono } from "hono";
 import { HTTPException } from "hono/http-exception";
 import type { AppBindings } from "./types.js";
-import { authMiddleware } from "./utils/auth.js";
+import { getAuthMiddleware } from "./utils/auth.js";
 import { api } from "./routes/api.js";
 import { viewer } from "./routes/viewer.js";
 import { HomeView } from "./frontend/home.js";
@@ -33,7 +33,10 @@ app.onError((err, c) => {
 
 app.get("/health", (c) => c.json({ status: "ok" }));
 
-app.use("/*", authMiddleware);
+app.use("/*", async (c, next) => {
+  const middleware = getAuthMiddleware(c.env.AUTH_MODE);
+  return middleware(c, next);
+});
 
 app.route("/api", api);
 app.route("/", viewer);

@@ -1,6 +1,7 @@
 import { readFile } from "node:fs/promises";
 import { basename } from "node:path";
-import { getAuthHeaders } from "../auth/access.js";
+import { getAuthHeaders as getAccessAuthHeaders } from "../auth/access.js";
+import { getAuthHeaders as getClerkAuthHeaders } from "../auth/clerk.js";
 import { getConfig, isConfigured } from "../config/store.js";
 import {
   defaultDocumentTitleFromFilename,
@@ -102,11 +103,8 @@ export async function prepareDocumentUpload(
   };
 }
 
-function getLoginErrorMessage(canLogin: boolean): string {
-  if (canLogin) {
-    return "Authentication required. Run: npx @duyet/sharehtml login";
-  }
-  return "Authentication required. Install cloudflared and run: npx @duyet/sharehtml login";
+function getLoginErrorMessage(): string {
+  return "Authentication required. Run: npx @duyet/sharehtml login";
 }
 
 async function checkResponse(
@@ -117,7 +115,7 @@ async function checkResponse(
   const location = resp.headers.get("location") || "";
   if (resp.status >= 300 && resp.status < 400) {
     if (location.includes("cloudflareaccess.com") || location.includes("/cdn-cgi/access/login")) {
-      throw new Error(getLoginErrorMessage(authContext.canLogin));
+      throw new Error(getLoginErrorMessage());
     }
   }
 
@@ -134,7 +132,7 @@ async function checkResponse(
       lowerBody.includes("cf-access") ||
       lowerBody.includes("unauthorized")
     ) {
-      throw new Error(getLoginErrorMessage(authContext.canLogin));
+      throw new Error(getLoginErrorMessage());
     }
 
     throw new Error(`${action} failed (${resp.status}): ${body || "Authentication required"}`);
@@ -153,12 +151,21 @@ async function parseJson<T>(resp: Response, action: string): Promise<T> {
   }
 }
 
+async function getAuth(workerUrl: string): Promise<AuthContext> {
+  const clerkAuth = await getClerkAuthHeaders(workerUrl);
+  if (Object.keys(clerkAuth.headers).length > 0) {
+    return clerkAuth;
+  }
+
+  return getAccessAuthHeaders(workerUrl);
+}
+
 async function requestWithAccess(
   action: string,
   options: RequestOptions,
 ): Promise<Response> {
   const { workerUrl } = getClient();
-  const auth = await getAuthHeaders(workerUrl);
+  const auth = await getAuth(workerUrl);
   const resp = await fetch(`${workerUrl}${options.path}`, {
     ...options,
     headers: auth.headers,

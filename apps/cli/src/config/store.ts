@@ -3,6 +3,7 @@ import Conf from "conf";
 interface Config {
   workerUrl: string;
   documentMappings: Record<string, string>;
+  authToken?: string;
 }
 
 const config = new Conf<Config>({
@@ -45,4 +46,16 @@ export function removeDocumentMapping(filePath: string): void {
   const currentMappings = { ...(config.get("documentMappings") || {}) };
   delete currentMappings[filePath];
   config.set("documentMappings", currentMappings);
+}
+
+export function getAuthToken(): string | undefined {
+  return config.get("authToken");
+}
+
+export function setAuthToken(token: string): void {
+  config.set("authToken", token);
+}
+
+export function clearAuthToken(): void {
+  config.delete("authToken");
 }

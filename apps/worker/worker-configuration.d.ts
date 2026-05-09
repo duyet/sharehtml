@@ -22,19 +22,12 @@ declare namespace Cloudflare {
 	interface Env {
 		DOCUMENTS_BUCKET: R2Bucket;
 		ASSETS: Fetcher;
-<<<<<<< HEAD
-		AUTH_MODE: "access" | "none" | "clerk";
+		AUTH_MODE: "access" | "clerk" | "none";
 		ACCESS_AUD?: "";
 		ACCESS_TEAM?: "";
 		CLERK_SECRET_KEY?: string;
 		CLERK_PUBLISHABLE_KEY?: string;
 		CLERK_JWT_KEY?: string;
-=======
-		AUTH_MODE: "access" | "clerk" | "none";
-		ACCESS_AUD?: "";
-		ACCESS_TEAM?: "";
-		CLERK_SECRET_KEY?: string;
->>>>>>> ac190c1 (feat(worker): add Clerk auth middleware alongside CF Access)
 		VIEWER_CAPABILITY_SECRET?: string;
 		DOCUMENT_DO: DurableObjectNamespace<import("./src/index").DocumentDO>;
 		REGISTRY_DO: DurableObjectNamespace<import("./src/index").RegistryDO>;
