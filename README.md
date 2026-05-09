@@ -19,14 +19,11 @@ Deploy a local document, get a link where others can view it and collaborate wit
 
 ## Quick Start
 
-You can use the CLI instantly without manual installation:
+You can use the CLI instantly without manual installation. It is pre-configured to use `https://html.duyet.net` by default:
 
 ```bash
-# configure to use the production instance
-npx -y sharehtml@latest config set-url https://html.duyet.net
-
 # deploy a file
-npx -y sharehtml@latest deploy my-report.html
+npx -y @duyet/sharehtml@latest deploy my-report.html
 ```
 
 ## AI Agent Integration
@@ -38,7 +35,7 @@ npx -y skills@latest add duyet/sharehtml
 ```
 
 The skill teaches agents to:
-- Deploy or update documents via CLI.
+- Deploy or update documents via CLI using `npx -y @duyet/sharehtml@latest`.
 - Perform `diff` before overwriting remote files.
 - Pull and review comments/feedback.
 - Manage sharing permissions.

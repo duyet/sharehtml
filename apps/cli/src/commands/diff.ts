@@ -163,8 +163,8 @@ export const diffCmd = new Command("diff")
       const remoteDocument = await resolveRemoteDocument(filePath, opts.id);
       if (!remoteDocument) {
         console.error(`Error: no matching remote document found for ${basename(filePath)}`);
-        console.log(`\n  deploy it first:  sharehtml deploy ${file}`);
-        console.log(`  or specify an id: sharehtml diff ${file} --id <document-id>`);
+        console.log(`\n  deploy it first:  npx @duyet/sharehtml deploy ${file}`);
+        console.log(`  or specify an id: npx @duyet/sharehtml diff ${file} --id <document-id>`);
         process.exit(1);
       }
 
@@ -185,7 +185,7 @@ export const diffCmd = new Command("diff")
             remoteText = new TextDecoder().decode(remoteRendered.content);
           } else {
             console.error(`Error: source diff unavailable because this document was deployed without storing the original source`);
-            console.log(`\n  run \`sharehtml deploy ${file}\` to re-deploy with source tracking enabled`);
+            console.log(`\n  run \`npx @duyet/sharehtml deploy ${file}\` to re-deploy with source tracking enabled`);
             process.exit(1);
           }
         } else {

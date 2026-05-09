@@ -8,7 +8,7 @@ interface Config {
 const config = new Conf<Config>({
   projectName: "sharehtml-cli",
   defaults: {
-    workerUrl: "",
+    workerUrl: "https://html.duyet.net",
     documentMappings: {},
   },
 });

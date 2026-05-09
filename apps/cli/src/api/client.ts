@@ -47,7 +47,7 @@ interface RequestOptions extends RequestInit {
 
 function getClient(): { workerUrl: string } {
   if (!isConfigured()) {
-    throw new Error("Not configured. Run: sharehtml config set-url <url>");
+    throw new Error("Not configured. Run: npx @duyet/sharehtml config set-url <url>");
   }
   return getConfig();
 }
@@ -104,9 +104,9 @@ export async function prepareDocumentUpload(
 
 function getLoginErrorMessage(canLogin: boolean): string {
   if (canLogin) {
-    return "Authentication required. Run: sharehtml login";
+    return "Authentication required. Run: npx @duyet/sharehtml login";
   }
-  return "Authentication required. Install cloudflared and run: sharehtml login";
+  return "Authentication required. Install cloudflared and run: npx @duyet/sharehtml login";
 }
 
 async function checkResponse(
@@ -291,7 +291,7 @@ export async function downloadDocument(
       error.message.includes("source unavailable")
     ) {
       throw new Error(
-        "Original source is not available for this document. Redeploy it once with a newer sharehtml CLI to enable source downloads.",
+        "Original source is not available for this document. Redeploy it once with a newer npx @duyet/sharehtml CLI to enable source downloads.",
       );
     }
     throw error;

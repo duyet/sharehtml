@@ -2,7 +2,7 @@ import { getConfig, isConfigured } from "../config/store.js";
 
 export async function deploymentRequiresLogin(): Promise<boolean> {
   if (!isConfigured()) {
-    throw new Error("Not configured. Run: sharehtml config set-url <url>");
+    throw new Error("Not configured. Run: npx @duyet/sharehtml config set-url <url>");
   }
 
   const { workerUrl } = getConfig();

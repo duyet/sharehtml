@@ -118,7 +118,7 @@ export const deployCmd = new Command("deploy")
         console.log(`  size:  ${(result.size / 1024).toFixed(1)}KB`);
         console.log(`  share: ${isShared ? "shareable" : "private"}`);
         if (!opts.share && !opts.private && !isShared) {
-          console.log(`  next:  run 'sharehtml share ${lookupFilename}' to make it shareable`);
+          console.log(`  next:  run 'npx @duyet/sharehtml share ${lookupFilename}' to make it shareable`);
         }
       }
     } catch (err) {

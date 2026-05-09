@@ -8,7 +8,7 @@ export const loginCmd = new Command("login")
   .action(async () => {
     try {
       if (!isConfigured()) {
-        console.error("Error: Not configured. Run: sharehtml config set-url <url>");
+        console.error("Error: Not configured. Run: npx @duyet/sharehtml config set-url <url>");
         printSetupHint();
         process.exit(1);
       }

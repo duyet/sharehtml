@@ -66,12 +66,10 @@ function SetupBlock({ workerUrl, requiresLogin }: SetupBlockProps): JSX.Element 
         <a href="https://github.com/duyet/sharehtml">sharehtml CLI</a>.
       </p>
       <pre>
-        {raw(`<span class="cmd-comment"># configure</span>\n`)}
-        npx -y sharehtml@latest config set-url {workerUrl}{"\n"}
-        {requiresLogin ? "npx -y sharehtml@latest login\n" : ""}
+        {raw(`<span class="cmd-comment"># deploy a file (defaults to ${workerUrl})</span>\n`)}
+        npx -y @duyet/sharehtml@latest deploy path/to/file.html
         {"\n"}
-        {raw(`<span class="cmd-comment"># deploy a file</span>\n`)}
-        npx -y sharehtml@latest deploy path/to/file.html
+        {requiresLogin ? "npx -y @duyet/sharehtml@latest login\n" : ""}
       </pre>
 
       <p class="setup-skills-label">

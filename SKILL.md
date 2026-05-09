@@ -5,14 +5,15 @@ description: "Deploy and manage HTML/Markdown documents on html.duyet.net with c
 
 ## Setup
 
-Ensure the CLI is configured:
+The CLI is pre-configured to use `https://html.duyet.net` by default.
+
 ```bash
-npx -y sharehtml@latest config set-url https://html.duyet.net
+npx -y @duyet/sharehtml@latest <command>
 ```
 
 ## Key Commands
 
-- `npx -y sharehtml@latest deploy <file>` — Deploy or update
-- `npx -y sharehtml@latest diff <file>` — Compare local vs remote
-- `npx -y sharehtml@latest pull <id>` — Download remote file
-- `npx -y sharehtml@latest list` — Search documents
+- `npx -y @duyet/sharehtml@latest deploy <file>` — Deploy or update
+- `npx -y @duyet/sharehtml@latest diff <file>` — Compare local vs remote
+- `npx -y @duyet/sharehtml@latest pull <id>` — Download remote file
+- `npx -y @duyet/sharehtml@latest list` — Search documents

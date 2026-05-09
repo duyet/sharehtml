@@ -1,17 +1,17 @@
 {
-  "name": "sharehtml",
+  "name": "@duyet/sharehtml",
   "version": "0.0.5",
   "description": "Bun CLI for deploying local documents to sharehtml for collaborative commenting",
   "license": "Apache-2.0",
   "type": "module",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/jonesphillip/sharehtml.git",
+    "url": "git+https://github.com/duyet/sharehtml.git",
     "directory": "apps/cli"
   },
-  "homepage": "https://github.com/jonesphillip/sharehtml",
+  "homepage": "https://github.com/duyet/sharehtml",
   "bugs": {
-    "url": "https://github.com/jonesphillip/sharehtml/issues"
+    "url": "https://github.com/duyet/sharehtml/issues"
   },
   "bin": {
     "sharehtml": "./dist/index.js"
