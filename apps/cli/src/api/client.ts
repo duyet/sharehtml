@@ -103,8 +103,29 @@ export async function prepareDocumentUpload(
   };
 }
 
-function getLoginErrorMessage(): string {
-  return "Authentication required. Run: npx @duyet/sharehtml login";
+function getLoginErrorMessage(authContext?: AuthContext): string {
+  const hasBearerToken = "Authorization" in (authContext?.headers ?? {});
+  const hint = hasBearerToken ? "Session may have expired. " : "";
+  return `${hint}Run: npx @duyet/sharehtml login`;
+}
+
+function isAuthRedirect(resp: Response): boolean {
+  if (resp.status < 300 || resp.status >= 400) return false;
+  const location = resp.headers.get("location") || "";
+  return location.includes("cloudflareaccess.com") || location.includes("/cdn-cgi/access/login");
+}
+
+function isAuthErrorBody(body: string, contentType: string): boolean {
+  if (contentType.includes("text/html")) return true;
+  const lower = body.toLowerCase();
+  if (lower.includes("unauthorized")) return true;
+  if (lower.includes("cloudflareaccess.com") || lower.includes("cf-access")) return true;
+  try {
+    const json = JSON.parse(body) as Record<string, unknown>;
+    return "error" in json || "errors" in json;
+  } catch {
+    return false;
+  }
 }
 
 async function checkResponse(
@@ -112,11 +133,8 @@ async function checkResponse(
   action: string,
   authContext: AuthContext,
 ): Promise<void> {
-  const location = resp.headers.get("location") || "";
-  if (resp.status >= 300 && resp.status < 400) {
-    if (location.includes("cloudflareaccess.com") || location.includes("/cdn-cgi/access/login")) {
-      throw new Error(getLoginErrorMessage());
-    }
+  if (isAuthRedirect(resp)) {
+    throw new Error(getLoginErrorMessage(authContext));
   }
 
   if (resp.ok) return;
@@ -124,15 +142,9 @@ async function checkResponse(
   if (resp.status === 401 || resp.status === 403) {
     const body = await resp.text().catch(() => "");
     const contentType = resp.headers.get("content-type") || "";
-    const lowerBody = body.toLowerCase();
 
-    if (
-      contentType.includes("text/html") ||
-      lowerBody.includes("cloudflareaccess.com") ||
-      lowerBody.includes("cf-access") ||
-      lowerBody.includes("unauthorized")
-    ) {
-      throw new Error(getLoginErrorMessage());
+    if (isAuthErrorBody(body, contentType)) {
+      throw new Error(getLoginErrorMessage(authContext));
     }
 
     throw new Error(`${action} failed (${resp.status}): ${body || "Authentication required"}`);
