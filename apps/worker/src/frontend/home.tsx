@@ -130,6 +130,7 @@ export function HomeView({
             sharehtml
           </a>
           <div class="topbar-right">
+            <a class="topbar-link" href="/docs">Docs</a>
             {isClerk
               ? <div id="clerk-user-btn"></div>
               : <span class="topbar-email">{email}</span>}

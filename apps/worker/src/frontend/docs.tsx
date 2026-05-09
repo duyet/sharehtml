@@ -175,7 +175,7 @@ sharehtml deploy report.html</code></pre>
               <p>
                 Agents can deploy without credentials. Documents expire after 24 hours:
               </p>
-              <pre><code>npx -y @duyet/sharehtml deploy {{filename}}</code></pre>
+              <pre><code>npx -y @duyet/sharehtml deploy report.html</code></pre>
 
               <h3 class="docs-section-subtitle">Authenticated Deployment</h3>
               <p>
@@ -191,10 +191,10 @@ sharehtml deploy report.html</code></pre>
                 <pre class="on"><span class="docs-comment"># Set environment variables</span>
 export SHAREHTML_EMAIL="you@example.com"
 export SHAREHTML_API_KEY="your-api-key"
-npx @duyet/sharehtml deploy {{filename}}</pre>
+npx @duyet/sharehtml deploy report.html</pre>
                 <pre><span class="docs-comment"># Login once, CLI caches credentials</span>
 npx -y @duyet/sharehtml login
-npx @duyet/sharehtml deploy {{filename}}</pre>
+npx @duyet/sharehtml deploy report.html</pre>
                 <pre><span class="docs-comment"># Or add to .env file</span>
 SHAREHTML_EMAIL=you@example.com
 SHAREHTML_API_KEY=your-api-key</pre>
@@ -235,15 +235,21 @@ curl -X POST https://html.duyet.net/api/documents \
   -H "Content-Type: text/html" \
   --data-binary @index.html</pre>
                 <pre><span class="docs-comment"># Get document metadata</span>
-curl https://html.duyet.net/api/documents/{{id}}</pre>
-                <pre><span class="docs-comment"># Update share settings</span>
-curl -X PUT https://html.duyet.net/api/documents/{{id}}/share \
+curl https://html.duyet.net/api/documents/doc_abc123</pre>
+                <pre><span class="docs-comment"># Update share settings</span>{raw(`
+curl -X PUT https://html.duyet.net/api/documents/doc_abc123/share \
   -H "Content-Type: application/json" \
-  -d '{{"mode":"link"}}'</pre>
+  -d '{"mode":"link"}'`)}</pre>
               </div>
 
               <h3 class="docs-section-subtitle">Response Format</h3>
-              <pre><code>'{{"id":"doc_abc123","title":"My Document","url":"https://html.duyet.net/d/doc_abc123","created_at":"2025-01-15T10:30:00Z","expires_at":"2025-01-16T10:30:00Z"}}'</code></pre>
+              <pre>{raw(`{
+  "id": "doc_abc123",
+  "title": "My Document",
+  "url": "https://html.duyet.net/d/doc_abc123",
+  "created_at": "2025-01-15T10:30:00Z",
+  "expires_at": "2025-01-16T10:30:00Z"
+}`)}</pre>
             </section>
 
             <section class="docs-section" id="faq">

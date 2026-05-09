@@ -37,7 +37,7 @@ export async function getAssetUrls(assets: Fetcher): Promise<AssetUrls> {
         shellClientCss: shellEntry.css?.[0] ? "/" + shellEntry.css[0] : "",
         homeCss: homeEntry.css?.[0] ? "/" + homeEntry.css[0] : "",
         collabJs: "/" + collabEntry.file,
-        docsCss: docsEntry?.file ? "/" + docsEntry.file : "/src/client/docs.css",
+        docsCss: docsEntry?.file ? "/" + docsEntry.file : "",
       };
 
       return cachedUrls;
