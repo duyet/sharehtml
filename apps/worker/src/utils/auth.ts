@@ -119,7 +119,10 @@ export const clerkAuthMiddleware = createMiddleware<AppBindings>(async (c, next)
     return;
   }
 
-  const clerkClient = createClerkClient({ secretKey: c.env.CLERK_SECRET_KEY });
+  const clerkClient = createClerkClient({
+    secretKey: c.env.CLERK_SECRET_KEY,
+    publishableKey: c.env.CLERK_PUBLISHABLE_KEY,
+  });
   return handleClerkAuth(clerkClient, c, next);
 });
 
