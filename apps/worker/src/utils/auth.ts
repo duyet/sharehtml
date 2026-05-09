@@ -100,6 +100,18 @@ export const authMiddleware = createMiddleware<AppBindings>(async (c, next) => {
   await next();
 });
 
+export interface ClerkAuthService {
+  authenticateRequest(request: Request): Promise<ClerkAuthState>;
+  users: {
+    getUser(userId: string): Promise<{ primaryEmailAddress?: { emailAddress: string } | null }>;
+  };
+}
+
+export interface ClerkAuthState {
+  isAuthenticated: boolean;
+  toAuth(): { userId: string | null; sessionClaims: unknown };
+}
+
 export const clerkAuthMiddleware = createMiddleware<AppBindings>(async (c, next) => {
   if (c.env.AUTH_MODE === "none") {
     c.set("authUser", DEV_USER);
@@ -108,6 +120,14 @@ export const clerkAuthMiddleware = createMiddleware<AppBindings>(async (c, next)
   }
 
   const clerkClient = createClerkClient({ secretKey: c.env.CLERK_SECRET_KEY });
+  return handleClerkAuth(clerkClient, c, next);
+});
+
+export async function handleClerkAuth(
+  clerkClient: ClerkAuthService,
+  c: Context<AppBindings>,
+  next: () => Promise<void>,
+) {
   const requestState = await clerkClient.authenticateRequest(c.req.raw);
 
   if (!requestState.isAuthenticated) {
@@ -139,7 +159,7 @@ export const clerkAuthMiddleware = createMiddleware<AppBindings>(async (c, next)
   const source: AuthSource = c.req.header("Authorization") ? "bearer-token" : "cookie";
   c.set("authUser", { id: userId, email, source });
   await next();
-});
+}
 
 const devMiddleware = createMiddleware<AppBindings>(async (c, next) => {
   c.set("authUser", DEV_USER);
