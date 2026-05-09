@@ -926,7 +926,7 @@ async function maybeInstallAgentSkill(cliCmd: string): Promise<void> {
 async function main() {
   console.log();
   console.log(`  ${bold("sharehtml")} setup`);
-  console.log(`  ${dim("Deploy your worker and configure Cloudflare Access.")}`);
+  console.log(`  ${dim("Deploy your worker and configure authentication.")}`);
   console.log();
 
   // Detect wrangler CLI auth
@@ -969,11 +969,69 @@ async function main() {
 
   const accountId = wranglerAccount.id;
   console.log();
-  const useAccess = await confirm("Require authentication with Cloudflare Access?");
+  console.log(`  ${bold("Authentication")}`);
+  console.log(`    ${dim("1.")} Clerk ${dim("(recommended — user accounts, sign-in UI)")}`);
+  console.log(`    ${dim("2.")} Cloudflare Access ${dim("(Zero Trust, corporate auth)")}`);
+  console.log(`    ${dim("3.")} None ${dim("(anyone with the URL can access)")}`);
+  console.log();
+  const authChoice = await prompt("Choose authentication mode [1/2/3]:");
+  const authMode = authChoice === "2" ? "access" : authChoice === "3" ? "none" : "clerk";
   let accessAud = "";
   let accessTeam = "";
+  let clerkPublishableKey = "";
+  let clerkJwtKey = "";
 
-  if (useAccess) {
+  if (authMode === "clerk") {
+    console.log();
+    console.log(`  ${bold("Clerk configuration")}`);
+    console.log(`  You need a Clerk application with your domain configured.`);
+    console.log(`  ${dim("https://dashboard.clerk.com → API Keys")}`);
+    console.log();
+
+    const clerkSecretKey = await promptSecret("Clerk Secret Key (sk_live_... or sk_test_...):");
+    if (!clerkSecretKey) {
+      fail("Clerk Secret Key is required.");
+    }
+
+    clerkPublishableKey = await prompt("Clerk Publishable Key (pk_live_... or pk_test_...):");
+    if (!clerkPublishableKey) {
+      fail("Clerk Publishable Key is required.");
+    }
+
+    clerkJwtKey = await promptSecret("Clerk JWT Verification Key (PEM format, optional — press Enter to skip):");
+    console.log();
+
+    // Store the secret key via wrangler secret
+    s = spinner("Setting Clerk secret key...", true);
+    try {
+      await run(
+        "npx",
+        ["wrangler", "secret", "put", "CLERK_SECRET_KEY", "--env", "production"],
+        { input: `${clerkSecretKey}\n` },
+      );
+      s.stop("Clerk secret key configured");
+    } catch (error: unknown) {
+      s.stop();
+      fail(`Failed to set CLERK_SECRET_KEY: ${formatCommandError(error)}`);
+    }
+
+    if (clerkJwtKey) {
+      s = spinner("Setting Clerk JWT verification key...", true);
+      try {
+        await run(
+          "npx",
+          ["wrangler", "secret", "put", "CLERK_JWT_KEY", "--env", "production"],
+          { input: `${clerkJwtKey}\n` },
+        );
+        s.stop("Clerk JWT key configured");
+      } catch (error: unknown) {
+        s.stop();
+        fail(`Failed to set CLERK_JWT_KEY: ${formatCommandError(error)}`);
+      }
+    }
+  }
+
+  if (authMode === "access") {
     console.log();
     const cfTokenUrl = "https://dash.cloudflare.com/profile/api-tokens";
     console.log(`  Create a Cloudflare API token with these permissions:`);
@@ -1098,9 +1156,14 @@ async function main() {
   }
 
   s = spinner("Updating wrangler.jsonc production vars...", true);
-  const productionVars: Record<string, string> = useAccess
-    ? { AUTH_MODE: "access", ACCESS_AUD: accessAud, ACCESS_TEAM: accessTeam }
-    : { AUTH_MODE: "none" };
+  let productionVars: Record<string, string>;
+  if (authMode === "clerk") {
+    productionVars = { AUTH_MODE: "clerk", CLERK_PUBLISHABLE_KEY: clerkPublishableKey };
+  } else if (authMode === "access") {
+    productionVars = { AUTH_MODE: "access", ACCESS_AUD: accessAud, ACCESS_TEAM: accessTeam };
+  } else {
+    productionVars = { AUTH_MODE: "none" };
+  }
   try {
     writeWranglerProductionVars(configPath, productionVars);
     s.stop("Production vars updated");
@@ -1109,14 +1172,14 @@ async function main() {
     fail(`Failed to update wrangler.jsonc: ${getErrorMessage(error)}`);
   }
 
-  if (useAccess) {
-    s = spinner("Ensuring production browser capability secret...", true);
+  if (authMode !== "none") {
+    s = spinner("Ensuring production viewer capability secret...", true);
     try {
       const status = await ensureProductionSecret("VIEWER_CAPABILITY_SECRET");
       s.stop(
         status === "created"
-          ? "Browser capability secret created"
-          : "Browser capability secret already configured",
+          ? "Viewer capability secret created"
+          : "Viewer capability secret already configured",
       );
     } catch (error: unknown) {
       s.stop();
@@ -1144,10 +1207,10 @@ async function main() {
     fail(`Deploy failed: ${message}`);
   }
 
-  if (!useAccess) {
+  if (authMode === "none") {
     console.log();
     console.log(`  ${dim("Note: anyone with the URL can view and comment.")}`);
-    console.log(`  ${dim("Run setup again to add Cloudflare Access later.")}`);
+    console.log(`  ${dim("Run setup again to add authentication later.")}`);
   } else {
     console.log();
     console.log(`  ${dim("Note: wrangler.jsonc now contains your deployment config.")}`);
@@ -1180,7 +1243,7 @@ async function main() {
     }
   }
 
-  if (useAccess) {
+  if (authMode === "access") {
     await ensureCloudflaredForCli();
   }
 
@@ -1191,7 +1254,7 @@ async function main() {
   console.log(`  ${bold("Setup complete")}`);
   console.log();
   console.log(`    ${dim("$")} ${cliCmd} config set-url ${workerUrl}`);
-  if (useAccess) {
+  if (authMode === "access") {
     console.log(`    ${dim("$")} ${cliCmd} login`);
   }
   console.log(`    ${dim("$")} ${cliCmd} deploy my-page.html`);
