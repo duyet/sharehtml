@@ -84,6 +84,24 @@ export type ReactionRow = {
   created_at: string;
 };
 
+export type ApiKeyRow = {
+  id: string;
+  key_hash: string;
+  user_email: string;
+  name: string;
+  created_at: string;
+};
+
+export type DashboardDocument = {
+  id: string;
+  title: string;
+  filename: string;
+  size: number;
+  created_at: string;
+  updated_at: string | null;
+  share_mode: string;
+};
+
 export type DocumentSnapshot = {
   comments: import("@sharehtml/shared").Comment[];
   reactions: import("@sharehtml/shared").Reaction[];

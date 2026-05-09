@@ -1,5 +1,5 @@
 import { DurableObject } from "cloudflare:workers";
-import type { DocumentRow, RecentViewRow, UserRow } from "../types.js";
+import type { ApiKeyRow, DocumentRow, RecentViewRow, UserRow } from "../types.js";
 import { normalizeEmail } from "../utils/email.js";
 
 const USER_COLORS = [
@@ -67,6 +67,23 @@ export class RegistryDO extends DurableObject<Env> {
         PRIMARY KEY (doc_id, email)
       )
     `);
+    this.sql.exec(`
+      CREATE TABLE IF NOT EXISTS api_keys (
+        id TEXT PRIMARY KEY,
+        key_hash TEXT NOT NULL,
+        user_email TEXT NOT NULL,
+        name TEXT NOT NULL DEFAULT '',
+        created_at TEXT NOT NULL DEFAULT (datetime('now'))
+      )
+    `);
+    this.ensureUpdatedAtIndex();
+  }
+
+  private ensureUpdatedAtIndex() {
+    const indices = this.sql.exec<{ name: string }>("SELECT name FROM sqlite_master WHERE type='index' AND name='idx_documents_owner_updated'").toArray();
+    if (indices.length === 0) {
+      this.sql.exec("CREATE INDEX idx_documents_owner_updated ON documents (owner_email, created_at DESC)");
+    }
   }
 
   private ensureDocumentSharingColumn() {
@@ -330,6 +347,61 @@ export class RegistryDO extends DurableObject<Env> {
         "SELECT * FROM documents WHERE is_shared = 1 ORDER BY created_at DESC LIMIT 50",
       )
       .toArray();
+  }
+
+  async createApiKey(params: {
+    id: string;
+    keyHash: string;
+    userEmail: string;
+    name: string;
+  }): Promise<ApiKeyRow> {
+    const normalizedEmail = normalizeEmail(params.userEmail);
+    this.sql.exec(
+      "INSERT INTO api_keys (id, key_hash, user_email, name) VALUES (?, ?, ?, ?)",
+      params.id,
+      params.keyHash,
+      normalizedEmail,
+      params.name,
+    );
+    return {
+      id: params.id,
+      key_hash: params.keyHash,
+      user_email: normalizedEmail,
+      name: params.name,
+      created_at: new Date().toISOString(),
+    };
+  }
+
+  async listApiKeys(userEmail: string): Promise<Array<Omit<ApiKeyRow, "key_hash">>> {
+    const normalizedEmail = normalizeEmail(userEmail);
+    return this.sql
+      .exec<{ id: string; user_email: string; name: string; created_at: string }>(
+        "SELECT id, user_email, name, created_at FROM api_keys WHERE lower(user_email) = ? ORDER BY created_at DESC",
+        normalizedEmail,
+      )
+      .toArray();
+  }
+
+  async deleteApiKey(id: string, userEmail: string): Promise<boolean> {
+    const normalizedEmail = normalizeEmail(userEmail);
+    // Check existence first since sql.database.changes is not available in test env
+    const existing = this.sql
+      .exec<{ id: string }>("SELECT id FROM api_keys WHERE id = ? AND lower(user_email) = ?", id, normalizedEmail)
+      .toArray();
+    if (existing.length === 0) return false;
+    this.sql.exec(
+      "DELETE FROM api_keys WHERE id = ? AND lower(user_email) = ?",
+      id,
+      normalizedEmail,
+    );
+    return true;
+  }
+
+  async getApiKeyByHash(keyHash: string): Promise<ApiKeyRow | null> {
+    const rows = this.sql
+      .exec<ApiKeyRow>("SELECT * FROM api_keys WHERE key_hash = ?", keyHash)
+      .toArray();
+    return rows.length > 0 ? rows[0] : null;
   }
 
   async deleteDocument(id: string) {
