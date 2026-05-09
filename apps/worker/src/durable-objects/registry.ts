@@ -432,11 +432,19 @@ export class RegistryDO extends DurableObject<Env> {
   }
 
   async deleteApiKey(id: string, userEmail: string): Promise<boolean> {
-    const result = this.sql.exec(
+    const existing = this.sql.exec<ApiKeyRow>(
+      "SELECT * FROM api_keys WHERE id = ? AND user_email = ?",
+      id,
+      userEmail,
+    ).toArray();
+    if (existing.length === 0) {
+      return false;
+    }
+    this.sql.exec(
       "DELETE FROM api_keys WHERE id = ? AND user_email = ?",
       id,
       userEmail,
     );
-    return (result.meta.changes ?? 0) > 0;
+    return true;
   }
 }
