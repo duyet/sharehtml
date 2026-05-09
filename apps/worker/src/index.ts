@@ -89,7 +89,6 @@ app.get("/", async (c) => {
       recentViews,
       page: documentsPage.page,
       pageSize,
-      pageSize,
       totalCount: documentsPage.totalCount,
       requiresLogin: isAuthEnabled(c.env.AUTH_MODE),
       homeCapabilityToken,
