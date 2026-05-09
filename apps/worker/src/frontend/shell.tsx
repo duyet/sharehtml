@@ -19,12 +19,14 @@ interface ShellParams {
 }
 
 function getShareDescription(authMode: AuthMode, shareMode: ShareMode): string {
-  if (authMode !== "access") {
+  if (authMode === "none") {
     return "anyone with the link can view and comment";
   }
   switch (shareMode) {
     case "link":
-      return "anyone allowed by your Cloudflare Access policy can view and comment";
+      return authMode === "access"
+        ? "anyone allowed by your Cloudflare Access policy can view and comment"
+        : "anyone with the link can view and comment";
     case "emails":
       return "add people to share this document";
     case "private":
@@ -101,6 +103,9 @@ export function ShellView(
                 `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>`,
               )}
             </button>
+            {authMode === "clerk" && clerkPublishableKey && (
+              <div id="clerk-user-btn"></div>
+            )}
             <button class="sidebar-toggle" id="sidebar-toggle">
               <span class="sidebar-toggle-text">comments</span>
               {raw(
@@ -205,6 +210,7 @@ export function ShellView(
               contentPath: `/d/${docId}/content`,
               collabJsPath: assets.collabJs,
               viewerCapabilityToken,
+              clerkPublishableKey: authMode === "clerk" ? clerkPublishableKey : undefined,
             })}`,
           )}
         </script>
