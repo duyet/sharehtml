@@ -15,12 +15,29 @@ const viewer = new Hono<AppBindings>();
 
 // Viewer shell
 viewer.get("/d/:id", async (c) => {
-  const id = c.req.param("id");
+  const paramId = c.req.param("id");
+  const isRawHtml = paramId.endsWith(".html");
+  const id = isRawHtml ? paramId.slice(0, -5) : paramId;
   const email = normalizeEmail(c.get("authUser").email);
 
   const result = await loadDocWithAccessCheck(c.env, id, email);
   if (!result) return c.text("Not found", 404);
   const { doc, registry } = result;
+
+  // Record view (don't block response, but ensure it completes)
+  c.executionCtx.waitUntil(registry.recordView(email, id).catch(() => {}));
+
+  if (isRawHtml) {
+    const obj = await getRenderedObject(c.env.DOCUMENTS_BUCKET, id, doc);
+    if (!obj) return c.text("Content not found", 404);
+
+    return new Response(obj.body, {
+      headers: {
+        "Content-Type": "text/html; charset=utf-8",
+        "Cache-Control": "public, max-age=0, must-revalidate",
+      },
+    });
+  }
 
   const assets = await getAssetUrls(c.env.ASSETS);
   const viewerCapabilityToken = await createCapabilityToken(c.env, {
@@ -29,9 +46,6 @@ viewer.get("/d/:id", async (c) => {
     documentId: id,
     ttlSeconds: CAPABILITY_TTL_SECONDS,
   });
-
-  // Record view (don't block response, but ensure it completes)
-  c.executionCtx.waitUntil(registry.recordView(email, id).catch(() => {}));
 
   return c.html(
     ShellView({
