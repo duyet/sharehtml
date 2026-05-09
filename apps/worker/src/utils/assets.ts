@@ -42,7 +42,7 @@ export async function getAssetUrls(assets: Fetcher): Promise<AssetUrls> {
         dashboardCss: dashboardEntry.css?.[0] ? "/" + dashboardEntry.css[0] : "",
         dashboardClientJs: "/" + dashboardEntry.file,
         collabJs: "/" + collabEntry.file,
-        docsCss: docsEntry?.file ? "/" + docsEntry.file : "/src/client/docs.css",
+        docsCss: docsEntry?.file ? "/" + docsEntry.file : "",
       };
 
       return cachedUrls;
@@ -57,9 +57,9 @@ export async function getAssetUrls(assets: Fetcher): Promise<AssetUrls> {
     shellClientJs: "/src/client/shell-client.ts",
     shellClientCss: "",
     homeCss: "/src/client/home.css",
-    dashboardCss: "/src/client/dashboard.css",
+    dashboardCss: "",
     dashboardClientJs: "/src/client/dashboard-client.ts",
     collabJs: "/src/client/collab-client.ts",
-    docsCss: "/src/client/docs.css",
+    docsCss: "",
   };
 }
