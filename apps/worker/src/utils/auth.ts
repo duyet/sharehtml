@@ -1,6 +1,7 @@
 import { createMiddleware } from "hono/factory";
 import { getCookie } from "hono/cookie";
 import { createRemoteJWKSet, jwtVerify } from "jose";
+import { createClerkClient } from "@clerk/backend";
 import type { Context } from "hono";
 import type { AppBindings } from "../types.js";
 
@@ -10,7 +11,9 @@ export interface AuthUser {
   source: AuthSource;
 }
 
-export type AuthSource = "access-jwt-header" | "cf-access-token" | "cookie" | "dev";
+export type AuthSource = "access-jwt-header" | "cf-access-token" | "cookie" | "bearer-token" | "dev";
+
+const DEV_USER: AuthUser = Object.freeze({ id: "dev", email: "dev@localhost", source: "dev" });
 
 let jwksCache: { teamName: string; jwks: ReturnType<typeof createRemoteJWKSet> } | null = null;
 
@@ -78,7 +81,7 @@ async function verifyAccessJWT(jwt: string, env: Env): Promise<AuthUser | null> 
 export const authMiddleware = createMiddleware<AppBindings>(async (c, next) => {
   // Fail closed: only skip auth when explicitly set to "none"
   if (c.env.AUTH_MODE === "none") {
-    c.set("authUser", { id: "dev", email: "dev@localhost", source: "dev" });
+    c.set("authUser", DEV_USER);
     await next();
     return;
   }
@@ -96,3 +99,59 @@ export const authMiddleware = createMiddleware<AppBindings>(async (c, next) => {
   c.set("authUser", { ...user, source });
   await next();
 });
+
+export const clerkAuthMiddleware = createMiddleware<AppBindings>(async (c, next) => {
+  if (c.env.AUTH_MODE === "none") {
+    c.set("authUser", DEV_USER);
+    await next();
+    return;
+  }
+
+  const clerkClient = createClerkClient({ secretKey: c.env.CLERK_SECRET_KEY });
+  const requestState = await clerkClient.authenticateRequest(c.req.raw);
+
+  if (!requestState.isAuthenticated) {
+    return c.text("Unauthorized", 401);
+  }
+
+  const auth = requestState.toAuth();
+  const userId = auth.userId;
+  if (!userId) {
+    return c.text("Unauthorized", 401);
+  }
+
+  // Try to get email from session claims first
+  const claims = auth.sessionClaims as Record<string, unknown> | undefined;
+  let email =
+    claims && typeof claims.primaryEmail === "string"
+      ? claims.primaryEmail
+      : null;
+
+  if (!email) {
+    const user = await clerkClient.users.getUser(userId);
+    email = user.primaryEmailAddress?.emailAddress ?? null;
+  }
+
+  if (!email) {
+    return c.text("Unauthorized", 401);
+  }
+
+  const source: AuthSource = c.req.header("Authorization") ? "bearer-token" : "cookie";
+  c.set("authUser", { id: userId, email, source });
+  await next();
+});
+
+const devMiddleware = createMiddleware<AppBindings>(async (c, next) => {
+  c.set("authUser", DEV_USER);
+  await next();
+});
+
+export function getAuthMiddleware(authMode: AuthMode): typeof authMiddleware {
+  if (authMode === "none") {
+    return devMiddleware;
+  }
+  if (authMode === "clerk") {
+    return clerkAuthMiddleware;
+  }
+  return authMiddleware;
+}
