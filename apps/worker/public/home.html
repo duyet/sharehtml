@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>sharehtml — Deploy ideas instantly</title>
+  <link rel="stylesheet" href="{{assets_css}}">
+  <script src="{{assets_js}}" defer></script>
+</head>
+<body>
+  <div class="topbar">
+    <a class="topbar-home" href="/">sharehtml</a>
+    <div class="topbar-right">
+      {{#authenticated}}
+      <a class="topbar-link" href="/docs">Docs</a>
+      {{/authenticated}}
+      <span class="topbar-email">{{email}}</span>
+      {{#clerk_button}}
+      <div id="clerk-user-btn"></div>
+      {{/clerk_button}}
+    </div>
+  </div>
+
+  <div class="content">
+    <section class="hero">
+      <h1>Deploy your ideas instantly</h1>
+      <p>Share HTML, Markdown, and code with collaborative comments and reactions.</p>
+      <a href="https://github.com/duyet/sharehtml" class="btn-primary">View on GitHub</a>
+    </section>
+
+    <!-- Stats Band -->
+    <section class="stats-section">
+      <div class="stats-band">
+        <div class="stat-card">
+          <div class="stat-num">{{user_doc_count}}</div>
+          <div class="stat-label">Your Documents</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num">{{storage_used}}</div>
+          <div class="stat-label">Storage Used</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num">{{total_views}}</div>
+          <div class="stat-label">Total Views</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num">{{account_age}}</div>
+          <div class="stat-label">Account Age</div>
+        </div>
+      </div>
+
+      {{#global_stats}}
+      <div class="global-stats">
+        <span class="global-stat">{{global_users}} users</span>
+        <span class="global-stat">{{global_docs}} documents</span>
+        <span class="global-stat">{{global_views}} total views</span>
+      </div>
+      {{/global_stats}}
+    </section>
+
+    <!-- Quick Start -->
+    <section class="section">
+      <h2>Quick Start</h2>
+      <div class="setup-block">
+        <p>Deploy HTML, Markdown, or code files instantly with the sharehtml CLI:</p>
+        <pre><code class="language-bash">npx -y @duyet/sharehtml@latest deploy path/to/file.html</code></pre>
+        {{#requires_login}}
+        <p>First, authenticate with your instance:</p>
+        <pre><code class="language-bash">npx -y @duyet/sharehtml@latest login</code></pre>
+        {{/requires_login}}
+      </div>
+    </section>
+
+    <!-- Recently Viewed -->
+    {{#has_recent_views}}
+    <section class="section">
+      <h2>Recently Viewed</h2>
+      <div class="recent-grid">
+        {{{recent_views_html}}}
+      </div>
+    </section>
+    {{/has_recent_views}}
+
+    <!-- Recently Added -->
+    <section class="section">
+      <h2>Recently Added</h2>
+      <div class="doc-list">
+        {{{documents_html}}}
+      </div>
+      {{{pagination_html}}}
+    </section>
+
+    <!-- Features -->
+    <section class="section features-section">
+      <h2>Features</h2>
+      <div class="features-grid">
+        <div class="feature-item">
+          <h3>✦ Collaborative Comments</h3>
+          <p>Threaded discussions with text anchoring and emoji reactions.</p>
+        </div>
+        <div class="feature-item">
+          <h3>✦ Live Presence</h3>
+          <p>See who's viewing and their selections in real-time.</p>
+        </div>
+        <div class="feature-item">
+          <h3>✦ AI Agent Skills</h3>
+          <p>Deep integration for Claude Code and other AI agents.</p>
+        </div>
+        <div class="feature-item">
+          <h3>✦ Short URLs</h3>
+          <p>Compact 5-character IDs for easy sharing.</p>
+        </div>
+        <div class="feature-item">
+          <h3>✦ Multiple Formats</h3>
+          <p>HTML, Markdown, and code with syntax highlighting.</p>
+        </div>
+        <div class="feature-item">
+          <h3>✦ Self-Hosted</h3>
+          <p>Run on Cloudflare Workers with R2 storage.</p>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <script id="__HOME_CONFIG__" type="application/json">
+    {{{home_config}}}
+  </script>
+</body>
+</html>

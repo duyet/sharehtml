@@ -1,5 +1,5 @@
 import { DurableObject } from "cloudflare:workers";
-import type { ApiKeyRow, DocumentRow, RecentViewRow, UserRow } from "../types.js";
+import type { ApiKeyRow, DocumentRow, RecentViewRow, UserRow, UserStats, GlobalStats } from "../types.js";
 import { normalizeEmail } from "../utils/email.js";
 
 const USER_COLORS = [
@@ -59,6 +59,7 @@ export class RegistryDO extends DurableObject<Env> {
     `);
     this.ensureDocumentSharingColumn();
     this.ensureDocumentArtifactColumns();
+    this.ensureViewCountColumn();
     this.sql.exec(`
       CREATE TABLE IF NOT EXISTS shared_emails (
         doc_id TEXT NOT NULL,
@@ -77,13 +78,6 @@ export class RegistryDO extends DurableObject<Env> {
       )
     `);
     this.ensureUpdatedAtIndex();
-  }
-
-  private ensureUpdatedAtIndex() {
-    const indices = this.sql.exec<{ name: string }>("SELECT name FROM sqlite_master WHERE type='index' AND name='idx_documents_owner_updated'").toArray();
-    if (indices.length === 0) {
-      this.sql.exec("CREATE INDEX idx_documents_owner_updated ON documents (owner_email, created_at DESC)");
-    }
   }
 
   private ensureDocumentSharingColumn() {
@@ -113,6 +107,21 @@ export class RegistryDO extends DurableObject<Env> {
 
     if (!columnNames.has("source_language")) {
       this.sql.exec("ALTER TABLE documents ADD COLUMN source_language TEXT");
+    }
+  }
+
+  private ensureViewCountColumn() {
+    const columns = this.sql.exec<{ name: string }>("PRAGMA table_info(documents)").toArray();
+    const hasViewCount = columns.some((column) => column.name === "view_count");
+    if (hasViewCount) return;
+
+    this.sql.exec("ALTER TABLE documents ADD COLUMN view_count INTEGER DEFAULT 0");
+  }
+
+  private ensureUpdatedAtIndex() {
+    const indices = this.sql.exec<{ name: string }>("SELECT name FROM sqlite_master WHERE type='index' AND name='idx_documents_owner_updated'").toArray();
+    if (indices.length === 0) {
+      this.sql.exec("CREATE INDEX idx_documents_owner_updated ON documents (owner_email, created_at DESC)");
     }
   }
 
@@ -325,6 +334,8 @@ export class RegistryDO extends DurableObject<Env> {
       normalizeEmail(userEmail),
       docId,
     );
+    // Increment view count on the document
+    this.sql.exec("UPDATE documents SET view_count = COALESCE(view_count, 0) + 1 WHERE id = ?", docId);
   }
 
   async getRecentViews(userEmail: string, limit = 20): Promise<RecentViewRow[]> {
@@ -349,63 +360,47 @@ export class RegistryDO extends DurableObject<Env> {
       .toArray();
   }
 
-  async createApiKey(params: {
-    id: string;
-    keyHash: string;
-    userEmail: string;
-    name: string;
-  }): Promise<ApiKeyRow> {
-    const normalizedEmail = normalizeEmail(params.userEmail);
-    this.sql.exec(
-      "INSERT INTO api_keys (id, key_hash, user_email, name) VALUES (?, ?, ?, ?)",
-      params.id,
-      params.keyHash,
-      normalizedEmail,
-      params.name,
-    );
-    return {
-      id: params.id,
-      key_hash: params.keyHash,
-      user_email: normalizedEmail,
-      name: params.name,
-      created_at: new Date().toISOString(),
-    };
-  }
-
-  async listApiKeys(userEmail: string): Promise<Array<Omit<ApiKeyRow, "key_hash">>> {
-    const normalizedEmail = normalizeEmail(userEmail);
-    return this.sql
-      .exec<{ id: string; user_email: string; name: string; created_at: string }>(
-        "SELECT id, user_email, name, created_at FROM api_keys WHERE lower(user_email) = ? ORDER BY created_at DESC",
-        normalizedEmail,
-      )
-      .toArray();
-  }
-
-  async deleteApiKey(id: string, userEmail: string): Promise<boolean> {
-    const normalizedEmail = normalizeEmail(userEmail);
-    // Check existence first since sql.database.changes is not available in test env
-    const existing = this.sql
-      .exec<{ id: string }>("SELECT id FROM api_keys WHERE id = ? AND lower(user_email) = ?", id, normalizedEmail)
-      .toArray();
-    if (existing.length === 0) return false;
-    this.sql.exec(
-      "DELETE FROM api_keys WHERE id = ? AND lower(user_email) = ?",
-      id,
-      normalizedEmail,
-    );
-    return true;
-  }
-
-  async getApiKeyByHash(keyHash: string): Promise<ApiKeyRow | null> {
-    const rows = this.sql
-      .exec<ApiKeyRow>("SELECT * FROM api_keys WHERE key_hash = ?", keyHash)
-      .toArray();
-    return rows.length > 0 ? rows[0] : null;
-  }
-
   async deleteDocument(id: string) {
     this.sql.exec("DELETE FROM shared_emails WHERE doc_id = ?", id);
     this.sql.exec("DELETE FROM documents WHERE id = ?", id);
+  }
+
+  async getUserStats(userEmail: string): Promise<UserStats> {
+    const normalizedEmail = normalizeEmail(userEmail);
+    const docCountResult = this.sql.exec<{ count: number }>(
+      "SELECT COUNT(*) as count FROM documents WHERE owner_email = ?",
+      normalizedEmail
+    ).first();
+    const storageUsedResult = this.sql.exec<{ total: number }>(
+      "SELECT COALESCE(SUM(size), 0) as total FROM documents WHERE owner_email = ?",
+      normalizedEmail
+    ).first();
+    const totalViewsResult = this.sql.exec<{ total: number }>(
+      "SELECT COALESCE(SUM(view_count), 0) as total FROM documents WHERE owner_email = ?",
+      normalizedEmail
+    ).first();
+    const user = await this.getUser(normalizedEmail);
+    const createdAt = user?.created_at || "";
+
+    return {
+      docCount: docCountResult?.count || 0,
+      storageUsed: storageUsedResult?.total || 0,
+      totalViews: totalViewsResult?.total || 0,
+      accountAge: createdAt,
+    };
+  }
+
+  async getGlobalStats(): Promise<GlobalStats> {
+    const usersResult = this.sql.exec<{ count: number }>("SELECT COUNT(*) as count FROM users").first();
+    const docsResult = this.sql.exec<{ count: number }>("SELECT COUNT(*) as count FROM documents").first();
+    const viewsResult = this.sql.exec<{ total: number }>("SELECT COALESCE(SUM(view_count), 0) as total FROM documents").first();
+    const storageResult = this.sql.exec<{ total: number }>("SELECT COALESCE(SUM(size), 0) as total FROM documents").first();
+
+    return {
+      totalUsers: usersResult?.count || 0,
+      totalDocs: docsResult?.count || 0,
+      totalViews: viewsResult?.total || 0,
+      totalStorage: storageResult?.total || 0,
+    };
   }
 }
