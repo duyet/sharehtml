@@ -135,13 +135,15 @@ app.onError((err, c) => {
 
 app.get("/health", (c) => c.json({ status: "ok" }));
 
+// Public routes (no auth)
+app.route("/docs", docs);
+
 app.use("/*", async (c, next) => {
   const middleware = getAuthMiddleware(c.env.AUTH_MODE);
   return middleware(c, next);
 });
 
 app.route("/api", api);
-app.route("/docs", docs);
 app.route("/", viewer);
 
 app.get("/llms.txt", async (c) => {
@@ -164,7 +166,14 @@ app.get("/llms.txt", async (c) => {
 app.get("/", async (c) => {
   const email = normalizeEmail(c.get("authUser").email);
   const html = await renderHomeFromTemplate(c, email);
-  return c.html(html);
+
+  // Add cache headers for static HTML content
+  return c.html(html, {
+    headers: {
+      "Cache-Control": "public, max-age=60, s-maxage=300",
+      "CDN-Cacheable": "public",
+    },
+  });
 });
 
 export default app;
