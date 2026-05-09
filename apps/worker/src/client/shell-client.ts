@@ -769,9 +769,7 @@ function getShareDescription(): string {
   if (AUTH_MODE === "none") return "anyone with the link can view and comment";
   switch (shareMode) {
     case "link":
-      return AUTH_MODE === "access"
-        ? "anyone allowed by your Cloudflare Access policy can view and comment"
-        : "anyone with the link can view and comment";
+      return "anyone with the link can view and comment";
     case "emails":
       if (sharedEmails.length === 0) return "add people to share this document";
       return `shared with ${sharedEmails.length} ${sharedEmails.length === 1 ? "person" : "people"}`;
