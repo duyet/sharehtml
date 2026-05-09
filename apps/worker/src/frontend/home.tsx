@@ -3,8 +3,8 @@
 import { raw } from "hono/utils/html";
 import type { AssetUrls } from "../utils/assets.js";
 import { formatDocumentSize, formatRelativeTime } from "../utils/home-view.js";
-import type { DocumentRow, RecentViewRow } from "../types.js";
-import { toHtml, safeJsonForScript } from "./jsx.js";
+import type { AuthMode, DocumentRow, RecentViewRow } from "../types.js";
+import { toHtml, safeJsonForScript, ClerkScripts } from "./jsx.js";
 
 interface HomeParams {
   assets: AssetUrls;
@@ -16,6 +16,8 @@ interface HomeParams {
   pageSize: number;
   requiresLogin: boolean;
   homeCapabilityToken: string;
+  authMode: AuthMode;
+  clerkPublishableKey?: string;
 }
 
 interface DocCardProps {
@@ -100,6 +102,8 @@ export function HomeView({
   pageSize,
   requiresLogin,
   homeCapabilityToken,
+  authMode,
+  clerkPublishableKey,
   cfBeaconToken,
 }: HomeParams & { cfBeaconToken?: string }): string {
   const jsx = (
@@ -117,6 +121,7 @@ export function HomeView({
             data-cf-beacon={`{"token": "${cfBeaconToken}"}`}
           ></script>
         )}
+        {authMode === "clerk" && clerkPublishableKey && <ClerkScripts publishableKey={clerkPublishableKey} />}
       </head>
       <body>
         <div class="topbar">
