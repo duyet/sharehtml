@@ -73,10 +73,18 @@ function SetupBlock({ workerUrl, requiresLogin }: SetupBlockProps): JSX.Element 
       </pre>
 
       <p class="setup-skills-label">
-        Add <b>sharehtml skills</b> to your AI Agent (Claude Code, etc.)
+        Add <b>sharehtml skills</b> to your AI Agent (Claude Code, etc.):
       </p>
       <pre>
         npx -y skills@latest add duyet/sharehtml
+      </pre>
+
+      <p class="setup-skills-label">
+        Or copy & paste this prompt to your AI Agent (Cursor, Windsurf, Claude, etc.):
+      </p>
+      <pre>
+        Deploy this to the web using sharehtml:
+        `npx -y @duyet/sharehtml@latest deploy path/to/file.html`
       </pre>
     </div>
   );
@@ -116,7 +124,7 @@ export function HomeView({
           <div class="hero">
             <h1>Deploy your ideas instantly.</h1>
             <p>
-              A simple editorial platform for sharing HTML reports, Markdown notes, 
+              Built for AI Agents. A simple, editorial platform for sharing HTML reports, Markdown notes, 
               and code snippets with the world.
             </p>
             <a href="https://github.com/duyet/sharehtml" class="btn-primary">
@@ -140,7 +148,7 @@ export function HomeView({
 
           {documents.length > 0 && (
             <div class="section">
-              <div class="section-label">My Documents</div>
+              <div class="section-label">Recently Added</div>
               <div class="doc-list">
                 {documents.map((d) => <DocCard doc={d} subtitle={formatDocumentSize(d.size)} />)}
               </div>
