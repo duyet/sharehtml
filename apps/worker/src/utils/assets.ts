@@ -4,6 +4,7 @@ export interface AssetUrls {
   shellClientCss: string;
   homeCss: string;
   collabJs: string;
+  docsCss: string;
 }
 
 interface ManifestEntry {
@@ -24,6 +25,7 @@ export async function getAssetUrls(assets: Fetcher): Promise<AssetUrls> {
       const shellEntry = manifest["src/client/shell-client.ts"];
       const homeEntry = manifest["src/client/home-client.ts"];
       const collabEntry = manifest["src/client/collab-client.ts"];
+      const docsEntry = manifest["src/client/docs.css"];
 
       if (!shellEntry || !homeEntry || !collabEntry) {
         throw new Error("Missing required entries in asset manifest");
@@ -35,6 +37,7 @@ export async function getAssetUrls(assets: Fetcher): Promise<AssetUrls> {
         shellClientCss: shellEntry.css?.[0] ? "/" + shellEntry.css[0] : "",
         homeCss: homeEntry.css?.[0] ? "/" + homeEntry.css[0] : "",
         collabJs: "/" + collabEntry.file,
+        docsCss: docsEntry?.file ? "/" + docsEntry.file : "/src/client/docs.css",
       };
 
       return cachedUrls;
@@ -50,5 +53,6 @@ export async function getAssetUrls(assets: Fetcher): Promise<AssetUrls> {
     shellClientCss: "",
     homeCss: "/src/client/home.css",
     collabJs: "/src/client/collab-client.ts",
+    docsCss: "/src/client/docs.css",
   };
 }

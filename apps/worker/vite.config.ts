@@ -10,8 +10,11 @@ export default defineConfig({
     rollupOptions: {
       input: {
         "home-client": "src/client/home-client.ts",
+        "home.css": "src/client/home.css",
         "shell-client": "src/client/shell-client.ts",
+        "shell-client.css": "src/client/styles.css",
         "collab-client": "src/client/collab-client.ts",
+        "docs.css": "src/client/docs.css",
       },
     },
   },

@@ -4,6 +4,7 @@ import { isAuthEnabled, type AppBindings } from "./types.js";
 import { getAuthMiddleware } from "./utils/auth.js";
 import { api } from "./routes/api.js";
 import { viewer } from "./routes/viewer.js";
+import { docs } from "./routes/docs.js";
 import { HomeView } from "./frontend/home.js";
 import { createCapabilityToken } from "./utils/capability.js";
 import { getAssetUrls } from "./utils/assets.js";
@@ -39,6 +40,7 @@ app.use("/*", async (c, next) => {
 });
 
 app.route("/api", api);
+app.route("/docs", docs);
 app.route("/", viewer);
 
 app.get("/llms.txt", async (c) => {

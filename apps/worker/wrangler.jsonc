@@ -11,7 +11,7 @@
   "assets": {
     "not_found_handling": "none",
     "binding": "ASSETS",
-    "run_worker_first": ["/d/*", "/api/*", "/health", "/"]
+    "run_worker_first": ["/d/*", "/api/*", "/docs/*", "/health", "/"]
   },
   "r2_buckets": [
     {
@@ -76,7 +76,7 @@
       "assets": {
         "not_found_handling": "none",
         "binding": "ASSETS",
-        "run_worker_first": ["/d/*", "/api/*", "/health", "/"]
+        "run_worker_first": ["/d/*", "/api/*", "/docs/*", "/health", "/"]
       },
       "r2_buckets": [
         {
