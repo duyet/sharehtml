@@ -12,6 +12,7 @@ import { getRegistry } from "./utils/registry.js";
 import { formatRelativeTime, formatDocumentSize, formatBytes, formatAccountAge, buildHomePath } from "./utils/home-view.js";
 import { toHtml, safeJsonForScript } from "./frontend/jsx.js";
 import { DashboardView } from "./frontend/dashboard.js";
+import { LoginView } from "./frontend/login.js";
 
 export { DocumentDO } from "./durable-objects/document.js";
 export { RegistryDO } from "./durable-objects/registry.js";
@@ -60,6 +61,7 @@ async function renderHomeFromTemplate(c: any, email: string) {
   // Handle authentication conditionals
   const isAuthenticated = c.get("authUser").id !== "unauthenticated";
   html = html.replace(/\{\{#authenticated\}\}([\s\S]*?)\{\{\/authenticated\}\}/g, isAuthenticated ? "$1" : "");
+  html = html.replace(/\{\{\^authenticated\}\}([\s\S]*?)\{\{\/authenticated\}\}/g, isAuthenticated ? "" : "$1");
   html = html.replace(/\{\{#clerk_button\}\}([\s\S]*?)\{\{\/clerk_button\}\}/g, c.env.CLERK_PUBLISHABLE_KEY ? "$1" : "");
   html = html.replace(/\{\{#requires_login\}\}([\s\S]*?)\{\{\/requires_login\}\}/g, isAuthEnabled(c.env.AUTH_MODE) ? "$1" : "");
   html = html.replace(/\{\{#global_stats\}\}([\s\S]*?)\{\{\/global_stats\}\}/g, "$1");
@@ -165,10 +167,27 @@ app.get("/llms.txt", async (c) => {
   return c.text(lines.join("\n"));
 });
 
+// Public login page (no auth required)
+app.get("/login", async (c) => {
+  const url = new URL(c.req.url);
+  const redirectUrl = url.searchParams.get("redirect") || "/dashboard";
+
+  const assets = await getAssetUrls(c.env.ASSETS);
+
+  return c.html(
+    LoginView({
+      assets,
+      redirectUrl,
+      authMode: c.env.AUTH_MODE,
+      clerkPublishableKey: c.env.CLERK_PUBLISHABLE_KEY,
+    }),
+  );
+});
+
 app.get("/dashboard", async (c) => {
-  // Redirect unauthenticated users to home
+  // Redirect unauthenticated users to login page
   if (c.get("authUser").id === "unauthenticated") {
-    return c.redirect("/");
+    return c.redirect("/login?redirect=/dashboard");
   }
 
   const email = normalizeEmail(c.get("authUser").email);

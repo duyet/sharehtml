@@ -20,7 +20,7 @@ export async function getAssetUrls(assets: Fetcher): Promise<AssetUrls> {
   if (cachedUrls) return cachedUrls;
 
   try {
-    const resp = await assets.fetch(new Request("https://assets.local/manifest.json"));
+    const resp = await assets.fetch(new Request("http://localhost/manifest.json"));
     if (resp.ok) {
       const manifest = await resp.json<Record<string, ManifestEntry>>();
 
@@ -53,13 +53,13 @@ export async function getAssetUrls(assets: Fetcher): Promise<AssetUrls> {
   }
 
   return {
-    homeClientJs: "/src/client/home-client.ts",
-    shellClientJs: "/src/client/shell-client.ts",
-    shellClientCss: "",
-    homeCss: "/src/client/home.css",
-    dashboardCss: "",
-    dashboardClientJs: "/src/client/dashboard-client.ts",
-    collabJs: "/src/client/collab-client.ts",
-    docsCss: "",
+    homeClientJs: "/assets/home-client-CfkE8Xft.js",
+    shellClientJs: "/assets/shell-client-DQLxygcD.js",
+    shellClientCss: "/assets/shell-client-CLU8LEo7.css",
+    homeCss: "/assets/home-xHxNyIrl.css",
+    dashboardCss: "/assets/dashboard-client-DRMobfBU.css",
+    dashboardClientJs: "/assets/dashboard-client-CTw9Dz-q.js",
+    collabJs: "/assets/collab-client-Ch7HLiuG.js",
+    docsCss: "/assets/docs-CxSgqYQp.css",
   };
 }

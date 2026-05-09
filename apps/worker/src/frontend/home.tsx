@@ -5,6 +5,7 @@ import type { AssetUrls } from "../utils/assets.js";
 import { formatDocumentSize, formatRelativeTime } from "../utils/home-view.js";
 import type { AuthMode, DocumentRow, RecentViewRow } from "../types.js";
 import { toHtml, safeJsonForScript, ClerkScripts } from "./jsx.js";
+import { isAuthEnabled } from "../utils/auth.js";
 
 interface HomeParams {
   assets: AssetUrls;
@@ -131,9 +132,13 @@ export function HomeView({
           </a>
           <div class="topbar-right">
             <a class="topbar-link" href="/docs">Docs</a>
-            {isClerk
-              ? <div id="clerk-user-btn"></div>
-              : <span class="topbar-email">{email}</span>}
+            {isClerk && clerkPublishableKey ? (
+              <div id="clerk-user-btn"></div>
+            ) : isAuthEnabled(authMode) ? (
+              <a class="topbar-link" href="/login">Sign in</a>
+            ) : (
+              <span class="topbar-email">{email}</span>
+            )}
           </div>
         </div>
         

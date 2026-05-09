@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>sharehtml — Deploy ideas instantly</title>
   <link rel="stylesheet" href="{{assets_css}}">
-  <script src="{{assets_js}}" defer></script>
+  <script src="{{assets_js}}" type="module" defer></script>
 </head>
 <body>
   <div class="topbar">
@@ -13,8 +13,17 @@
     <div class="topbar-right">
       {{#authenticated}}
       <a class="topbar-link" href="/docs">Docs</a>
-      {{/authenticated}}
       <span class="topbar-email">{{email}}</span>
+      {{/authenticated}}
+      {{^authenticated}}
+      <a class="topbar-link" href="#" id="login-link">Sign In</a>
+      <script>
+        document.getElementById('login-link').addEventListener('click', (e) => {
+          e.preventDefault();
+          window.clerk?.openSignIn();
+        });
+      </script>
+      {{/authenticated}}
       {{#clerk_button}}
       <div id="clerk-user-btn"></div>
       {{/clerk_button}}
@@ -25,37 +34,6 @@
     <section class="hero">
       <h1>Deploy your ideas instantly</h1>
       <p>Share HTML, Markdown, and code with collaborative comments and reactions.</p>
-      <a href="https://github.com/duyet/sharehtml" class="btn-primary">View on GitHub</a>
-    </section>
-
-    <!-- Stats Band -->
-    <section class="stats-section">
-      <div class="stats-band">
-        <div class="stat-card">
-          <div class="stat-num">{{user_doc_count}}</div>
-          <div class="stat-label">Your Documents</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-num">{{storage_used}}</div>
-          <div class="stat-label">Storage Used</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-num">{{total_views}}</div>
-          <div class="stat-label">Total Views</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-num">{{account_age}}</div>
-          <div class="stat-label">Account Age</div>
-        </div>
-      </div>
-
-      {{#global_stats}}
-      <div class="global-stats">
-        <span class="global-stat">{{global_users}} users</span>
-        <span class="global-stat">{{global_docs}} documents</span>
-        <span class="global-stat">{{global_views}} total views</span>
-      </div>
-      {{/global_stats}}
     </section>
 
     <!-- Quick Start -->
@@ -68,6 +46,14 @@
         <p>First, authenticate with your instance:</p>
         <pre><code class="language-bash">npx -y @duyet/sharehtml@latest login</code></pre>
         {{/requires_login}}
+      </div>
+
+      <div class="setup-block" style="margin-top: 24px;">
+        <p><strong>For AI Agents:</strong> Share your screen with Claude Code and other AI agents:</p>
+        <pre><code class="language-bash">npx -y @duyet/sharehtml@latest deploy file.html --prompt="Review this file with me"</code></pre>
+        <p style="font-size: 14px; color: var(--color-muted-soft); margin-top: 12px;">
+          AI agents can view, comment, and collaborate on shared documents in real-time.
+        </p>
       </div>
     </section>
 
