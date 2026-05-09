@@ -8,7 +8,7 @@ import {
   WEBSOCKET_SUBPROTOCOL,
 } from "../utils/security-constants.js";
 
-type AuthMode = "access" | "none";
+type AuthMode = "access" | "clerk" | "none";
 type ShareMode = "private" | "link" | "emails";
 type ShareResponse = { mode: ShareMode; emails: string[] };
 
@@ -29,6 +29,7 @@ interface CommentConfig {
   contentPath: string;
   collabJsPath: string;
   viewerCapabilityToken: string;
+  clerkPublishableKey?: string;
 }
 
 interface ElementConstructor<T extends Element> {
@@ -52,7 +53,7 @@ function parseCommentConfig(value: unknown): CommentConfig | null {
   if (!isRecord(value)) return null;
   if (typeof value.docId !== "string") return null;
   if (typeof value.email !== "string") return null;
-  if (value.authMode !== "access" && value.authMode !== "none") return null;
+  if (value.authMode !== "access" && value.authMode !== "clerk" && value.authMode !== "none") return null;
   if (value.shareMode !== "private" && value.shareMode !== "link" && value.shareMode !== "emails") return null;
   if (typeof value.canManageSharing !== "boolean") return null;
   if (typeof value.contentPath !== "string") return null;
@@ -68,6 +69,7 @@ function parseCommentConfig(value: unknown): CommentConfig | null {
     contentPath: value.contentPath,
     collabJsPath: value.collabJsPath,
     viewerCapabilityToken: value.viewerCapabilityToken,
+    clerkPublishableKey: typeof value.clerkPublishableKey === "string" ? value.clerkPublishableKey : undefined,
   };
 }
 
@@ -91,6 +93,7 @@ const config = getCommentConfig();
 const DOC_ID = config.docId;
 const USER_EMAIL = config.email;
 const AUTH_MODE = config.authMode;
+const CLERK_PUBLISHABLE_KEY = config.clerkPublishableKey;
 const CAN_MANAGE_SHARING = config.canManageSharing;
 const CONTENT_PATH = config.contentPath;
 const COLLAB_JS_PATH = config.collabJsPath;
@@ -126,7 +129,7 @@ let iframeDriven = false;
 let suppressScrollSync = false;
 let sidebarSpacer: HTMLElement | null = null;
 let hasAnimatedHighlights = false;
-let shareMode: ShareMode = AUTH_MODE === "access" ? config.shareMode : "link";
+let shareMode: ShareMode = AUTH_MODE === "access" || AUTH_MODE === "clerk" ? config.shareMode : "link";
 let sharedEmails: string[] = [];
 let emailsLoaded = false;
 let shareMessageOverride: string | null = null;
@@ -763,10 +766,12 @@ function openDocumentLink(rawHref: unknown) {
 
 function getShareDescription(): string {
   if (shareMessageOverride) return shareMessageOverride;
-  if (AUTH_MODE !== "access") return "anyone with the link can view and comment";
+  if (AUTH_MODE === "none") return "anyone with the link can view and comment";
   switch (shareMode) {
     case "link":
-      return "anyone allowed by your Cloudflare Access policy can view and comment";
+      return AUTH_MODE === "access"
+        ? "anyone allowed by your Cloudflare Access policy can view and comment"
+        : "anyone with the link can view and comment";
     case "emails":
       if (sharedEmails.length === 0) return "add people to share this document";
       return `shared with ${sharedEmails.length} ${sharedEmails.length === 1 ? "person" : "people"}`;
@@ -839,7 +844,7 @@ async function loadShareState() {
 }
 
 async function updateShareMode(nextMode: ShareMode, nextEmails?: string[]): Promise<boolean> {
-  if (!CAN_MANAGE_SHARING || AUTH_MODE !== "access") {
+  if (!CAN_MANAGE_SHARING || AUTH_MODE === "none") {
     renderShareModal();
     return true;
   }
@@ -2423,5 +2428,25 @@ function parseTimestamp(dateStr: string) {
   return new Date(dateStr + "Z");
 }
 
+// Clerk auth
+async function initClerk(): Promise<void> {
+  if (AUTH_MODE !== "clerk" || !CLERK_PUBLISHABLE_KEY) return;
+
+  const mountPoint = document.getElementById("clerk-user-btn");
+  if (!mountPoint) return;
+
+  const Clerk = (await import("https://cdn.jsdelivr.net/npm/@clerk/clerk-js@5/dist/clerk.browser.mjs")).default;
+  const clerk = new Clerk(CLERK_PUBLISHABLE_KEY);
+  await clerk.load();
+
+  if (!clerk.user) {
+    clerk.redirectToSignIn();
+    return;
+  }
+
+  clerk.mountUserButton(mountPoint, { afterSignOutUrl: "/" });
+}
+
 // Start
 init();
+initClerk();

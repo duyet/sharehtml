@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import { HTTPException } from "hono/http-exception";
-import type { AppBindings } from "./types.js";
+import { isAuthEnabled, type AppBindings } from "./types.js";
 import { getAuthMiddleware } from "./utils/auth.js";
 import { api } from "./routes/api.js";
 import { viewer } from "./routes/viewer.js";
@@ -89,7 +89,12 @@ app.get("/", async (c) => {
       recentViews,
       page: documentsPage.page,
       pageSize,
+<<<<<<< HEAD
       requiresLogin: c.env.AUTH_MODE === "access",
+=======
+      totalCount: documentsPage.totalCount,
+      requiresLogin: isAuthEnabled(c.env.AUTH_MODE),
+>>>>>>> origin/main
       homeCapabilityToken,
       authMode: c.env.AUTH_MODE,
       clerkPublishableKey: c.env.CLERK_PUBLISHABLE_KEY,
