@@ -16,6 +16,7 @@ export default defineConfig({
         "dashboard-client": "src/client/dashboard-client.ts",
         "collab-client": "src/client/collab-client.ts",
         "docs.css": "src/client/docs.css",
+        "components.css": "src/client/components.css",
       },
     },
   },
