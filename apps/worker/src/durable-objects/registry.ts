@@ -403,4 +403,40 @@ export class RegistryDO extends DurableObject<Env> {
       totalStorage: storageResult?.total || 0,
     };
   }
+
+  // API Key methods
+
+  async createApiKey(params: { id: string; keyHash: string; userEmail: string; name: string }): Promise<void> {
+    this.sql.exec(
+      "INSERT INTO api_keys (id, key_hash, user_email, name, created_at) VALUES (?, ?, ?, ?, datetime('now'))",
+      params.id,
+      params.keyHash,
+      params.userEmail,
+      params.name,
+    );
+  }
+
+  async listApiKeys(userEmail: string): Promise<ApiKeyRow[]> {
+    return this.sql.exec<ApiKeyRow>(
+      "SELECT * FROM api_keys WHERE user_email = ? ORDER BY created_at DESC",
+      userEmail,
+    ).toArray();
+  }
+
+  async getApiKeyByHash(keyHash: string): Promise<ApiKeyRow | null> {
+    const results = this.sql.exec<ApiKeyRow>(
+      "SELECT * FROM api_keys WHERE key_hash = ?",
+      keyHash,
+    ).toArray();
+    return results[0] || null;
+  }
+
+  async deleteApiKey(id: string, userEmail: string): Promise<boolean> {
+    const result = this.sql.exec(
+      "DELETE FROM api_keys WHERE id = ? AND user_email = ?",
+      id,
+      userEmail,
+    );
+    return (result.meta.changes ?? 0) > 0;
+  }
 }
