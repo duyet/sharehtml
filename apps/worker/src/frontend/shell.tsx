@@ -89,6 +89,9 @@ export function ShellView(
           </div>
           <div class="topbar-right">
             <div class="presence-dots" id="presence-dots"></div>
+            <a class="topbar-link" href="/docs" title="Documentation">
+              docs
+            </a>
             <a class="topbar-link" href={`/d/${docId}.html`} title="View raw HTML">
               raw
             </a>
