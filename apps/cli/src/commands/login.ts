@@ -1,10 +1,11 @@
 import { Command } from "commander";
 import { loginWithAccess } from "../auth/access.js";
+import { loginWithClerk, detectClerkDeployment } from "../auth/clerk.js";
 import { printSetupHint } from "../config/help.js";
 import { getConfig, isConfigured } from "../config/store.js";
 
 export const loginCmd = new Command("login")
-  .description("Log in to Cloudflare Access for CLI requests")
+  .description("Log in for CLI requests")
   .action(async () => {
     try {
       if (!isConfigured()) {
@@ -15,7 +16,14 @@ export const loginCmd = new Command("login")
 
       const { workerUrl } = getConfig();
       console.log(`Logging in to ${workerUrl}...`);
-      await loginWithAccess(workerUrl);
+
+      const isClerk = await detectClerkDeployment(workerUrl);
+      if (isClerk) {
+        await loginWithClerk(workerUrl);
+      } else {
+        await loginWithAccess(workerUrl);
+      }
+
       console.log("Login complete.");
     } catch (err) {
       console.error(`Error: ${(err as Error).message}`);

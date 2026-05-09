@@ -17,6 +17,11 @@ import { requireHomeBrowserCapability, requireViewerBrowserCapability } from "..
 
 const api = new Hono<AppBindings>();
 
+api.get("/auth/verify", async (c) => {
+  const user = c.get("authUser");
+  return c.json({ ok: true, email: user.email });
+});
+
 function inferSourceKind(filename: string): SourceKind {
   if (/\.(md|markdown)$/i.test(filename)) {
     return "markdown";
