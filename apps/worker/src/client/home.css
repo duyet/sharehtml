@@ -244,15 +244,21 @@ h1, h2, h3, .display-serif {
   background: var(--color-primary-active);
 }
 
+/* Clerk user button */
+#clerk-user-btn {
+  display: inline-flex;
+  align-items: center;
+}
+
 @media (max-width: 768px) {
   .hero h1 {
     font-size: 40px;
   }
-  
+
   .recent-grid {
     grid-template-columns: 1fr;
   }
-  
+
   .topbar {
     padding: 0 16px;
   }
