@@ -26,6 +26,7 @@ function confirm(question: string): Promise<boolean> {
 
 export const deployCmd = new Command("deploy")
   .alias("publish")
+  .alias("public")
   .description("Deploy an HTML, Markdown, or code file and get a shareable link")
   .argument("<file>", "Path to HTML, Markdown, or code file")
   .option("-t, --title <title>", "Document title (defaults to filename)")
