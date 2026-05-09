@@ -367,18 +367,18 @@ export class RegistryDO extends DurableObject<Env> {
 
   async getUserStats(userEmail: string): Promise<UserStats> {
     const normalizedEmail = normalizeEmail(userEmail);
-    const docCountResult = this.sql.exec<{ count: number }>(
+    const [docCountResult] = this.sql.exec<{ count: number }>(
       "SELECT COUNT(*) as count FROM documents WHERE owner_email = ?",
       normalizedEmail
-    ).first();
-    const storageUsedResult = this.sql.exec<{ total: number }>(
+    ).toArray();
+    const [storageUsedResult] = this.sql.exec<{ total: number }>(
       "SELECT COALESCE(SUM(size), 0) as total FROM documents WHERE owner_email = ?",
       normalizedEmail
-    ).first();
-    const totalViewsResult = this.sql.exec<{ total: number }>(
+    ).toArray();
+    const [totalViewsResult] = this.sql.exec<{ total: number }>(
       "SELECT COALESCE(SUM(view_count), 0) as total FROM documents WHERE owner_email = ?",
       normalizedEmail
-    ).first();
+    ).toArray();
     const user = await this.getUser(normalizedEmail);
     const createdAt = user?.created_at || "";
 
@@ -391,10 +391,10 @@ export class RegistryDO extends DurableObject<Env> {
   }
 
   async getGlobalStats(): Promise<GlobalStats> {
-    const usersResult = this.sql.exec<{ count: number }>("SELECT COUNT(*) as count FROM users").first();
-    const docsResult = this.sql.exec<{ count: number }>("SELECT COUNT(*) as count FROM documents").first();
-    const viewsResult = this.sql.exec<{ total: number }>("SELECT COALESCE(SUM(view_count), 0) as total FROM documents").first();
-    const storageResult = this.sql.exec<{ total: number }>("SELECT COALESCE(SUM(size), 0) as total FROM documents").first();
+    const [usersResult] = this.sql.exec<{ count: number }>("SELECT COUNT(*) as count FROM users").toArray();
+    const [docsResult] = this.sql.exec<{ count: number }>("SELECT COUNT(*) as count FROM documents").toArray();
+    const [viewsResult] = this.sql.exec<{ total: number }>("SELECT COALESCE(SUM(view_count), 0) as total FROM documents").toArray();
+    const [storageResult] = this.sql.exec<{ total: number }>("SELECT COALESCE(SUM(size), 0) as total FROM documents").toArray();
 
     return {
       totalUsers: usersResult?.count || 0,
