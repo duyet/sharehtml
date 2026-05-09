@@ -33,14 +33,21 @@
   --color-on-dark: #faf9f5;
   --color-on-dark-soft: #a09d96;
 
-  /* Legacy mapping for compatibility if needed */
+  /* Legacy mapping for compatibility */
   --color-bg: var(--color-canvas);
   --color-surface: var(--color-surface-card);
+  --color-surface-elevated: var(--color-canvas);
+  --color-surface-muted: var(--color-surface-soft);
+  --color-surface-muted-hover: var(--color-surface-card);
   --color-text: var(--color-ink);
   --color-text-muted: var(--color-body);
   --color-text-faint: var(--color-muted);
   --color-border: var(--color-hairline);
   --color-border-strong: var(--color-ink);
+  --color-overlay: rgba(20, 20, 19, 0.4);
+  --color-shadow-soft: rgba(20, 20, 19, 0.04);
+  --color-shadow-medium: rgba(20, 20, 19, 0.06);
+  --color-shadow-strong: rgba(20, 20, 19, 0.08);
   --color-accent: var(--color-primary);
   --color-accent-contrast: var(--color-on-primary);
 }
