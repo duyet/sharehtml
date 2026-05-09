@@ -1227,6 +1227,12 @@ body {
   }
 }
 
+/* Clerk user button */
+#clerk-user-btn {
+  display: inline-flex;
+  align-items: center;
+}
+
 @keyframes fadeIn {
   from {
     opacity: 0;
