@@ -1,5 +1,5 @@
 import { Hono } from "hono";
-import { shareModeFromInt, type AppBindings } from "../types.js";
+import { shareModeFromInt, type AppBindings, isSourceKind } from "../types.js";
 import { ShellView } from "../frontend/shell.js";
 import { getAssetUrls } from "../utils/assets.js";
 import { createCapabilityToken } from "../utils/capability.js";
@@ -7,7 +7,13 @@ import { loadDocWithAccessCheck } from "../utils/document-access.js";
 import { createAttachmentHeaders } from "../utils/download.js";
 import { emailsMatch, normalizeEmail } from "../utils/email.js";
 import { requireViewerBrowserCapability } from "../utils/request-security.js";
-import { getRenderedObject } from "../utils/document-storage.js";
+import { getRenderedObject, getSourceObject } from "../utils/document-storage.js";
+
+function getSourceMimeType(kind: string): string {
+  if (kind === "markdown") return "text/markdown; charset=utf-8";
+  if (kind === "html") return "text/html; charset=utf-8";
+  return "text/plain; charset=utf-8";
+}
 
 const CAPABILITY_TTL_SECONDS = 600;
 
@@ -134,6 +140,34 @@ viewer.get("/d/:id/ws", async (c) => {
   return docDo.fetch(
     new Request(`http://do/${id}/ws`, { headers }),
   );
+});
+
+// Source document download
+viewer.get("/d/:id/source", async (c) => {
+  const id = c.req.param("id");
+  const email = normalizeEmail(c.get("authUser").email);
+
+  const result = await loadDocWithAccessCheck(c.env, id, email);
+  if (!result) return c.text("Not found", 404);
+  const { doc } = result;
+
+  if (!doc.source_filename) {
+    return c.text("Source not available", 404);
+  }
+
+  const obj = await getSourceObject(c.env.DOCUMENTS_BUCKET, id, doc);
+  if (!obj) {
+    return c.text("Source not found", 404);
+  }
+
+  const sourceKind = isSourceKind(doc.source_kind) ? doc.source_kind : "html";
+
+  return new Response(obj.body, {
+    headers: createAttachmentHeaders(doc.source_filename, {
+      "Content-Type": getSourceMimeType(sourceKind),
+      "Cache-Control": "public, max-age=0, must-revalidate",
+    }),
+  });
 });
 
 export { viewer };

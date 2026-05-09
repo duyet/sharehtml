@@ -105,6 +105,8 @@ export const deployCmd = new Command("deploy")
         console.log(`  title: ${result.title}`);
         console.log(`  size:  ${(result.size / 1024).toFixed(1)}KB`);
         console.log(`  share: ${isShared ? "shareable" : "private"}`);
+        console.log(`  html:  ${result.url}`);
+        console.log(`  source: ${result.url}/source`);
       } else {
         console.log(`Deploying ${file}...`);
         const result = await deployDocument(filePath, opts.title, opts.slug);
@@ -119,6 +121,8 @@ export const deployCmd = new Command("deploy")
         console.log(`  title: ${result.title}`);
         console.log(`  size:  ${(result.size / 1024).toFixed(1)}KB`);
         console.log(`  share: ${isShared ? "shareable" : "private"}`);
+        console.log(`  html:  ${result.url}`);
+        console.log(`  source: ${result.url}/source`);
         if (!opts.share && !opts.private && !isShared) {
           console.log(`  next:  run 'npx @duyet/sharehtml share ${lookupFilename}' to make it shareable`);
         }
