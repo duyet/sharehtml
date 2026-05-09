@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import { isRecord, isShareMode, isSourceKind, parseDocumentSnapshot, shareModeFromInt, shareModeToInt, type AppBindings, type DocumentSnapshot, type ShareMode, type SourceKind } from "../types.js";
-import { nanoid } from "../utils/ids.js";
+import { nanoid, generateSlug } from "../utils/ids.js";
 import { loadDocWithAccessCheck } from "../utils/document-access.js";
 import { getRegistry } from "../utils/registry.js";
 import { extractDocumentTextFromHtml } from "../utils/document-text.js";
@@ -174,18 +174,31 @@ api.post("/documents", async (c) => {
   const file = rawFile instanceof File ? rawFile : null;
   const rawTitle = formData.get("title");
   const title = typeof rawTitle === "string" ? rawTitle : null;
+  const rawSlug = formData.get("slug");
+  const customSlug = typeof rawSlug === "string" && rawSlug.trim() ? rawSlug.trim() : null;
+
   const { source, sourceKind, sourceLanguage } = parseSourceFields(formData);
 
   if (!file) {
     return c.json({ error: "file is required" }, 400);
   }
 
-  const id = nanoid();
+  const registry = getRegistry(c.env);
+  let id: string;
+  let attempts = 0;
+
+  while (true) {
+    id = customSlug && attempts === 0 ? generateSlug(customSlug) : generateSlug(file.name, nanoid(5));
+    const exists = await registry.getDocument(id);
+    if (!exists) break;
+    if (attempts++ > 10) {
+      return c.json({ error: "could not generate unique slug" }, 500);
+    }
+  }
+
   const renderedFilename = file.name || "document.html";
   const sourceFilename = source?.name || renderedFilename;
   const resolvedTitle = getDocumentTitle(sourceFilename, title, sourceKind);
-
-  const registry = getRegistry(c.env);
 
   const writes: Array<Promise<unknown>> = [
     c.env.DOCUMENTS_BUCKET.put(getRenderedDocumentKey(id, renderedFilename), file.stream(), {

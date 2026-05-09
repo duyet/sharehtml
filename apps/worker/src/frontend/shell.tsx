@@ -42,7 +42,8 @@ export function ShellView(
     canManageSharing,
     assets,
     viewerCapabilityToken,
-  }: ShellParams,
+    cfBeaconToken,
+  }: ShellParams & { cfBeaconToken?: string },
 ) {
   const jsx = (
     <html lang="en">
@@ -50,8 +51,18 @@ export function ShellView(
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <title>{title} — sharehtml</title>
+        <meta property="og:title" content={title} />
+        <meta property="og:type" content="website" />
+        <meta name="robots" content="all" />
         <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
         {assets.shellClientCss && <link rel="stylesheet" href={assets.shellClientCss} />}
+        {cfBeaconToken && (
+          <script
+            defer
+            src="https://static.cloudflareinsights.com/beacon.min.js"
+            data-cf-beacon={`{"token": "${cfBeaconToken}"}`}
+          ></script>
+        )}
         <script>
           {raw(escapeScriptContent(
             `if(localStorage.getItem('comment_sidebar_${docId}')==='collapsed'){document.documentElement.classList.add('sidebar-start-collapsed')}`,
@@ -78,6 +89,10 @@ export function ShellView(
             <a class="topbar-link" href={`/d/${docId}.html`} title="View raw HTML">
               raw
             </a>
+            <div class="export-menu">
+               <button class="topbar-link" id="export-md">md</button>
+               <button class="topbar-link" id="export-json">json</button>
+            </div>
             <button class="share-btn" id="share-btn" title="Share link">
               {raw(
                 `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>`,

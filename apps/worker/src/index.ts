@@ -38,6 +38,23 @@ app.use("/*", authMiddleware);
 app.route("/api", api);
 app.route("/", viewer);
 
+app.get("/llms.txt", async (c) => {
+  const registry = getRegistry(c.env);
+  const docs = await registry.listPublicDocuments(); // We'll need to implement this
+  const url = new URL(c.req.url);
+  const origin = `${url.protocol}//${url.host}`;
+  
+  const lines = [
+    "# sharehtml documents",
+    "",
+    "A list of publicly available documents.",
+    "",
+    ...docs.map((d) => `- [${d.title}](${origin}/d/${d.id}) (${d.size} bytes)`),
+  ];
+  
+  return c.text(lines.join("\n"));
+});
+
 app.get("/", async (c) => {
   const email = normalizeEmail(c.get("authUser").email);
   const url = new URL(c.req.url);
@@ -73,6 +90,7 @@ app.get("/", async (c) => {
       totalCount: documentsPage.totalCount,
       requiresLogin: c.env.AUTH_MODE === "access",
       homeCapabilityToken,
+      cfBeaconToken: c.env.CF_BEACON_TOKEN,
     }),
   );
 });
