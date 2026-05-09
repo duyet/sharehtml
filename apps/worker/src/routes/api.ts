@@ -813,4 +813,18 @@ api.get("/documents/:id/comments", async (c) => {
   });
 });
 
+// Stats endpoints
+api.get("/stats/user", async (c) => {
+  const user = c.get("authUser");
+  const registry = getRegistry(c.env);
+  const stats = await registry.getUserStats(user.email);
+  return c.json(stats);
+});
+
+api.get("/stats/global", async (c) => {
+  const registry = getRegistry(c.env);
+  const stats = await registry.getGlobalStats();
+  return c.json(stats);
+});
+
 export { api };
