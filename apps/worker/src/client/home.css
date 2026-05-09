@@ -1,4 +1,5 @@
 @import "./theme.css";
+@import url("https://fonts.googleapis.com/css2?family=EB+Garamond:wght@400;500&family=Inter:wght@400;500&family=JetBrains+Mono&display=swap");
 
 body {
   font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -25,7 +26,7 @@ h1, h2, h3, .display-serif {
   justify-content: space-between;
   padding: 0 32px;
   background: var(--color-canvas);
-  border-bottom: 2px solid var(--color-primary); /* A distinct coral line to confirm CSS is active */
+  border-bottom: 2px solid var(--color-primary);
   position: sticky;
   top: 0;
   z-index: 10;
@@ -108,6 +109,10 @@ h1, h2, h3, .display-serif {
   font-size: 18px;
   color: var(--color-body-strong);
   margin-bottom: 24px;
+}
+
+.setup-skills-label {
+  margin-top: 32px;
 }
 
 .setup-block p a {
@@ -198,9 +203,12 @@ h1, h2, h3, .display-serif {
 }
 
 .doc-card-title {
-  font-family: "Tiempos Headline", serif;
+  font-family: "Tiempos Headline", Georgia, serif;
   font-size: 18px;
   color: var(--color-ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .doc-card-filename {
@@ -208,11 +216,15 @@ h1, h2, h3, .display-serif {
   font-size: 13px;
   color: var(--color-muted);
   margin-left: 16px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .doc-card-meta {
   font-size: 13px;
   color: var(--color-muted-soft);
+  margin-top: 4px;
 }
 
 /* Primary Button (Coral) */

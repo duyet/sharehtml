@@ -25,6 +25,10 @@ export async function getAssetUrls(assets: Fetcher): Promise<AssetUrls> {
       const homeEntry = manifest["src/client/home-client.ts"];
       const collabEntry = manifest["src/client/collab-client.ts"];
 
+      if (!shellEntry || !homeEntry || !collabEntry) {
+        throw new Error("Missing required entries in asset manifest");
+      }
+
       cachedUrls = {
         homeClientJs: "/" + homeEntry.file,
         shellClientJs: "/" + shellEntry.file,
@@ -35,8 +39,9 @@ export async function getAssetUrls(assets: Fetcher): Promise<AssetUrls> {
 
       return cachedUrls;
     }
+    console.error(`Asset manifest fetch failed with status: ${resp.status}`);
   } catch (error) {
-    // Fall back to development URLs
+    console.error("Error loading asset manifest:", error);
   }
 
   return {

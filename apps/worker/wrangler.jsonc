@@ -21,7 +21,7 @@
 	"r2_buckets": [
 		{
 			"binding": "DOCUMENTS_BUCKET",
-			"bucket_name": "sharehtml-documents",
+			"bucket_name": "sharehtml-documents-dev",
 		},
 	],
 	"durable_objects": {
@@ -57,15 +57,16 @@
 	],
 	"env": {
 		"production": {
-		  "name": "sharehtml",
-		  "workers_dev": false,
-		  "routes": [
-		    {
-		      "pattern": "html.duyet.net",
-		      "custom_domain": true
-		    }
-		  ],
-		  "preview_urls": false,			"upload_source_maps": true,
+			"name": "sharehtml",
+			"workers_dev": false,
+			"routes": [
+				{
+					"pattern": "html.duyet.net",
+					"custom_domain": true
+				}
+			],
+			"preview_urls": false,
+			"upload_source_maps": true,
 			"observability": {
 				"logs": {
 					"enabled": true,

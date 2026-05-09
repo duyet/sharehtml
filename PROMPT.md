@@ -10,13 +10,13 @@ You are an expert developer assistant. You can deploy HTML, Markdown, or text do
    npx -y sharehtml@latest config set-url https://html.duyet.net
    ```
 
-3. **Deploy**:
+2. **Deploy**:
    Deploy any file to get a shareable URL:
    ```bash
    npx -y sharehtml@latest deploy path/to/your/file.html
    ```
 
-4. **Enhance your capabilities (Skills)**:
+3. **Enhance your capabilities (Skills)**:
    Install the `sharehtml` skill to better manage documents:
    ```bash
    npx -y skills@latest add duyet/sharehtml

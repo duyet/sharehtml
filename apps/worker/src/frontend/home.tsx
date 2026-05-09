@@ -12,10 +12,8 @@ interface HomeParams {
   workerUrl: string;
   documents: DocumentRow[];
   recentViews: RecentViewRow[];
-  query: string;
   page: number;
   pageSize: number;
-  totalCount: number;
   requiresLogin: boolean;
   homeCapabilityToken: string;
 }
@@ -37,7 +35,7 @@ interface SetupBlockProps {
 function DocCard({ doc, subtitle }: DocCardProps): JSX.Element {
   return (
     <a class="doc-card" href={`/d/${doc.id}`}>
-      <div>
+      <div class="doc-card-top">
         <span class="doc-card-title">{doc.title}</span>
         <span class="doc-card-filename">{doc.filename}</span>
       </div>
@@ -76,7 +74,7 @@ function SetupBlock({ workerUrl, requiresLogin }: SetupBlockProps): JSX.Element 
         npx -y sharehtml@latest deploy path/to/file.html
       </pre>
 
-      <p style="margin-top: 32px">
+      <p class="setup-skills-label">
         Add <b>sharehtml skills</b> to your AI Agent (Claude Code, etc.)
       </p>
       <pre>
@@ -120,7 +118,7 @@ export function HomeView({
           <div class="hero">
             <h1>Deploy your ideas instantly.</h1>
             <p>
-              A simple, editorial platform for sharing HTML reports, Markdown notes, 
+              A simple editorial platform for sharing HTML reports, Markdown notes, 
               and code snippets with the world.
             </p>
             <a href="https://github.com/duyet/sharehtml" class="btn-primary">
