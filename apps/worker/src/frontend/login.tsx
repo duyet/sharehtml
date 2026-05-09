@@ -1,5 +1,6 @@
 /** @jsxRuntime automatic */
 /** @jsxImportSource hono/jsx */
+import { raw } from "hono/utils/html";
 import type { AssetUrls } from "../utils/assets.js";
 import type { AuthMode } from "../types.js";
 import { toHtml, ClerkScripts } from "./jsx.js";
