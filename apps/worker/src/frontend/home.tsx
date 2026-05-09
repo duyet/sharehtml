@@ -4,11 +4,7 @@ import { raw } from "hono/utils/html";
 import type { AssetUrls } from "../utils/assets.js";
 import { formatDocumentSize, formatRelativeTime } from "../utils/home-view.js";
 import type { AuthMode, DocumentRow, RecentViewRow } from "../types.js";
-<<<<<<< HEAD
-import { toHtml, safeJsonForScript } from "./jsx.js";
-=======
 import { toHtml, safeJsonForScript, ClerkScripts } from "./jsx.js";
->>>>>>> origin/main
 
 interface HomeParams {
   assets: AssetUrls;

@@ -89,12 +89,9 @@ app.get("/", async (c) => {
       recentViews,
       page: documentsPage.page,
       pageSize,
-<<<<<<< HEAD
-      requiresLogin: c.env.AUTH_MODE === "access",
-=======
+      pageSize,
       totalCount: documentsPage.totalCount,
       requiresLogin: isAuthEnabled(c.env.AUTH_MODE),
->>>>>>> origin/main
       homeCapabilityToken,
       authMode: c.env.AUTH_MODE,
       clerkPublishableKey: c.env.CLERK_PUBLISHABLE_KEY,
