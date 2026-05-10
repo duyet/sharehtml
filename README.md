@@ -19,6 +19,13 @@ You can use the CLI instantly without manual installation. It is pre-configured 
 # deploy a file
 npx -y @duyet/sharehtml@latest deploy my-report.html
 ```
+Or use curl directly:
+```bash
+curl -X POST https://html.duyet.net/api/documents \
+  -F "file=@my-report.html" \
+  -F "title=My Report"
+# Returns: { "id": "abcde", "url": "https://html.duyet.net/d/abcde" }
+```
 ## Optional: Authentication for Advanced Features
 sharehtml works out of the box with no authentication. Enable auth if you want persistent dashboards, private documents, or user management. sharehtml supports three authentication modes:
 | Mode | Description | Use Case |
@@ -86,8 +93,8 @@ Configure Clerk webhooks to automatically sync users when they sign up, update p
 **Endpoint URL:** `https://<your-domain>/webhooks/clerk`
 **Events:** `user.created`, `user.updated`, `user.deleted`
 
-### CLI Authentication
-When your instance uses Clerk authentication, the CLI will automatically detect it and guide you through login:
+### CLI Authentication (Optional)
+The `login` command is only needed for advanced features like persistent dashboards, private documents, or user management. Most users never need it.
 npx @duyet/sharehtml login
 The login flow:
 1. CLI displays a URL to visit in your browser
@@ -132,6 +139,7 @@ Browser ◄┘──► Durable Objects
 | `npx @duyet/sharehtml deploy <file>` | Deploy an HTML, Markdown, or code file |
 | `echo '<html>' \| npx @duyet/sharehtml publish` | Deploy HTML content via stdin pipe |
 | `npx @duyet/sharehtml publish '<html>' --content` | Deploy HTML content directly as argument |
+| `cat report.html \| curl -X POST https://html.duyet.net/api/documents -F "file=@-;filename=report.html"` | Upload via curl stdin pipe |
 | `npx @duyet/sharehtml list` | List your documents |
 | `npx @duyet/sharehtml open <id>` | Open a document in the browser |
 | `npx @duyet/sharehtml pull <id>` | Download a document locally |
@@ -140,7 +148,6 @@ Browser ◄┘──► Durable Objects
 | `npx @duyet/sharehtml delete <id>` | Delete a document |
 | `npx @duyet/sharehtml share <id>` | Make a document publicly shareable |
 | `npx @duyet/sharehtml unshare <id>` | Make a document private again |
-| `npx @duyet/sharehtml login` | Authenticate with your sharehtml instance |
 | `npx @duyet/sharehtml config set-url <url>` | Set the sharehtml instance URL |
 
 ## REST API
