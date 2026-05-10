@@ -434,7 +434,7 @@ body {
 }
 .selection-emoji-picker {
   position: fixed;
-  background: #ffffff;
+  background: var(--color-canvas);
   border: 1px solid #000000;
   border-radius: 6px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
@@ -539,7 +539,7 @@ body {
   border-color: rgba(255, 255, 255, 0.4);
 }
 .mobile-compose-send {
-  background: #ffffff;
+  background: var(--color-canvas);
   color: #000000;
   border: none;
   border-radius: 8px;
