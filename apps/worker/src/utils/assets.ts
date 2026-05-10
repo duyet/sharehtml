@@ -7,6 +7,7 @@ export interface AssetUrls {
   dashboardClientJs: string;
   collabJs: string;
   docsCss: string;
+  shared: string;
 }
 
 interface ManifestEntry {
@@ -29,6 +30,7 @@ export async function getAssetUrls(assets: Fetcher): Promise<AssetUrls> {
       const dashboardEntry = manifest["src/client/dashboard-client.ts"];
       const collabEntry = manifest["src/client/collab-client.ts"];
       const docsEntry = manifest["src/client/docs.css"];
+      const sharedEntry = manifest["src/client/shared.js"];
 
       if (!shellEntry || !homeEntry || !dashboardEntry || !collabEntry) {
         throw new Error("Missing required entries in asset manifest");
@@ -43,6 +45,7 @@ export async function getAssetUrls(assets: Fetcher): Promise<AssetUrls> {
         dashboardClientJs: "/" + dashboardEntry.file,
         collabJs: "/" + collabEntry.file,
         docsCss: docsEntry?.file ? "/" + docsEntry.file : "",
+        shared: sharedEntry?.file ? "/" + sharedEntry.file : "",
       };
 
       return cachedUrls;
@@ -61,5 +64,6 @@ export async function getAssetUrls(assets: Fetcher): Promise<AssetUrls> {
     dashboardClientJs: "/assets/dashboard-client-CTw9Dz-q.js",
     collabJs: "/assets/collab-client-Ch7HLiuG.js",
     docsCss: "/assets/docs-CxSgqYQp.css",
+    shared: "/assets/shared-CiSuWWxG.js",
   };
 }
