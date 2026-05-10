@@ -43,16 +43,11 @@ export function clerkCdnUrl(publishableKey: string): string {
   return `https://${fqdn}`;
 }
 
-/** Clerk script tags to inject in <head> when AUTH_MODE === "clerk". */
+/** Clerk script tag to set publishable key when AUTH_MODE === "clerk". */
 export function ClerkScripts({ publishableKey }: { publishableKey: string }): JSX.Element {
-  const cdn = clerkCdnUrl(publishableKey);
   return (
-    <>
-      <script>
-        {raw(`window.__CLERK_PUBLISHABLE_KEY__=${safeJsonForScript(publishableKey)};`)}
-      </script>
-      <script defer src={`${cdn}/npm/@clerk/ui@1/dist/ui.browser.js`}></script>
-      <script defer data-clerk-publishable-key={publishableKey} src={`${cdn}/npm/@clerk/clerk-js@6/dist/clerk.browser.js`}></script>
-    </>
+    <script>
+      {raw(`window.__CLERK_PUBLISHABLE_KEY__=${safeJsonForScript(publishableKey)};`)}
+    </script>
   );
 }

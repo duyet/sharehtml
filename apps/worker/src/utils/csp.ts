@@ -24,7 +24,7 @@ function buildCspPolicy(options: CspOptions): string[] {
 
   dirs.push("font-src 'self' https://fonts.gstatic.com");
 
-  const connects = ["'self'", "wss:"];
+  const connects = ["'self'", "wss:", "https://cdn.jsdelivr.net"];
   if (options.clerkPublishableKey) {
     connects.push(clerkOrigin(options.clerkPublishableKey));
   }
