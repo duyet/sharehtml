@@ -299,30 +299,28 @@ function hideApiKeyModal(): void {
   if (modal) modal.style.display = "none";
 }
 
-function initClerkUserButton(): void {
+async function initClerkUserButton(): Promise<void> {
   if (!config?.clerkPublishableKey) return;
 
-  const clerk = (window as unknown as Record<string, unknown>).Clerk as
-    | { load: () => Promise<void>; isSignedIn: boolean; mountUserButton: (node: HTMLDivElement) => void; openSignIn: () => void }
-    | undefined;
+  const node = document.getElementById("clerk-user-btn");
+  if (!(node instanceof HTMLDivElement)) return;
 
-  if (!clerk) return;
-
-  clerk.load().then(() => {
-    const node = document.getElementById("clerk-user-btn");
-    if (!(node instanceof HTMLDivElement)) return;
+  try {
+    const Clerk = (await import("https://cdn.jsdelivr.net/npm/@clerk/clerk-js@5/dist/clerk.browser.mjs")).default;
+    const clerk = new Clerk(config.clerkPublishableKey);
+    await clerk.load();
 
     // Dashboard requires authentication - auto-open sign-in if not signed in
-    if (!clerk.isSignedIn) {
+    if (!clerk.user) {
       clerk.openSignIn();
       return;
     }
 
     // For signed-in users, mount the user button (shows avatar)
     clerk.mountUserButton(node);
-  }).catch(() => {
+  } catch {
     // Clerk load failed silently
-  });
+  }
 }
 
 function initDashboard(): void {
@@ -448,7 +446,7 @@ function initDashboard(): void {
   void loadApiKeys();
 
   // Clerk
-  initClerkUserButton();
+  void initClerkUserButton();
 }
 
 initDashboard();

@@ -296,7 +296,7 @@ function initHomeClient(): void {
 
   // Clerk user button initialization
   if (config.clerkPublishableKey) {
-    initClerkUserButton(config.requiresLogin ?? false);
+    void initClerkUserButton(config.requiresLogin ?? false);
   }
 }
 
@@ -333,19 +333,20 @@ function initClerkSignIn(): void {
   });
 }
 
-function initClerkUserButton(requiresLogin: boolean): void {
-  const clerk = (window as unknown as Record<string, unknown>).Clerk as
-    | { load: () => Promise<void>; isSignedIn: boolean; mountUserButton: (node: HTMLDivElement) => void; openSignIn: () => void; addListener: (fn: (state: unknown) => void) => () => void }
-    | undefined;
+async function initClerkUserButton(requiresLogin: boolean): Promise<void> {
+  const clerkPublishableKey = config?.clerkPublishableKey;
+  if (!clerkPublishableKey) return;
 
-  if (!clerk) return;
+  const node = document.getElementById("clerk-user-btn");
+  if (!(node instanceof HTMLDivElement)) return;
 
-  clerk.load().then(() => {
-    const node = document.getElementById("clerk-user-btn");
-    if (!(node instanceof HTMLDivElement)) return;
+  try {
+    const Clerk = (await import("https://cdn.jsdelivr.net/npm/@clerk/clerk-js@5/dist/clerk.browser.mjs")).default;
+    const clerk = new Clerk(clerkPublishableKey);
+    await clerk.load();
 
-    // For signed-in users, mount the Clerk user button
-    if (clerk.isSignedIn) {
+    // For signed-in users, mount the Clerk user button (shows avatar)
+    if (clerk.user) {
       clerk.mountUserButton(node);
       return;
     }
@@ -361,9 +362,9 @@ function initClerkUserButton(requiresLogin: boolean): void {
     if (requiresLogin) {
       clerk.openSignIn();
     }
-  }).catch(() => {
+  } catch {
     // Clerk load failed silently — user button won't be mounted
-  });
+  }
 }
 
 function initTabs(): void {
