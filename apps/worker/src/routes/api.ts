@@ -5,6 +5,7 @@ import { loadDocWithAccessCheck } from "../utils/document-access.js";
 import { getRegistry } from "../utils/registry.js";
 import { extractDocumentTextFromHtml } from "../utils/document-text.js";
 import { hashApiKey } from "../utils/auth.js";
+import { checkRateLimit, rateLimitKey, type RateLimitConfig } from "../utils/rate-limit.js";
 import {
   getLegacyDocumentKey,
   getRenderedDocumentKey,
@@ -68,12 +69,33 @@ api.get("/dashboard", async (c) => {
 
 // API Key CRUD
 
+const RATE_LIMIT: RateLimitConfig = { windowMs: 60_000, maxRequests: 30 };
+
+function requireRateLimit(c: Parameters<typeof rateLimitKey>[0]): Response | null {
+  const key = rateLimitKey(c);
+  const result = checkRateLimit(key, RATE_LIMIT);
+  if (!result.allowed) {
+    return c.json({ error: "Too many requests" }, 429);
+  }
+  return null;
+}
+
 function generateApiKey(): string {
   const chars = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
-  const bytes = crypto.getRandomValues(new Uint8Array(32));
+  // Rejection sampling to avoid modulo bias
+  const maxValid = 256 - (256 % chars.length);
+  const raw = crypto.getRandomValues(new Uint8Array(32));
+  const keyBytes = new Uint8Array(32);
+  for (let i = 0; i < 32; i++) {
+    let val = raw[i];
+    while (val >= maxValid) {
+      val = crypto.getRandomValues(new Uint8Array(1))[0];
+    }
+    keyBytes[i] = val;
+  }
   let key = "shk_";
   for (let i = 0; i < 32; i++) {
-    key += chars[bytes[i] % chars.length];
+    key += chars[keyBytes[i] % chars.length];
   }
   return key;
 }
@@ -84,6 +106,9 @@ api.post("/keys", async (c) => {
   if (!isAuthenticated(user)) {
     return c.json({ error: "Authentication required" }, 401);
   }
+
+  const rateLimited = requireRateLimit(c);
+  if (rateLimited) return rateLimited;
 
   // API key management requires session-based auth, not API key auth
   if (user.source === "api-key") {
@@ -141,6 +166,9 @@ api.delete("/keys/:id", async (c) => {
   if (!isAuthenticated(user)) {
     return c.json({ error: "Authentication required" }, 401);
   }
+
+  const rateLimited = requireRateLimit(c);
+  if (rateLimited) return rateLimited;
 
   if (user.source === "api-key") {
     return c.json({ error: "Cannot delete API keys using API key authentication" }, 403);
@@ -309,6 +337,9 @@ api.post("/documents", async (c) => {
   if (!isAuthenticated(user)) {
     return c.json({ error: "Authentication required" }, 401);
   }
+
+  const rateLimited = requireRateLimit(c);
+  if (rateLimited) return rateLimited;
 
   const protectedResponse = await requireHomeBrowserCapability(c);
   if (protectedResponse) return protectedResponse;
@@ -549,6 +580,9 @@ api.put("/documents/:id", async (c) => {
     return c.json({ error: "Authentication required" }, 401);
   }
 
+  const rateLimited = requireRateLimit(c);
+  if (rateLimited) return rateLimited;
+
   const id = c.req.param("id");
   const protectedResponse = await requireViewerBrowserCapability(c, id);
   if (protectedResponse) return protectedResponse;
@@ -708,6 +742,9 @@ api.put("/documents/:id/share", async (c) => {
     return c.json({ error: "Authentication required" }, 401);
   }
 
+  const rateLimited = requireRateLimit(c);
+  if (rateLimited) return rateLimited;
+
   const id = c.req.param("id");
   const protectedResponse = await requireViewerBrowserCapability(c, id);
   if (protectedResponse) return protectedResponse;
@@ -769,6 +806,9 @@ api.put("/documents/:id/tags", async (c) => {
     return c.json({ error: "Authentication required" }, 401);
   }
 
+  const rateLimited = requireRateLimit(c);
+  if (rateLimited) return rateLimited;
+
   const id = c.req.param("id");
   const protectedResponse = await requireViewerBrowserCapability(c, id);
   if (protectedResponse) return protectedResponse;
@@ -800,6 +840,9 @@ api.post("/documents/:id/tags", async (c) => {
   if (!isAuthenticated(user)) {
     return c.json({ error: "Authentication required" }, 401);
   }
+
+  const rateLimited = requireRateLimit(c);
+  if (rateLimited) return rateLimited;
 
   const id = c.req.param("id");
   const protectedResponse = await requireViewerBrowserCapability(c, id);
@@ -837,6 +880,9 @@ api.delete("/documents/:id/tags/:tag", async (c) => {
   if (!isAuthenticated(user)) {
     return c.json({ error: "Authentication required" }, 401);
   }
+
+  const rateLimited = requireRateLimit(c);
+  if (rateLimited) return rateLimited;
 
   const id = c.req.param("id");
   const tag = c.req.param("tag");
@@ -877,6 +923,9 @@ api.delete("/documents/:id", async (c) => {
   if (!isAuthenticated(user)) {
     return c.json({ error: "Authentication required" }, 401);
   }
+
+  const rateLimited = requireRateLimit(c);
+  if (rateLimited) return rateLimited;
 
   const id = c.req.param("id");
   const protectedResponse = await requireViewerBrowserCapability(c, id);

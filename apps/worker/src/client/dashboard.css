@@ -52,11 +52,6 @@ body {
   color: var(--color-muted);
 }
 
-#clerk-user-btn {
-  display: inline-flex;
-  align-items: center;
-}
-
 .dashboard-content {
   max-width: 1200px;
   margin: 0 auto;

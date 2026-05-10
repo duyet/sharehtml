@@ -167,12 +167,6 @@ li {
   border-color: var(--color-ink);
 }
 
-/* ── Clerk user button ──────────────────────────── */
-#clerk-user-btn {
-  display: inline-flex;
-  align-items: center;
-}
-
 /* ── Tabs ─────────────────────────────────────── */
 .tabs {
   border: 1.5px solid var(--color-hairline);

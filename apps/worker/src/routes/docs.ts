@@ -1,6 +1,7 @@
 import { Hono } from "hono";
 import type { AppBindings } from "../types.js";
 import { DocsView } from "../frontend/docs.js";
+import { cspHeader } from "../utils/csp.js";
 import { getAssetUrls } from "../utils/assets.js";
 
 const docs = new Hono<AppBindings>();
@@ -18,7 +19,10 @@ docs.get("/", async (c) => {
 
     // Return HTML with cache headers
     return c.html(html, {
-      headers: CACHE_HEADERS,
+      headers: {
+        ...CACHE_HEADERS,
+        "Content-Security-Policy": cspHeader({}),
+      },
     });
   } catch (error) {
     console.error("Docs route error:", error);

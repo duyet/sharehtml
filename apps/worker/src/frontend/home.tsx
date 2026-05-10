@@ -2,10 +2,9 @@
 /** @jsxImportSource hono/jsx */
 import { raw } from "hono/utils/html";
 import type { AssetUrls } from "../utils/assets.js";
-import { formatDocumentSize, formatRelativeTime } from "../utils/home-view.js";
-import type { AuthMode, DocumentRow, RecentViewRow } from "../types.js";
+import { formatDocumentSize, formatRelativeTime, buildHomePath } from "../utils/home-view.js";
+import { isAuthEnabled, type AuthMode, type DocumentRow, type RecentViewRow } from "../types.js";
 import { toHtml, safeJsonForScript, ClerkScripts } from "./jsx.js";
-import { isAuthEnabled } from "../utils/auth.js";
 
 interface HomeParams {
   assets: AssetUrls;
@@ -15,6 +14,8 @@ interface HomeParams {
   recentViews: RecentViewRow[];
   page: number;
   pageSize: number;
+  totalCount: number;
+  query: string;
   requiresLogin: boolean;
   homeCapabilityToken: string;
   authMode: AuthMode;
@@ -58,6 +59,39 @@ function RecentDocCard({ doc }: RecentDocCardProps): JSX.Element {
       <div class="recent-card-filename">{doc.filename}</div>
       <div class="recent-card-meta">viewed {formatRelativeTime(viewedAt)}</div>
     </a>
+  );
+}
+
+interface PaginationProps {
+  page: number;
+  pageSize: number;
+  totalCount: number;
+  query: string;
+}
+
+function Pagination({ page, pageSize, totalCount, query }: PaginationProps): JSX.Element | null {
+  if (totalCount <= pageSize) return null;
+
+  const totalPages = Math.ceil(totalCount / pageSize);
+
+  return (
+    <div class="pagination">
+      <a
+        class={`pagination-link${page <= 1 ? " disabled" : ""}`}
+        href={buildHomePath(query, page - 1)}
+      >
+        ← Previous
+      </a>
+      <span class="pagination-info">
+        Page {page} of {totalPages}
+      </span>
+      <a
+        class={`pagination-link${page >= totalPages ? " disabled" : ""}`}
+        href={buildHomePath(query, page + 1)}
+      >
+        Next →
+      </a>
+    </div>
   );
 }
 
@@ -176,6 +210,7 @@ export function HomeView({
               <div class="doc-list">
                 {documents.map((d) => <DocCard doc={d} subtitle={formatDocumentSize(d.size)} />)}
               </div>
+              <Pagination page={page} pageSize={pageSize} totalCount={totalCount} query={query} />
             </div>
           )}
         </div>

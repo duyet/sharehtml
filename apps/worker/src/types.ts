@@ -97,14 +97,6 @@ export type ReactionRow = {
   created_at: string;
 };
 
-export type ApiKeyRow = {
-  id: string;
-  key_hash: string;
-  user_email: string;
-  name: string;
-  created_at: string;
-};
-
 export type DashboardDocument = {
   id: string;
   title: string;

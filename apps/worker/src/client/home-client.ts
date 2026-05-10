@@ -285,6 +285,9 @@ function initHomeClient(): void {
   form.addEventListener("submit", handleSearchSubmit);
   pagination.addEventListener("click", handlePaginationClick);
 
+  // Initialize tabs
+  initTabs();
+
   // Check if on login page
   if (document.getElementById("clerk-sign-in")) {
     initClerkSignIn();
@@ -360,6 +363,35 @@ function initClerkUserButton(requiresLogin: boolean): void {
     }
   }).catch(() => {
     // Clerk load failed silently — user button won't be mounted
+  });
+}
+
+function initTabs(): void {
+  const tabs = document.querySelectorAll(".tabs");
+  tabs.forEach((tab) => {
+    const tabbar = tab.querySelector(".tabbar");
+    if (!tabbar) return;
+
+    const buttons = tabbar.querySelectorAll("button");
+    const panes = tab.querySelectorAll("pre");
+
+    buttons.forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const tabIndex = btn.getAttribute("data-t");
+        if (tabIndex === null) return;
+
+        // Remove .on from all buttons and panes
+        buttons.forEach((b) => b.classList.remove("on"));
+        panes.forEach((p) => p.classList.remove("on"));
+
+        // Add .on to clicked button and corresponding pane
+        btn.classList.add("on");
+        const targetPane = panes[Number.parseInt(tabIndex, 10)];
+        if (targetPane) {
+          targetPane.classList.add("on");
+        }
+      });
+    });
   });
 }
 

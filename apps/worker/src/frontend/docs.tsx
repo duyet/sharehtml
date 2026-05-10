@@ -44,9 +44,9 @@ export function DocsView({ assets }: DocsParams): string {
 
           <main class="docs-content">
             <header class="docs-header">
-              <div class="docs-eyebrow">Documentation</div>
+              <div class="eyebrow">Documentation</div>
               <h1>Deploy files instantly with sharehtml</h1>
-              <div class="docs-tldr" id="tldr">
+              <div class="tldr" id="tldr">
                 <b>TL;DR</b> — Deploy HTML, Markdown, or code files in seconds. No signup required.
                 Documents persist indefinitely. Built for AI agents and developers.
               </div>
@@ -57,8 +57,8 @@ export function DocsView({ assets }: DocsParams): string {
               <p>The fastest way to deploy a file:</p>
               <pre><code>npx -y @duyet/sharehtml deploy path/to/file.html</code></pre>
 
-              <div class="docs-callout">
-                <span class="docs-callout-icon">★</span>
+              <div class="callout">
+                <span class="ico">★</span>
                 <div>
                   <b>No signup required.</b> Deploy anonymously — your document will be live instantly.
                   Documents persist indefinitely. Authenticate for account management features.
@@ -70,10 +70,10 @@ export function DocsView({ assets }: DocsParams): string {
 
               <details open>
                 <summary>
-                  <span class="docs-summary-title">1 · Deploy as one-off file</span>
-                  <span class="docs-summary-meta">npx • no install</span>
+                  <span class="summary-title">1 · Deploy as one-off file</span>
+                  <span class="summary-meta">npx • no install</span>
                 </summary>
-                <div class="docs-details-body">
+                <div class="details-body">
                   <p>Use npx to deploy without installing anything:</p>
                   <pre><code>npx -y @duyet/sharehtml deploy report.html</code></pre>
                   <p>This uploads the file and returns a shareable URL. Works for HTML, Markdown, and text files.</p>
@@ -82,10 +82,10 @@ export function DocsView({ assets }: DocsParams): string {
 
               <details>
                 <summary>
-                  <span class="docs-summary-title">2 · Install CLI for repeated use</span>
-                  <span class="docs-summary-meta">npm • global install</span>
+                  <span class="summary-title">2 · Install CLI for repeated use</span>
+                  <span class="summary-meta">npm • global install</span>
                 </summary>
-                <div class="docs-details-body">
+                <div class="details-body">
                   <p>Install globally for faster deployments:</p>
                   <pre><code>npm install -g @duyet/sharehtml
 sharehtml deploy report.html</code></pre>
@@ -95,10 +95,10 @@ sharehtml deploy report.html</code></pre>
 
               <details>
                 <summary>
-                  <span class="docs-summary-title">3 · Authenticate for persistent storage</span>
-                  <span class="docs-summary-meta">email • permanent docs</span>
+                  <span class="summary-title">3 · Authenticate for persistent storage</span>
+                  <span class="summary-meta">email • permanent docs</span>
                 </summary>
-                <div class="docs-details-body">
+                <div class="details-body">
                   <p>Link your email to keep documents permanently:</p>
                   <pre><code>npx -y @duyet/sharehtml login</code></pre>
                   <p>
@@ -110,14 +110,14 @@ sharehtml deploy report.html</code></pre>
 
               <details>
                 <summary>
-                  <span class="docs-summary-title">4 · Use from AI agents</span>
-                  <span class="docs-summary-meta">Claude • Cursor • Windsurf</span>
+                  <span class="summary-title">4 · Use from AI agents</span>
+                  <span class="summary-meta">Claude • Cursor • Windsurf</span>
                 </summary>
-                <div class="docs-details-body">
+                <div class="details-body">
                   <p>Add sharehtml skills to your AI agent:</p>
                   <pre><code>npx -y skills add duyet/sharehtml</code></pre>
                   <p>Or paste this prompt to your AI agent:</p>
-                  <div class="docs-highlight-box">
+                  <div class="highlight-box">
                     <p>
                       <em>"Deploy this to the web using sharehtml: `npx -y @duyet/sharehtml deploy path/to/file.html`"</em>
                     </p>
@@ -150,8 +150,8 @@ sharehtml deploy report.html</code></pre>
                 <li><b>Specific people:</b> Only verified email addresses can access</li>
               </ul>
 
-              <div class="docs-callout">
-                <span class="docs-callout-icon">★</span>
+              <div class="callout">
+                <span class="ico">★</span>
                 <div>
                   <b>Search engines.</b> Documents are not indexed by search engines. Your content
                   is only accessible to those with the direct link.
@@ -379,7 +379,7 @@ curl -X DELETE https://html.duyet.net/api/keys/key_id \
             <section class="docs-section" id="faq">
               <h2 class="docs-section-title">FAQ</h2>
 
-              <dl class="docs-faq">
+              <dl class="faq">
                 <dt>What file types are supported?</dt>
                 <dd>
                   HTML, Markdown (.md), and plain text files. Code files are syntax-highlighted

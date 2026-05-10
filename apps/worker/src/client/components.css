@@ -81,62 +81,6 @@ details[open] summary::before {
   margin-bottom: 12px;
 }
 
-/* ── Tabs ───────────────────────────────────── */
-.tabs {
-  border: 1.5px solid var(--color-hairline);
-  border-radius: 10px;
-  background: var(--color-surface-card);
-  margin: 16px 0 8px;
-  overflow: hidden;
-}
-
-.tabbar {
-  display: flex;
-  border-bottom: 1px solid var(--color-hairline);
-  background: var(--color-surface-soft);
-}
-
-.tabbar button {
-  appearance: none;
-  border: none;
-  background: none;
-  font-family: "JetBrains Mono", monospace;
-  font-size: 12px;
-  color: var(--color-muted);
-  padding: 10px 16px;
-  cursor: pointer;
-  border-right: 1px solid var(--color-hairline);
-  transition: background 0.15s ease, color 0.15s ease;
-}
-
-.tabbar button:hover {
-  background: var(--color-surface-card);
-  color: var(--color-body);
-}
-
-.tabbar button.on {
-  background: var(--color-canvas);
-  color: var(--color-ink);
-  border-bottom: 2px solid var(--color-primary);
-  margin-bottom: -1px;
-}
-
-.tabs pre {
-  display: none;
-  margin: 0;
-  padding: 16px 18px;
-  font-family: "JetBrains Mono", monospace;
-  font-size: 12.5px;
-  line-height: 1.6;
-  color: var(--color-on-dark);
-  overflow-x: auto;
-  background: var(--color-surface-dark);
-}
-
-.tabs pre.on {
-  display: block;
-}
-
 /* ── Callout ─────────────────────────────────── */
 .callout,
 .docs-callout {

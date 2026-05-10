@@ -81,32 +81,10 @@ body {
   margin-bottom: 24px;
 }
 
-.docs-eyebrow {
-  font-family: "JetBrains Mono", monospace;
-  font-size: 11px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--color-muted);
-  margin-bottom: 10px;
-}
-
 .docs-content > h1 {
   font-size: 32px;
   color: var(--color-ink);
   margin-bottom: 14px;
-}
-
-.docs-tldr {
-  border: 1.5px solid var(--color-hairline);
-  border-left: 3px solid var(--color-primary);
-  border-radius: 10px;
-  background: var(--color-surface-card);
-  padding: 16px 18px;
-  margin-bottom: 24px;
-}
-
-.docs-tldr b {
-  color: var(--color-ink);
 }
 
 .docs-section {
@@ -185,63 +163,6 @@ body {
   border-bottom-color: var(--color-primary);
 }
 
-/* ── Collapsible Details ───────────────────────── */
-details {
-  border: 1.5px solid var(--color-hairline);
-  border-radius: 10px;
-  background: var(--color-surface-card);
-  margin: 14px 0;
-  overflow: hidden;
-}
-
-details summary {
-  list-style: none;
-  cursor: pointer;
-  padding: 14px 16px;
-  font-family: "Tiempos Headline", "EB Garamond", Georgia, serif;
-  font-size: 16px;
-  color: var(--color-ink);
-  display: flex;
-  align-items: baseline;
-  gap: 10px;
-  user-select: none;
-}
-
-details summary::-webkit-details-marker {
-  display: none;
-}
-
-details summary::before {
-  content: "▸";
-  color: var(--color-primary);
-  font-family: Inter, sans-serif;
-  font-size: 12px;
-  transition: transform 120ms;
-}
-
-details[open] summary::before {
-  transform: rotate(90deg);
-}
-
-.docs-summary-title {
-  flex: 1;
-}
-
-.docs-summary-meta {
-  font-family: "JetBrains Mono", monospace;
-  font-size: 11px;
-  color: var(--color-muted);
-}
-
-.docs-details-body {
-  padding: 0 16px 16px;
-}
-
-.docs-details-body p {
-  font-size: 14px;
-  margin-bottom: 12px;
-}
-
 /* ── Tabs ────────────────────────────────────── */
 .docs-tabs {
   border: 1.5px solid var(--color-hairline);
@@ -292,70 +213,6 @@ details[open] summary::before {
 
 .docs-tabs pre.on {
   display: block;
-}
-
-/* ── Callout ──────────────────────────────────── */
-.docs-callout {
-  display: flex;
-  gap: 12px;
-  border: 1.5px solid var(--color-surface-card);
-  background: rgba(239, 233, 222, 0.5);
-  border-radius: 10px;
-  padding: 14px 16px;
-  margin: 18px 0;
-  font-size: 14px;
-  max-width: 680px;
-}
-
-.docs-callout-icon {
-  color: var(--color-primary);
-  font-weight: 600;
-  flex-shrink: 0;
-}
-
-.docs-callout b {
-  color: var(--color-ink);
-}
-
-/* ── Highlight Box ────────────────────────────── */
-.docs-highlight-box {
-  background: var(--color-surface-card);
-  border: 1px solid var(--color-hairline);
-  border-radius: 10px;
-  padding: 16px 18px;
-  margin: 16px 0;
-  max-width: 680px;
-}
-
-.docs-highlight-box p {
-  margin-bottom: 0;
-}
-
-/* ── FAQ ──────────────────────────────────────── */
-.docs-faq {
-  margin-top: 8px;
-}
-
-.docs-faq dt {
-  font-family: "Tiempos Headline", "EB Garamond", Georgia, serif;
-  font-size: 16px;
-  font-weight: 500;
-  color: var(--color-ink);
-  margin-top: 18px;
-}
-
-.docs-faq dd {
-  font-size: 14px;
-  margin: 4px 0 0;
-  max-width: 640px;
-}
-
-/* ── Divider ──────────────────────────────────── */
-.docs-divider {
-  height: 1px;
-  background: var(--color-hairline);
-  margin: 24px 0;
-  max-width: 680px;
 }
 
 /* ── Mobile Responsive ────────────────────────── */

@@ -16,6 +16,16 @@ export function escapeScriptContent(str: string): string {
   return str.replace(/<\//g, "<\\/").replace(/<!--/g, "<\\!--");
 }
 
+// Escape HTML entities for safe embedding in HTML text content.
+export function escapeHtml(str: string): string {
+  return str
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 // JSON.stringify + escapeScriptContent for safe inline <script> data.
 export function safeJsonForScript(value: unknown): string {
   return escapeScriptContent(JSON.stringify(value));

@@ -52,6 +52,12 @@
   --color-accent-contrast: var(--color-on-primary);
 }
 
+/* Clerk user button (shared across all pages) */
+#clerk-user-btn {
+  display: inline-flex;
+  align-items: center;
+}
+
 @media (prefers-color-scheme: dark) {
   :root {
     /* We keep the warm cream theme even in dark mode as per Anthropic's brand identity, 

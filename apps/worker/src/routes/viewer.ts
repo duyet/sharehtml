@@ -3,6 +3,7 @@ import { isAuthEnabled, shareModeFromInt, type AppBindings, isSourceKind } from 
 import { ShellView } from "../frontend/shell.js";
 import { getAssetUrls } from "../utils/assets.js";
 import { createCapabilityToken } from "../utils/capability.js";
+import { cspHeader } from "../utils/csp.js";
 import { loadDocWithAccessCheck } from "../utils/document-access.js";
 import { createAttachmentHeaders } from "../utils/download.js";
 import { emailsMatch, normalizeEmail } from "../utils/email.js";
@@ -67,6 +68,14 @@ viewer.get("/d/:id", async (c) => {
       clerkPublishableKey: c.env.CLERK_PUBLISHABLE_KEY,
       cfBeaconToken: c.env.CF_BEACON_TOKEN,
     }),
+    {
+      headers: {
+        "Content-Security-Policy": cspHeader({
+          clerkPublishableKey: c.env.CLERK_PUBLISHABLE_KEY,
+          hasFrame: true,
+        }),
+      },
+    },
   );
 });
 
