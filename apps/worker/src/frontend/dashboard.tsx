@@ -63,6 +63,7 @@ export function DashboardView({
             sharehtml
           </a>
           <div class="topbar-right">
+            <a class="topbar-link" href="/docs">Docs</a>
             {isClerk
               ? <div id="clerk-user-btn"></div>
               : <span class="topbar-email">{email}</span>}
@@ -119,8 +120,12 @@ export function DashboardView({
           {documents.length === 0 && (
             <div class="dashboard-empty">
               <p>No documents yet.</p>
-              <p>Use the CLI to deploy your first document:</p>
+              <p>Deploy files instantly using the CLI:</p>
               <pre>npx -y @duyet/sharehtml@latest deploy path/to/file.html</pre>
+              <p class="dashboard-ai-prompt">
+                <b>For AI Agents:</b> Ask your agent to "deploy this file using sharehtml" —
+                works with Claude Code, Cursor, Windsurf, and more.
+              </p>
             </div>
           )}
 

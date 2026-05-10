@@ -23,6 +23,9 @@ export function DocsView({ assets }: DocsParams): string {
           <a class="docs-topbar-home" href="/">
             sharehtml
           </a>
+          <a class="docs-topbar-title" href="/">
+            Home
+          </a>
           <span class="docs-topbar-title">Documentation</span>
         </div>
 

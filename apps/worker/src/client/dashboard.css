@@ -270,6 +270,19 @@ h1, h2, h3, .display-serif {
   color: var(--color-on-dark);
 }
 
+.dashboard-empty .dashboard-ai-prompt {
+  margin-top: 24px;
+  padding: 16px 20px;
+  background: var(--color-surface-card);
+  border: 1px solid var(--color-hairline);
+  border-radius: 10px;
+  font-size: 15px;
+  color: var(--color-body);
+  max-width: 500px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
 /* Pagination */
 .doc-grid-pagination {
   display: flex;
