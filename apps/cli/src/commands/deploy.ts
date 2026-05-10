@@ -52,6 +52,7 @@ export const deployCmd = new Command("deploy")
   .option("--type <type>", "Content type: html, markdown, code (default: html)")
   .option("--language <lang>", "Language for code highlighting (with --type code)")
   .option("--tags <tags>", "Comma-separated tags for the document")
+  .option("--name <name>", "Custom filename (for URL sources)")
   .action(async (file: string | undefined, opts: {
     title?: string;
     update?: boolean;
@@ -62,6 +63,7 @@ export const deployCmd = new Command("deploy")
     type?: "html" | "markdown" | "code";
     language?: string;
     tags?: string;
+    name?: string;
   }) => {
     if (opts.share && opts.private) {
       console.error("Error: choose either --share or --private, not both");
@@ -85,10 +87,34 @@ export const deployCmd = new Command("deploy")
       }
       contentString = buffer.toString("utf-8");
       isNonFileSource = true;
+    } else if (file && (file.startsWith("http://") || file.startsWith("https://"))) {
+      console.log(`Fetching ${file}...`);
+      try {
+        const response = await fetch(file);
+        if (!response.ok) {
+          console.error(`Error: Failed to fetch URL: ${response.status} ${response.statusText}`);
+          process.exit(1);
+        }
+        const contentLength = response.headers.get("content-length");
+        if (contentLength) {
+          const size = parseInt(contentLength, 10);
+          if (size > 10 * 1024 * 1024) {
+            console.error(`Error: Remote file too large (${(size / 1024 / 1024).toFixed(1)}MB). Maximum is 10MB.`);
+            process.exit(1);
+          }
+        }
+        contentString = await response.text();
+        isNonFileSource = true;
+      } catch (err) {
+        console.error(`Error: Failed to fetch URL - ${(err as Error).message}`);
+        process.exit(1);
+      }
     }
 
     if (isNonFileSource) {
-      const filename = generateFilename(opts);
+      const filename = opts.name ?? (file && (file.startsWith("http://") || file.startsWith("https://"))
+        ? new URL(file).pathname.split("/").filter(Boolean).pop() ?? "index.html"
+        : generateFilename(opts));
       const sourceKind = opts.type ?? "html";
       const sourceLanguage = opts.language;
 
