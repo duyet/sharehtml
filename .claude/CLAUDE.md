@@ -41,7 +41,7 @@ After any PR creation (`/cp`, `/cpr`, or `gh pr create`), immediately start baby
 
 ## Project-Specific Patterns
 
-- **Auth modes**: `none` (dev), `clerk` (production), `access` (corporate)
+- **Auth modes**: `none` (dev/public), `clerk` (production with accounts), `access` (corporate)
 - **Monorepo**: `apps/worker`, `apps/cli`
 - **Deployment**: Cloudflare Workers with Wrangler
 - **Storage**: R2 for HTML, Durable Objects for metadata
