@@ -246,7 +246,6 @@ function buildUploadFormData(
   prepared: Awaited<ReturnType<typeof prepareDocumentUpload>>,
   title?: string,
   slug?: string,
-  tags?: string[],
 ): FormData {
   const formData = new FormData();
   formData.append("file", prepared.renderedBlob, prepared.renderedFilename);
@@ -257,9 +256,6 @@ function buildUploadFormData(
   }
   if (title) formData.append("title", title);
   if (slug) formData.append("slug", slug);
-  if (tags && tags.length > 0) {
-    formData.append("tags", tags.join(","));
-  }
   return formData;
 }
 
@@ -267,13 +263,12 @@ export async function deployDocument(
   filePath: string,
   title?: string,
   slug?: string,
-  tags?: string[],
 ): Promise<DeployResult> {
   const prepared = await prepareDocumentUpload(filePath, title);
   const resp = await requestWithAccess("Upload", {
     path: "/api/documents",
     method: "POST",
-    body: buildUploadFormData(prepared, title, slug, tags),
+    body: buildUploadFormData(prepared, title, slug),
   });
   return parseJson<DeployResult>(resp, "Upload");
 }
@@ -302,13 +297,12 @@ export async function updateDocument(
   id: string,
   filePath: string,
   title?: string,
-  tags?: string[],
 ): Promise<DeployResult> {
   const prepared = await prepareDocumentUpload(filePath, title);
   const resp = await requestWithAccess("Update", {
     path: `/api/documents/${id}`,
     method: "PUT",
-    body: buildUploadFormData(prepared, title, undefined, tags),
+    body: buildUploadFormData(prepared, title),
   });
   return parseJson<DeployResult>(resp, "Update");
 }
@@ -321,14 +315,13 @@ export async function deployContent(
     slug?: string;
     sourceKind?: SourceKind;
     sourceLanguage?: string;
-    tags?: string[];
   },
 ): Promise<DeployResult> {
   const prepared = await prepareContentUpload(content, filename, options);
   const resp = await requestWithAccess("Upload", {
     path: "/api/documents",
     method: "POST",
-    body: buildUploadFormData(prepared, options?.title, options?.slug, options?.tags),
+    body: buildUploadFormData(prepared, options?.title, options?.slug),
   });
   return parseJson<DeployResult>(resp, "Upload");
 }
@@ -341,14 +334,13 @@ export async function updateContent(
     title?: string;
     sourceKind?: SourceKind;
     sourceLanguage?: string;
-    tags?: string[];
   },
 ): Promise<DeployResult> {
   const prepared = await prepareContentUpload(content, filename, options);
   const resp = await requestWithAccess("Update", {
     path: `/api/documents/${id}`,
     method: "PUT",
-    body: buildUploadFormData(prepared, options?.title, undefined, options?.tags),
+    body: buildUploadFormData(prepared, options?.title),
   });
   return parseJson<DeployResult>(resp, "Update");
 }

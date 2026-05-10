@@ -216,11 +216,6 @@ function parseSourceFields(formData: FormData): {
   return { source, sourceKind, sourceLanguage };
 }
 
-function parseTagList(rawTags: string | null): string[] {
-  if (!rawTags) return [];
-  return rawTags.split(",").map(t => t.trim()).filter(Boolean);
-}
-
 type ShareRequest =
   | { mode: ShareMode; emails?: string[] }
   | { mode: "link" | "private" };
@@ -329,13 +324,6 @@ api.post("/documents", async (c) => {
 
   const { source, sourceKind, sourceLanguage } = parseSourceFields(formData);
 
-  // Parse tags from form field or header
-  const rawTags = formData.get("tags");
-  const tagsHeader = c.req.header("X-ShareHTML-Tags");
-  const tags = rawTags ? parseTagList(rawTags as string)
-    : tagsHeader ? parseTagList(tagsHeader)
-    : [];
-
   if (!file) {
     return c.json({ error: "file is required" }, 400);
   }
@@ -373,7 +361,6 @@ api.post("/documents", async (c) => {
       source_filename: source && sourceKind ? sourceFilename : null,
       source_kind: sourceKind,
       source_language: sourceLanguage,
-      tags,
     }),
   ];
 
@@ -398,7 +385,6 @@ api.post("/documents", async (c) => {
     filename: sourceFilename,
     size: file.size,
     isShared: !isAuthEnabled(c.env.AUTH_MODE),
-    tags,
   });
 });
 
@@ -444,11 +430,10 @@ api.get("/documents", async (c) => {
   const owner = c.get("authUser").email;
   const registry = getRegistry(c.env);
   const query = (c.req.query("q") || "").trim();
-  const tag = (c.req.query("tag") || "").trim();
   const limitQuery = Number.parseInt(c.req.query("limit") || "", 10);
   const pageQuery = Number.parseInt(c.req.query("page") || "", 10);
   const hasPaginationParams = Boolean(c.req.query("q")) || Boolean(c.req.query("limit")) ||
-    Boolean(c.req.query("page")) || Boolean(c.req.query("tag"));
+    Boolean(c.req.query("page"));
 
   if (!hasPaginationParams) {
     const documents = await registry.listDocuments(owner);
@@ -457,14 +442,13 @@ api.get("/documents", async (c) => {
 
   const limit = Number.isFinite(limitQuery) && limitQuery > 0 ? limitQuery : 10;
   const page = Number.isFinite(pageQuery) && pageQuery > 0 ? pageQuery : 1;
-  const result = await registry.listDocumentsPage(owner, { query, tag, limit, page });
+  const result = await registry.listDocumentsPage(owner, { query, limit, page });
   return c.json({
     documents: result.documents,
     totalCount: result.totalCount,
     page: result.page,
     pageSize: limit,
     query,
-    tag,
   });
 });
 
@@ -575,13 +559,6 @@ api.put("/documents/:id", async (c) => {
   const title = typeof rawTitle === "string" ? rawTitle : null;
   const { source, sourceKind, sourceLanguage } = parseSourceFields(formData);
 
-  // Parse tags from form field or header
-  const rawTags = formData.get("tags");
-  const tagsHeader = c.req.header("X-ShareHTML-Tags");
-  const tags = rawTags ? parseTagList(rawTags as string)
-    : tagsHeader ? parseTagList(tagsHeader)
-    : null;
-
   if (!file) {
     return c.json({ error: "file is required" }, 400);
   }
@@ -675,7 +652,6 @@ api.put("/documents/:id", async (c) => {
       source_filename: nextSourceFilename,
       source_kind: nextSourceKind,
       source_language: nextSourceLanguage,
-      tags,
     });
 
     const cleanupDeletes: Array<Promise<void>> = [];
@@ -709,7 +685,6 @@ api.put("/documents/:id", async (c) => {
     filename: nextSourceFilename || sourceFilename,
     size: file.size,
     isShared: Boolean(meta.is_shared),
-    tags,
   });
 });
 
@@ -767,133 +742,6 @@ api.put("/documents/:id/share", async (c) => {
 
   const responseEmails = mode === "emails" ? await registry.getSharedEmails(id) : [];
   return c.json({ ok: true, mode, isShared: mode === "link", emails: responseEmails });
-});
-
-// Tag endpoints
-
-// Get document tags
-api.get("/documents/:id/tags", async (c) => {
-  const id = c.req.param("id");
-  const protectedResponse = await requireViewerBrowserCapability(c, id, { requireOrigin: false });
-  if (protectedResponse) return protectedResponse;
-
-  const registry = getRegistry(c.env);
-  const doc = await registry.getDocument(id);
-  if (!doc || !emailsMatch(doc.owner_email, c.get("authUser").email)) {
-    return c.json({ error: "not found" }, 404);
-  }
-
-  const tags = await registry.getDocumentTags(id);
-  return c.json({ tags });
-});
-
-// Replace document tags
-api.put("/documents/:id/tags", async (c) => {
-  const user = c.get("authUser");
-  if (!isAuthenticated(user)) {
-    return c.json({ error: "Authentication required" }, 401);
-  }
-
-  const id = c.req.param("id");
-  const protectedResponse = await requireViewerBrowserCapability(c, id);
-  if (protectedResponse) return protectedResponse;
-
-  const registry = getRegistry(c.env);
-  const doc = await registry.getDocument(id);
-  if (!doc) {
-    return c.json({ error: "not found" }, 404);
-  }
-
-  if (!emailsMatch(doc.owner_email, c.get("authUser").email)) {
-    return c.json({ error: "forbidden" }, 403);
-  }
-
-  const body = await c.req.json();
-  if (!isRecord(body) || !Array.isArray(body.tags)) {
-    return c.json({ error: "tags must be an array" }, 400);
-  }
-
-  const tags = body.tags.filter((t: unknown) => typeof t === "string" && t.trim()).map((t: string) => t.trim());
-  await registry.setDocumentTags(id, tags);
-
-  return c.json({ ok: true, tags });
-});
-
-// Add tag to document
-api.post("/documents/:id/tags", async (c) => {
-  const user = c.get("authUser");
-  if (!isAuthenticated(user)) {
-    return c.json({ error: "Authentication required" }, 401);
-  }
-
-  const id = c.req.param("id");
-  const protectedResponse = await requireViewerBrowserCapability(c, id);
-  if (protectedResponse) return protectedResponse;
-
-  const registry = getRegistry(c.env);
-  const doc = await registry.getDocument(id);
-  if (!doc) {
-    return c.json({ error: "not found" }, 404);
-  }
-
-  if (!emailsMatch(doc.owner_email, c.get("authUser").email)) {
-    return c.json({ error: "forbidden" }, 403);
-  }
-
-  const body = await c.req.json();
-  if (!isRecord(body) || typeof body.tag !== "string") {
-    return c.json({ error: "tag is required" }, 400);
-  }
-
-  const tag = body.tag.trim();
-  if (!tag) {
-    return c.json({ error: "tag cannot be empty" }, 400);
-  }
-
-  await registry.addDocumentTag(id, tag);
-  const tags = await registry.getDocumentTags(id);
-
-  return c.json({ ok: true, tags });
-});
-
-// Remove tag from document
-api.delete("/documents/:id/tags/:tag", async (c) => {
-  const user = c.get("authUser");
-  if (!isAuthenticated(user)) {
-    return c.json({ error: "Authentication required" }, 401);
-  }
-
-  const id = c.req.param("id");
-  const tag = c.req.param("tag");
-  const protectedResponse = await requireViewerBrowserCapability(c, id);
-  if (protectedResponse) return protectedResponse;
-
-  const registry = getRegistry(c.env);
-  const doc = await registry.getDocument(id);
-  if (!doc) {
-    return c.json({ error: "not found" }, 404);
-  }
-
-  if (!emailsMatch(doc.owner_email, c.get("authUser").email)) {
-    return c.json({ error: "forbidden" }, 403);
-  }
-
-  await registry.removeDocumentTag(id, tag);
-  const tags = await registry.getDocumentTags(id);
-
-  return c.json({ ok: true, tags });
-});
-
-// List all tags for authenticated user
-api.get("/tags", async (c) => {
-  const protectedResponse = await requireHomeBrowserCapability(c, { requireOrigin: false });
-  if (protectedResponse) return protectedResponse;
-
-  const email = c.get("authUser").email;
-  const registry = getRegistry(c.env);
-  const tags = await registry.getAllTags(email);
-
-  return c.json({ tags });
 });
 
 // Delete document

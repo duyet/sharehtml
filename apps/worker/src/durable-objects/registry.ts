@@ -44,22 +44,6 @@ export class RegistryDO extends DurableObject<Env> {
         last_synced_at TEXT
       )
     `);
-    // Migrations: add new columns if they don't exist (ignore errors if already exist)
-    const migrations = [
-      `ALTER TABLE users ADD COLUMN deleted_at TEXT`,
-      `ALTER TABLE users ADD COLUMN clerk_user_id TEXT`,
-      `ALTER TABLE users ADD COLUMN image_url TEXT`,
-      `ALTER TABLE users ADD COLUMN username TEXT`,
-      `ALTER TABLE users ADD COLUMN external_id TEXT`,
-      `ALTER TABLE users ADD COLUMN last_synced_at TEXT`,
-    ];
-    for (const sql of migrations) {
-      try {
-        this.sql.exec(sql);
-      } catch {
-        // Column already exists, ignore error
-      }
-    }
     this.sql.exec(`
       CREATE TABLE IF NOT EXISTS documents (
         id TEXT PRIMARY KEY,
