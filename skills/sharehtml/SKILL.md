@@ -120,7 +120,7 @@ The agent can use **CLI** or **HTTP API (curl)** — both work without authentic
 5. **HTTP API**: Upload works without auth — no setup needed for one-off deployments
 6. **curl fallback**: If `npx` is not available or times out, use `curl -X POST https://html.duyet.net/api/documents -F "file=@doc.html"` — it works everywhere with no dependencies
 7. **Temp files**: For complex generated HTML, write to a temp file first, then `deploy` the file. This is more reliable than piping long strings.
-8. **Parse curl output**: The HTTP API returns JSON with `id` and `url` fields — extract the URL from the response body.
+8. **Parse curl output**: The HTTP API returns JSON with `id` and `url` fields — extract the URL with `jq -r .url`.
 
 ## Examples
 
@@ -207,7 +207,7 @@ npx -y @duyet/sharehtml deploy report.html | pbcopy
 npx -y @duyet/sharehtml deploy report.html | xclip -selection clipboard
 
 # Or capture URL in a variable for further use
-URL=$(npx -y @duyet/sharehtml deploy report.html | tail -1)
+URL=$(npx -y @duyet/sharehtml deploy report.html 2>/dev/null)
 echo "Deployed to: $URL"
 ```
 
