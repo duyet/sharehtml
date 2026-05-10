@@ -47,22 +47,34 @@ export function DocsView({ assets }: DocsParams): string {
               <div class="eyebrow">Documentation</div>
               <h1>Deploy files instantly with sharehtml</h1>
               <div class="tldr" id="tldr">
-                <b>TL;DR</b> — Deploy instantly. No signup, no auth required.
+                <b>TL;DR</b> — Deploy instantly via CLI, curl, or AI agent.
                 Upload HTML, Markdown, or code files and get a live URL in seconds.
-                Documents persist indefinitely. Built for AI agents and developers.
+                Documents persist indefinitely. No signup required.
               </div>
             </header>
 
             <section class="docs-section" id="quick-start">
               <h2 class="docs-section-title">Quick Start</h2>
-              <p>The fastest way to deploy a file:</p>
-              <pre><code>npx -y @duyet/sharehtml deploy path/to/file.html</code></pre>
+              <p>The fastest way to deploy a file — use CLI or curl:</p>
+
+              <div class="docs-tabs" data-tabs="quickstart">
+                <div class="docs-tabbar">
+                  <button class="on" data-t="0">CLI (npx)</button>
+                  <button data-t="1">curl</button>
+                </div>
+                <pre class="on"><span class="docs-comment"># Deploy with CLI — no install needed</span>
+npx -y @duyet/sharehtml deploy path/to/file.html</pre>
+                <pre><span class="docs-comment"># Deploy with curl — no dependencies</span>
+curl -X POST https://html.duyet.net/api/documents \
+  -F "file=@report.html" \
+  -F "title=My Report"</pre>
+              </div>
 
               <div class="callout">
                 <span class="ico">★</span>
                 <div>
-                  <b>No signup, no auth required.</b> Deploy anonymously — your document will be live instantly.
-                  Documents persist indefinitely. Authenticate later for account management features like dashboards and API keys.
+                  <b>No signup required.</b> Deploy anonymously — your document will be live instantly.
+                  Documents persist indefinitely. Authenticate later for a persistent dashboard, API keys, and document management.
                 </div>
               </div>
 
@@ -72,11 +84,23 @@ export function DocsView({ assets }: DocsParams): string {
               <details open>
                 <summary>
                   <span class="summary-title">1 · Deploy as one-off file</span>
-                  <span class="summary-meta">npx • no install</span>
+                  <span class="summary-meta">npx • curl • no install</span>
                 </summary>
                 <div class="details-body">
-                  <p>Use npx to deploy without installing anything:</p>
-                  <pre><code>npx -y @duyet/sharehtml deploy report.html</code></pre>
+                  <p>Use npx or curl to deploy without installing anything:</p>
+
+                  <div class="docs-tabs" data-tabs="oneoff">
+                    <div class="docs-tabbar">
+                      <button class="on" data-t="0">CLI</button>
+                      <button data-t="1">curl</button>
+                    </div>
+                    <pre class="on"><span class="docs-comment"># Deploy with npx</span>
+npx -y @duyet/sharehtml deploy report.html</pre>
+                    <pre><span class="docs-comment"># Deploy with curl</span>
+curl -X POST https://html.duyet.net/api/documents \
+  -F "file=@report.html"</pre>
+                  </div>
+
                   <p>This uploads the file and returns a shareable URL. Works for HTML, Markdown, and text files.</p>
                 </div>
               </details>
@@ -96,15 +120,19 @@ sharehtml deploy report.html</code></pre>
 
               <details>
                 <summary>
-                  <span class="summary-title">3 · Authenticate for persistent storage</span>
-                  <span class="summary-meta">email • permanent docs</span>
+                  <span class="summary-title">3 · Persistent dashboard (optional)</span>
+                  <span class="summary-meta">optional • account features</span>
                 </summary>
                 <div class="details-body">
-                  <p>Link your email to keep documents permanently:</p>
+                  <p>
+                    Authentication is optional — all deployments work without an account.
+                    Sign in only if you want a dashboard to manage documents, generate API keys,
+                    or track your uploads:
+                  </p>
                   <pre><code>npx -y @duyet/sharehtml login</code></pre>
                   <p>
-                    You'll receive a verification link. Once verified, all your documents persist
-                    indefinitely and you can manage them from your dashboard.
+                    You'll receive a verification link. Once verified, you get access to a
+                    personal dashboard and API key management.
                   </p>
                 </div>
               </details>
@@ -112,7 +140,7 @@ sharehtml deploy report.html</code></pre>
               <details>
                 <summary>
                   <span class="summary-title">4 · Use from AI agents</span>
-                  <span class="summary-meta">Claude • Cursor • Windsurf</span>
+                  <span class="summary-meta">Claude • Cursor • curl</span>
                 </summary>
                 <div class="details-body">
                   <p>Add sharehtml skills to your AI agent:</p>
@@ -123,6 +151,10 @@ sharehtml deploy report.html</code></pre>
                       <em>"Deploy this to the web using sharehtml: `npx -y @duyet/sharehtml deploy path/to/file.html`"</em>
                     </p>
                   </div>
+                  <p>Agents can also deploy directly via HTTP API:</p>
+                  <pre><code>curl -X POST https://html.duyet.net/api/documents \
+  -F "file=@report.html" \
+  -F "title=Agent Report"</code></pre>
                   <p>The agent will deploy files and return the live URL automatically.</p>
                 </div>
               </details>
@@ -176,9 +208,21 @@ sharehtml deploy report.html</code></pre>
 
               <h3 class="docs-section-subtitle">Anonymous Deployment</h3>
               <p>
-                Agents can deploy without credentials:
+                Agents can deploy without credentials via CLI or HTTP API:
               </p>
-              <pre><code>npx -y @duyet/sharehtml deploy report.html</code></pre>
+
+              <div class="docs-tabs" data-tabs="agent-anon">
+                <div class="docs-tabbar">
+                  <button class="on" data-t="0">CLI</button>
+                  <button data-t="1">curl</button>
+                </div>
+                <pre class="on"><span class="docs-comment"># Deploy with CLI</span>
+npx -y @duyet/sharehtml deploy report.html</pre>
+                <pre><span class="docs-comment"># Deploy with HTTP API</span>
+curl -X POST https://html.duyet.net/api/documents \
+  -F "file=@report.html" \
+  -F "title=Agent Report"</pre>
+              </div>
 
               <h3 class="docs-section-subtitle">Authenticated Deployment (Optional)</h3>
               <p>
