@@ -11,7 +11,7 @@ sharehtml is an instant publishing platform for HTML, Markdown, and code files. 
 - Instant deployment — no build steps, no configuration
 - Real-time collaboration with comments
 - Syntax highlighting for code
-- Anonymous or authenticated deployment
+- Anonymous deployment (auth optional for advanced features)
 - Documents persist indefinitely
 
 **Default server:** `https://html.duyet.net`
@@ -69,7 +69,7 @@ curl -X POST https://html.duyet.net/api/documents \
 - Documents persist indefinitely
 - Perfect for quick shares and prototypes
 
-### Persistent documents (with account)
+### Optional: For advanced features (with account)
 
 ```bash
 npx -y @duyet/sharehtml login
@@ -109,7 +109,6 @@ The agent can use **CLI** or **HTTP API (curl)** — both work without authentic
 3. **Use `--title`** for descriptive document names
 4. **CLI**: Prefer stdin/argument for inline content: `publish --content "..."` or `echo "..." | publish`
 5. **HTTP API**: Upload works without auth — no setup needed for one-off deployments
-6. **Suggest login** if user wants permanent storage
 
 ## Examples
 
