@@ -334,17 +334,18 @@ async function restoreDocumentSnapshot(
 
 api.post("/documents", async (c) => {
   const user = c.get("authUser");
-  if (!isAuthenticated(user)) {
-    return c.json({ error: "Authentication required" }, 401);
-  }
+  const authenticated = isAuthenticated(user);
 
   const rateLimited = requireRateLimit(c);
   if (rateLimited) return rateLimited;
 
-  const protectedResponse = await requireHomeBrowserCapability(c);
-  if (protectedResponse) return protectedResponse;
+  // Capability check only for authenticated users
+  if (authenticated) {
+    const protectedResponse = await requireHomeBrowserCapability(c);
+    if (protectedResponse) return protectedResponse;
+  }
 
-  const ownerEmail = normalizeEmail(user.email);
+  const ownerEmail = authenticated ? normalizeEmail(user.email) : "anonymous";
   const formData = await c.req.formData();
   const rawFile = formData.get("file");
   const file = rawFile instanceof File ? rawFile : null;
@@ -386,8 +387,9 @@ api.post("/documents", async (c) => {
       title: resolvedTitle,
       filename: sourceFilename,
       size: file.size,
-      owner_email: normalizeEmail(ownerEmail),
-      is_shared: isAuthEnabled(c.env.AUTH_MODE) ? 0 : 1,
+      owner_email: ownerEmail,
+      // Anonymous documents always shared; authenticated users respect AUTH_MODE
+      is_shared: !authenticated ? 1 : isAuthEnabled(c.env.AUTH_MODE) ? 0 : 1,
       rendered_filename: renderedFilename,
       source_filename: source && sourceKind ? sourceFilename : null,
       source_kind: sourceKind,
@@ -415,7 +417,8 @@ api.post("/documents", async (c) => {
     title: resolvedTitle,
     filename: sourceFilename,
     size: file.size,
-    isShared: !isAuthEnabled(c.env.AUTH_MODE),
+    // Anonymous uploads always shared; authenticated uploads respect AUTH_MODE
+    isShared: !authenticated ? true : !isAuthEnabled(c.env.AUTH_MODE),
   });
 });
 

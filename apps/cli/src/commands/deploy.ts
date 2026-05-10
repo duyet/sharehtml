@@ -13,7 +13,7 @@ import {
 } from "../api/client.js";
 import { readStdin } from "../utils/stdin.js";
 import { deploymentRequiresLogin } from "../auth/capabilities.js";
-import { getDocumentMapping, removeDocumentMapping, setDocumentMapping } from "../config/store.js";
+import { getDocumentMapping, removeDocumentMapping, setDocumentMapping, getAuthToken } from "../config/store.js";
 import { updateDocumentSharing } from "./share-utils.js";
 import { renderedFilenameToHtml } from "../utils/document-render.js";
 
@@ -124,7 +124,9 @@ export const deployCmd = new Command("deploy")
           throw new Error("Private documents require Cloudflare Access on this deployment.");
         }
 
-        const existing = await findDocumentByFilename(filename, "source");
+        const isAuthenticated = getAuthToken() !== undefined;
+        // Only check for existing documents if authenticated (anonymous users can't update)
+        const existing = isAuthenticated ? await findDocumentByFilename(filename, "source") : null;
         if (existing && !opts.update) {
           const existingUrl = getDocumentUrl(existing.id);
           console.error(`Document already exists at ${existingUrl}`);
@@ -212,22 +214,26 @@ export const deployCmd = new Command("deploy")
       const filename = basename(filePath);
       const lookupFilename = renderedFilenameToHtml(filename);
       const mappedDocumentId = getDocumentMapping(filePath);
+      const isAuthenticated = getAuthToken() !== undefined;
       let existing = null;
 
-      if (mappedDocumentId) {
-        try {
-          existing = await getDocument(mappedDocumentId);
-        } catch {
-          removeDocumentMapping(filePath);
+      // Only check for existing documents if authenticated (anonymous users can't update)
+      if (isAuthenticated) {
+        if (mappedDocumentId) {
+          try {
+            existing = await getDocument(mappedDocumentId);
+          } catch {
+            removeDocumentMapping(filePath);
+          }
         }
-      }
 
-      if (!existing) {
-        existing = await findDocumentByFilename(filename, "source");
-      }
+        if (!existing) {
+          existing = await findDocumentByFilename(filename, "source");
+        }
 
-      if (!existing && lookupFilename !== filename) {
-        existing = await findDocumentByFilename(lookupFilename, "rendered");
+        if (!existing && lookupFilename !== filename) {
+          existing = await findDocumentByFilename(lookupFilename, "rendered");
+        }
       }
 
       if (existing) {

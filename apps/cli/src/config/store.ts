@@ -17,7 +17,7 @@ const config = new Conf<Config>({
 
 export function getConfig(): Config {
   return {
-    workerUrl: config.get("workerUrl"),
+    workerUrl: config.get("workerUrl") || "https://html.duyet.net",
     documentMappings: config.get("documentMappings") || {},
   };
 }
