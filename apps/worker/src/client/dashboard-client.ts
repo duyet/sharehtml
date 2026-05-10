@@ -13,6 +13,12 @@ interface DashboardDocument {
   is_shared: number;
 }
 
+interface ApiKey {
+  id: string;
+  name: string;
+  created_at: string;
+}
+
 interface DashboardConfig {
   page: number;
   pageSize: number;
@@ -190,6 +196,83 @@ async function deleteDocument(docId: string): Promise<boolean> {
   }
 }
 
+function renderApiKeyItem(key: ApiKey): string {
+  const prefix = key.id.slice(0, 8);
+  const date = formatRelativeTime(key.created_at);
+  return `
+    <div class="api-key-item" data-key-id="${escapeHtml(key.id)}">
+      <div class="api-key-item-prefix">shk_${prefix}...</div>
+      <div class="api-key-item-date">${date}</div>
+      <button class="api-key-item-delete" data-key-id="${escapeHtml(key.id)}">delete</button>
+    </div>
+  `;
+}
+
+async function loadApiKeys(): Promise<void> {
+  if (!config) return;
+
+  try {
+    const response = await dashboardFetch("/api/keys");
+    if (!response.ok) return;
+
+    const data = await response.json();
+    if (!isRecord(data) || !Array.isArray(data.keys)) return;
+
+    const keys: ApiKey[] = data.keys.map((k: unknown) => {
+      if (!isRecord(k)) return null;
+      return {
+        id: typeof k.id === "string" ? k.id : "",
+        name: typeof k.name === "string" ? k.name : "",
+        created_at: typeof k.created_at === "string" ? k.created_at : "",
+      };
+    }).filter(Boolean) as ApiKey[];
+
+    const listEl = document.getElementById("api-keys-list");
+    const emptyEl = document.getElementById("api-keys-empty");
+
+    if (!listEl || !emptyEl) return;
+
+    if (keys.length === 0) {
+      listEl.innerHTML = "";
+      emptyEl.style.display = "flex";
+      return;
+    }
+
+    emptyEl.style.display = "none";
+    listEl.innerHTML = keys.map(renderApiKeyItem).join("");
+  } catch {
+    // Silently fail on error
+  }
+}
+
+async function createApiKey(): Promise<void> {
+  if (!config) return;
+
+  try {
+    const response = await dashboardFetch("/api/keys", { method: "POST" });
+    if (!response.ok) return;
+
+    const data = await response.json();
+    if (!isRecord(data) || typeof data.key !== "string") return;
+
+    showApiKeyModal(data.key);
+    await loadApiKeys();
+  } catch {
+    // Silently fail on error
+  }
+}
+
+async function deleteApiKey(keyId: string): Promise<boolean> {
+  if (!config) return false;
+
+  try {
+    const response = await dashboardFetch(`/api/keys/${keyId}`, { method: "DELETE" });
+    return response.ok;
+  } catch {
+    return false;
+  }
+}
+
 function showDeleteModal(docId: string): void {
   deleteTargetId = docId;
   const modal = document.getElementById("delete-modal");
@@ -305,17 +388,10 @@ function initDashboard(): void {
     });
   }
 
-  // API Key buttons (placeholder - no backend yet)
+  // API Key buttons
   const createApiKeyBtn = document.getElementById("create-api-key-btn");
   if (createApiKeyBtn) {
-    createApiKeyBtn.addEventListener("click", () => {
-      // Generate a placeholder key for UI demonstration
-      const chars = "0123456789abcdefghijklmnopqrstuvwxyz";
-      let key = "shtml_";
-      const bytes = crypto.getRandomValues(new Uint8Array(24));
-      for (let i = 0; i < 24; i++) key += chars[bytes[i] % chars.length];
-      showApiKeyModal(key);
-    });
+    createApiKeyBtn.addEventListener("click", () => void createApiKey());
   }
 
   const apiKeyCopyBtn = document.getElementById("api-key-copy-btn");
@@ -344,6 +420,25 @@ function initDashboard(): void {
       if (e.target === apiKeyModal) hideApiKeyModal();
     });
   }
+
+  // API Keys list delete handler
+  const apiKeysList = document.getElementById("api-keys-list");
+  if (apiKeysList) {
+    apiKeysList.addEventListener("click", async (e: Event) => {
+      const target = e.target;
+      if (!(target instanceof HTMLElement)) return;
+      if (!target.classList.contains("api-key-item-delete")) return;
+      const keyId = target.dataset.keyId;
+      if (!keyId) return;
+      const ok = await deleteApiKey(keyId);
+      if (ok) {
+        await loadApiKeys();
+      }
+    });
+  }
+
+  // Load API keys on init
+  void loadApiKeys();
 
   // Clerk
   initClerkUserButton();

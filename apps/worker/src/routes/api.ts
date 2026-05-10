@@ -90,7 +90,12 @@ api.post("/keys", async (c) => {
     return c.json({ error: "Cannot create API keys using API key authentication" }, 403);
   }
 
-  const body = await c.req.json();
+  let body: unknown = {};
+  try {
+    body = await c.req.json();
+  } catch {
+    // Empty body is valid, name defaults to ""
+  }
   const name = isRecord(body) && typeof body.name === "string" ? body.name.trim() : "";
 
   const rawKey = generateApiKey();
