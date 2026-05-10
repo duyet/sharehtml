@@ -34,7 +34,6 @@ Returns a shareable URL like `https://html.duyet.net/d/abc123`.
 | `echo '<html>' \| npx -y @duyet/sharehtml publish` | Deploy HTML content via stdin pipe |
 | `npx -y @duyet/sharehtml publish --content '<html>'` | Deploy HTML content directly as argument |
 | `npx -y @duyet/sharehtml deploy <file> --title "My Title"` | Deploy with custom title |
-| `npx -y @duyet/sharehtml deploy <file> --title "My Title"` | Deploy with custom title |
 | `npx -y @duyet/sharehtml login` | Authenticate for persistent storage |
 | `npx -y @duyet/sharehtml list` | List your documents (authenticated) |
 | `npx -y @duyet/sharehtml pull <id>` | Download a document's source |
