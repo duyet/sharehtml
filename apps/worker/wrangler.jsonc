@@ -45,6 +45,10 @@
     {
       "tag": "v1",
       "new_sqlite_classes": ["DocumentDO", "RegistryDO"]
+    },
+    {
+      "tag": "v2",
+      "new_sqlite_classes": []
     }
   ],
   "env": {

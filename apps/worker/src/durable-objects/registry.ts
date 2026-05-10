@@ -35,7 +35,8 @@ export class RegistryDO extends DurableObject<Env> {
         email TEXT PRIMARY KEY,
         display_name TEXT NOT NULL,
         color TEXT NOT NULL,
-        created_at TEXT NOT NULL DEFAULT (datetime('now'))
+        created_at TEXT NOT NULL DEFAULT (datetime('now')),
+        deleted_at TEXT
       )
     `);
     this.sql.exec(`
@@ -132,7 +133,7 @@ export class RegistryDO extends DurableObject<Env> {
   async getUser(email: string): Promise<UserRow | null> {
     const normalizedEmail = normalizeEmail(email);
     const rows = this.sql
-      .exec<UserRow>("SELECT email, display_name, color FROM users WHERE lower(email) = ?", normalizedEmail)
+      .exec<UserRow>("SELECT email, display_name, color FROM users WHERE lower(email) = ? AND deleted_at IS NULL", normalizedEmail)
       .toArray();
     if (rows.length === 0) return null;
     return rows[0];
@@ -140,11 +141,24 @@ export class RegistryDO extends DurableObject<Env> {
 
   async setUser(email: string, displayName: string): Promise<UserRow> {
     const normalizedEmail = normalizeEmail(email);
-    const existing = await this.getUser(email);
-    if (existing) {
+    // Check if user exists (including deleted)
+    const rows = this.sql
+      .exec<UserRow & { deleted_at: string | null }>("SELECT email, display_name, color, deleted_at FROM users WHERE lower(email) = ?", normalizedEmail)
+      .toArray();
+
+    if (rows.length > 0) {
+      const existing = rows[0];
+      if (existing.deleted_at) {
+        // Reactivate deleted user
+        this.sql.exec("UPDATE users SET display_name = ?, deleted_at = NULL WHERE email = ?", displayName, existing.email);
+        return { email: existing.email, display_name: displayName, color: existing.color };
+      }
+      // Update existing user
       this.sql.exec("UPDATE users SET display_name = ? WHERE email = ?", displayName, existing.email);
       return { ...existing, display_name: displayName };
     }
+
+    // Create new user
     const color = this.pickColor();
     this.sql.exec(
       "INSERT INTO users (email, display_name, color) VALUES (?, ?, ?)",
@@ -159,7 +173,8 @@ export class RegistryDO extends DurableObject<Env> {
     const normalizedEmail = normalizeEmail(email);
     const existing = await this.getUser(email);
     if (!existing) return false;
-    this.sql.exec("DELETE FROM users WHERE email = ?", existing.email);
+    // Soft delete: mark as deleted instead of removing
+    this.sql.exec("UPDATE users SET deleted_at = datetime('now') WHERE email = ?", existing.email);
     return true;
   }
 
