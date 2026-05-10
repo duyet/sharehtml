@@ -32,7 +32,7 @@ body {
 }
 
 .docs-toc-title {
-  font-family: "JetBrains Mono", monospace;
+  font-family: var(--font-mono);
   font-size: 10px;
   letter-spacing: 0.1em;
   text-transform: uppercase;
@@ -121,7 +121,7 @@ body {
 }
 
 .docs-section code {
-  font-family: "JetBrains Mono", monospace;
+  font-family: var(--font-mono);
   font-size: 13px;
   background: var(--color-surface-soft);
   padding: 3px 6px;
@@ -133,7 +133,7 @@ body {
   background: var(--color-surface-soft);
   border-radius: 10px;
   padding: 16px 18px;
-  font-family: "JetBrains Mono", monospace;
+  font-family: var(--font-mono);
   font-size: 12.5px;
   line-height: 1.6;
   color: var(--color-body);
@@ -182,7 +182,7 @@ body {
   appearance: none;
   border: none;
   background: none;
-  font-family: "JetBrains Mono", monospace;
+  font-family: var(--font-mono);
   font-size: 12px;
   color: var(--color-muted);
   padding: 10px 16px;

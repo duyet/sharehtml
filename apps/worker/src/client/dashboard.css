@@ -12,10 +12,10 @@
 }
 
 .topbar-home {
-  font-family: "Tiempos Headline", Georgia, serif;
+  font-family: var(--font-serif);
   font-size: 24px;
   font-weight: 400;
-  color: var(--color-primary);
+  color: var(--clay);
   text-decoration: none;
   display: flex;
   align-items: center;
@@ -24,7 +24,7 @@
 
 .topbar-home::before {
   content: "\2726";
-  color: var(--color-ink);
+  color: var(--slate);
   font-size: 18px;
 }
 
@@ -36,7 +36,7 @@
 
 .topbar-email {
   font-size: 14px;
-  color: var(--color-muted);
+  color: var(--g500);
 }
 
 .dashboard-content {
@@ -58,10 +58,10 @@
 
 .dashboard-count {
   font-size: 14px;
-  color: var(--color-muted-soft);
+  color: var(--g500);
 }
 
-/* Document Grid */
+/* ── Document Grid ─────────────────────────────── */
 .doc-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -70,16 +70,18 @@
 }
 
 .doc-grid-card {
-  background: var(--color-canvas);
-  border: 1px solid var(--color-hairline);
+  background: var(--paper);
+  border: 1.5px solid var(--g200);
   border-radius: 12px;
   overflow: hidden;
-  transition: transform 0.2s ease, border-color 0.2s ease;
+  box-shadow: 0 2px 8px rgba(20, 20, 19, 0.04);
+  transition: transform 150ms ease, box-shadow 150ms ease, border-color 150ms ease;
 }
 
 .doc-grid-card:hover {
   transform: translateY(-2px);
-  border-color: var(--color-primary);
+  box-shadow: 0 6px 20px rgba(20, 20, 19, 0.08);
+  border-color: var(--g300);
 }
 
 /* Preview iframe container */
@@ -88,8 +90,8 @@
   width: 100%;
   height: 200px;
   overflow: hidden;
-  background: var(--color-surface-soft);
-  border-bottom: 1px solid var(--color-hairline);
+  background: var(--g100);
+  border-bottom: 1px solid var(--g200);
 }
 
 .doc-grid-iframe {
@@ -109,24 +111,25 @@
 }
 
 .doc-grid-card-title {
-  font-family: "Tiempos Headline", Georgia, serif;
+  font-family: var(--font-serif);
   font-size: 17px;
-  color: var(--color-ink);
+  color: var(--slate);
   text-decoration: none;
   display: block;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  transition: color 150ms ease;
 }
 
 .doc-grid-card-title:hover {
-  color: var(--color-primary);
+  color: var(--clay);
 }
 
 .doc-grid-filename {
-  font-family: "JetBrains Mono", monospace;
+  font-family: var(--font-mono);
   font-size: 12px;
-  color: var(--color-muted-soft);
+  color: var(--g500);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -139,7 +142,7 @@
   align-items: center;
   gap: 8px;
   font-size: 12px;
-  color: var(--color-muted-soft);
+  color: var(--g500);
   margin-bottom: 12px;
   flex-wrap: wrap;
 }
@@ -147,7 +150,7 @@
 .doc-grid-meta span::after {
   content: "\00B7";
   margin-left: 8px;
-  color: var(--color-hairline);
+  color: var(--g200);
 }
 
 .doc-grid-meta span:last-child::after {
@@ -155,13 +158,14 @@
   margin-left: 0;
 }
 
-/* Share badges */
+/* ── Share Badges ───────────────────────────────── */
 .share-badge {
-  font-size: 11px;
+  font-family: var(--font-mono);
+  font-size: 10px;
   font-weight: 500;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
-  padding: 2px 8px;
+  letter-spacing: 0.08em;
+  padding: 3px 8px;
   border-radius: 4px;
   display: inline-block;
   line-height: 1.4;
@@ -173,21 +177,24 @@
 }
 
 .badge-link {
-  background: rgba(46, 125, 50, 0.12);
-  color: var(--color-primary);
+  background: rgba(120, 140, 93, 0.12);
+  color: var(--olive);
+  border: 1px solid rgba(120, 140, 93, 0.3);
 }
 
 .badge-email {
-  background: rgba(21, 101, 192, 0.12);
-  color: var(--color-primary);
+  background: rgba(217, 119, 87, 0.12);
+  color: var(--clay);
+  border: 1px solid rgba(217, 119, 87, 0.3);
 }
 
 .badge-private {
-  background: rgba(139, 105, 20, 0.12);
-  color: var(--color-muted-soft);
+  background: rgba(135, 134, 127, 0.08);
+  color: var(--g500);
+  border: 1px solid var(--g200);
 }
 
-/* Card action buttons */
+/* ── Card Action Buttons ─────────────────────────── */
 .doc-grid-actions {
   display: flex;
   gap: 8px;
@@ -197,37 +204,42 @@
   font-size: 13px;
   padding: 6px 14px;
   border-radius: 6px;
-  border: 1px solid var(--color-hairline);
-  background: var(--color-canvas);
-  color: var(--color-body);
+  border: 1px solid var(--g200);
+  background: var(--paper);
+  color: var(--g700);
   cursor: pointer;
   text-decoration: none;
   display: inline-block;
-  transition: border-color 0.15s ease, background 0.15s ease;
+  transition: border-color 150ms ease, background 150ms ease, color 150ms ease;
 }
 
 .doc-grid-btn:hover {
-  border-color: var(--color-primary);
+  border-color: var(--g300);
+  background: var(--ivory);
 }
 
 .doc-grid-btn-view {
-  color: var(--color-primary);
+  color: var(--clay);
+}
+
+.doc-grid-btn-view:hover {
+  border-color: var(--clay);
 }
 
 .doc-grid-btn-delete {
-  color: var(--color-muted-soft);
+  color: var(--g500);
 }
 
 .doc-grid-btn-delete:hover {
-  border-color: var(--color-error);
-  color: var(--color-error);
+  border-color: var(--rust);
+  color: var(--rust);
 }
 
-/* Empty state */
+/* ── Empty State ────────────────────────────────── */
 .dashboard-empty {
   text-align: center;
   padding: 64px 32px;
-  color: var(--color-muted);
+  color: var(--g500);
 }
 
 .dashboard-empty p {
@@ -237,28 +249,28 @@
 
 .dashboard-empty pre {
   display: inline-block;
-  background: var(--color-surface-dark);
+  background: var(--slate);
   border-radius: 12px;
   padding: 24px;
-  font-family: "JetBrains Mono", monospace;
+  font-family: var(--font-mono);
   font-size: 14px;
-  color: var(--color-on-dark);
+  color: var(--ivory);
 }
 
 .dashboard-empty .dashboard-ai-prompt {
   margin-top: 24px;
   padding: 16px 20px;
-  background: var(--color-surface-card);
-  border: 1px solid var(--color-hairline);
+  background: var(--paper);
+  border: 1px solid var(--g200);
   border-radius: 10px;
   font-size: 15px;
-  color: var(--color-body);
+  color: var(--g700);
   max-width: 500px;
   margin-left: auto;
   margin-right: auto;
 }
 
-/* Pagination */
+/* ── Pagination ─────────────────────────────────── */
 .doc-grid-pagination {
   display: flex;
   align-items: center;
@@ -270,26 +282,27 @@
 
 .pagination-link {
   font-size: 14px;
-  color: var(--color-primary);
+  color: var(--clay);
   text-decoration: none;
   padding: 8px 16px;
-  border: 1px solid var(--color-hairline);
+  border: 1px solid var(--g200);
   border-radius: 6px;
   cursor: pointer;
-  background: var(--color-canvas);
-  transition: border-color 0.15s ease;
+  background: var(--paper);
+  transition: border-color 150ms ease, background 150ms ease;
 }
 
 .pagination-link:hover {
-  border-color: var(--color-primary);
+  border-color: var(--clay);
+  background: var(--ivory);
 }
 
 .pagination-status {
   font-size: 13px;
-  color: var(--color-muted-soft);
+  color: var(--g500);
 }
 
-/* Dashboard section */
+/* ── Dashboard Section ───────────────────────────── */
 .dashboard-section {
   margin-top: 64px;
 }
@@ -299,16 +312,17 @@
   font-weight: 500;
   text-transform: uppercase;
   letter-spacing: 0.1em;
-  color: var(--color-muted);
+  color: var(--g500);
   margin-bottom: 24px;
 }
 
-/* API Keys panel */
+/* ── API Keys Panel ─────────────────────────────── */
 .api-keys-panel {
-  background: var(--color-surface-card);
+  background: var(--paper);
   border-radius: 12px;
   padding: 32px;
-  border: 1px solid var(--color-hairline);
+  border: 1px solid var(--g200);
+  box-shadow: 0 2px 8px rgba(20, 20, 19, 0.04);
 }
 
 .api-keys-empty {
@@ -319,7 +333,7 @@
 }
 
 .api-keys-empty p {
-  color: var(--color-body);
+  color: var(--g700);
   font-size: 15px;
 }
 
@@ -332,37 +346,37 @@
   align-items: center;
   justify-content: space-between;
   padding: 12px 16px;
-  border: 1px solid var(--color-hairline);
+  border: 1px solid var(--g200);
   border-radius: 8px;
   margin-bottom: 8px;
-  background: var(--color-canvas);
+  background: var(--ivory);
 }
 
 .api-key-item-prefix {
-  font-family: "JetBrains Mono", monospace;
+  font-family: var(--font-mono);
   font-size: 14px;
-  color: var(--color-body);
+  color: var(--slate);
 }
 
 .api-key-item-date {
   font-size: 12px;
-  color: var(--color-muted-soft);
+  color: var(--g500);
 }
 
 .api-key-item-delete {
   font-size: 13px;
   padding: 4px 12px;
   border-radius: 4px;
-  border: 1px solid var(--color-hairline);
+  border: 1px solid var(--g200);
   background: transparent;
-  color: var(--color-muted-soft);
+  color: var(--g500);
   cursor: pointer;
-  transition: border-color 0.15s ease, color 0.15s ease;
+  transition: border-color 150ms ease, color 150ms ease;
 }
 
 .api-key-item-delete:hover {
-  border-color: var(--color-error);
-  color: var(--color-error);
+  border-color: var(--rust);
+  color: var(--rust);
 }
 
 .api-key-display {
@@ -373,11 +387,11 @@
 
 .api-key-display code {
   flex: 1;
-  font-family: "JetBrains Mono", monospace;
+  font-family: var(--font-mono);
   font-size: 13px;
   padding: 12px 16px;
-  background: var(--color-surface-dark);
-  color: var(--color-on-dark);
+  background: var(--slate);
+  color: var(--ivory);
   border-radius: 8px;
   overflow-x: auto;
   word-break: break-all;
@@ -387,33 +401,37 @@
 .modal-backdrop {
   position: fixed;
   inset: 0;
-  background: var(--color-overlay);
+  background: rgba(20, 20, 19, 0.5);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 100;
+  backdrop-filter: blur(2px);
 }
 
 .modal-content {
-  background: var(--color-canvas);
+  background: var(--paper);
   border-radius: 12px;
   padding: 32px;
   max-width: 480px;
   width: 100%;
   margin: 16px;
+  box-shadow: 0 12px 40px rgba(20, 20, 19, 0.12);
+  border: 1px solid var(--g200);
 }
 
 .modal-title {
-  font-family: "Tiempos Headline", Georgia, serif;
+  font-family: var(--font-serif);
   font-size: 24px;
-  color: var(--color-ink);
+  color: var(--slate);
   margin-bottom: 12px;
 }
 
 .modal-description {
   font-size: 15px;
-  color: var(--color-body);
+  color: var(--g700);
   margin-bottom: 24px;
+  line-height: 1.55;
 }
 
 .modal-actions {
@@ -423,15 +441,15 @@
 }
 
 .modal-submit {
-  background: var(--color-primary);
-  color: var(--color-on-primary);
+  background: var(--clay);
+  color: var(--paper);
   padding: 10px 20px;
   border-radius: 8px;
   border: none;
   font-weight: 500;
   font-size: 14px;
   cursor: pointer;
-  transition: background 0.2s ease;
+  transition: background 150ms ease;
 }
 
 .modal-submit:hover {
@@ -440,20 +458,21 @@
 
 .modal-cancel {
   background: transparent;
-  color: var(--color-muted);
+  color: var(--g500);
   padding: 10px 20px;
   border-radius: 8px;
-  border: 1px solid var(--color-hairline);
+  border: 1px solid var(--g200);
   font-size: 14px;
   cursor: pointer;
-  transition: border-color 0.15s ease;
+  transition: border-color 150ms ease, color 150ms ease;
 }
 
 .modal-cancel:hover {
-  border-color: var(--color-primary);
+  border-color: var(--g300);
+  color: var(--slate);
 }
 
-/* Responsive */
+/* ── Responsive ─────────────────────────────────── */
 @media (max-width: 1024px) {
   .doc-grid {
     grid-template-columns: repeat(2, 1fr);

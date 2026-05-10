@@ -25,7 +25,7 @@ body {
   z-index: 10;
 }
 .topbar-home {
-  font-family: "Tiempos Headline", Georgia, serif;
+  font-family: var(--font-serif);
   font-size: 24px;
   font-weight: 400;
   color: var(--color-primary);
@@ -44,7 +44,7 @@ body {
   min-width: 0;
 }
 .topbar-title {
-  font-family: "Tiempos Headline", Georgia, serif;
+  font-family: var(--font-serif);
   font-size: 18px;
   font-weight: 400;
   color: var(--color-ink);
@@ -167,7 +167,7 @@ body {
 }
 .presence-tooltip-email {
   font-size: 12px;
-  font-family: "JetBrains Mono", monospace;
+  font-family: var(--font-mono);
   color: var(--color-muted);
   line-height: 1.2;
 }
@@ -1066,7 +1066,7 @@ body {
   box-shadow: 0 4px 12px rgba(20, 20, 19, 0.08);
 }
 .modal-title {
-  font-family: "Tiempos Headline", Georgia, serif;
+  font-family: var(--font-serif);
   font-size: 24px;
   font-weight: 400;
   color: var(--color-ink);

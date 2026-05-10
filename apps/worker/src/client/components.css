@@ -2,7 +2,7 @@
 
 /* ── Eyebrow ───────────────────────────────── */
 .eyebrow {
-  font-family: "JetBrains Mono", monospace;
+  font-family: var(--font-mono);
   font-size: 11px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -37,7 +37,7 @@ summary {
   list-style: none;
   cursor: pointer;
   padding: 14px 16px;
-  font-family: "Tiempos Headline", "EB Garamond", Georgia, serif;
+  font-family: var(--font-serif);
   font-size: 16px;
   color: var(--color-ink);
   display: flex;
@@ -67,7 +67,7 @@ details[open] summary::before {
 }
 
 .summary-meta {
-  font-family: "JetBrains Mono", monospace;
+  font-family: var(--font-mono);
   font-size: 11px;
   color: var(--color-muted-soft);
 }
@@ -115,7 +115,7 @@ details[open] summary::before {
 
 .faq dt,
 .docs-faq dt {
-  font-family: "Tiempos Headline", "EB Garamond", Georgia, serif;
+  font-family: var(--font-serif);
   font-size: 16px;
   font-weight: 500;
   color: var(--color-ink);
