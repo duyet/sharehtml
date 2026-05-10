@@ -375,59 +375,6 @@ h1, h2, h3, .display-serif {
 /* Utility classes */
 .hidden { display: none !important; }
 
-/* Tabs */
-.tabs {
-  border: 1.5px solid var(--gray-300);
-  border-radius: 10px;
-  background: white;
-  margin: 16px 0 8px;
-  overflow: hidden;
-}
-
-.tabbar {
-  display: flex;
-  border-bottom: 1px solid var(--gray-300);
-  background: var(--gray-150);
-}
-
-.tabbar button {
-  appearance: none;
-  border: none;
-  background: none;
-  font-family: "JetBrains Mono", monospace;
-  font-size: 12px;
-  color: var(--gray-500);
-  padding: 10px 16px;
-  cursor: pointer;
-  border-right: 1px solid var(--gray-300);
-}
-
-.tabbar button.on {
-  background: white;
-  color: var(--slate);
-  border-bottom: 2px solid var(--clay);
-  margin-bottom: -1px;
-}
-
-.tabs pre {
-  display: none;
-  margin: 0;
-  padding: 16px 18px;
-  font-family: "JetBrains Mono", monospace;
-  font-size: 14px;
-  line-height: 1.6;
-  color: var(--slate);
-  overflow-x: auto;
-}
-
-.tabs pre.on {
-  display: block;
-}
-
-.comment {
-  color: var(--gray-500);
-}
-
 /* Pagination */
 .pagination {
   display: flex;

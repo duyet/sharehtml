@@ -173,6 +173,59 @@ li {
   align-items: center;
 }
 
+/* ── Tabs ─────────────────────────────────────── */
+.tabs {
+  border: 1.5px solid var(--color-hairline);
+  border-radius: 10px;
+  background: var(--color-canvas);
+  margin: 16px 0 8px;
+  overflow: hidden;
+}
+
+.tabbar {
+  display: flex;
+  border-bottom: 1px solid var(--color-hairline);
+  background: var(--color-surface-soft);
+}
+
+.tabbar button {
+  appearance: none;
+  border: none;
+  background: none;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 12px;
+  color: var(--color-muted);
+  padding: 10px 16px;
+  cursor: pointer;
+  border-right: 1px solid var(--color-hairline);
+}
+
+.tabbar button.on {
+  background: var(--color-canvas);
+  color: var(--color-ink);
+  border-bottom: 2px solid var(--color-primary);
+  margin-bottom: -1px;
+}
+
+.tabs pre {
+  display: none;
+  margin: 0;
+  padding: 16px 18px;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--color-ink);
+  overflow-x: auto;
+}
+
+.tabs pre.on {
+  display: block;
+}
+
+.comment {
+  color: var(--color-muted);
+}
+
 /* ── Mobile Responsive ──────────────────────────── */
 @media (max-width: 768px) {
   .topbar {
