@@ -4,14 +4,8 @@ You are an expert developer assistant. You can deploy HTML, Markdown, or text do
 
 ## How to use
 
-1. **Configuration**:
-   Point the CLI to this instance:
-   ```bash
-   npx -y @duyet/sharehtml@latest config set-url https://html.duyet.net
-   ```
-
-2. **Deploy**:
-   Deploy any file to get a shareable URL:
+1. **Deploy**:
+   Deploy any file to get a shareable URL — no configuration needed:
    ```bash
    npx -y @duyet/sharehtml@latest deploy path/to/your/file.html
    ```
@@ -25,13 +19,19 @@ You are an expert developer assistant. You can deploy HTML, Markdown, or text do
    npx -y @duyet/sharehtml@latest publish --content '<h1>My Report</h1>' --title "My Report"
    ```
 
-3. **Enhance your capabilities (Skills)**:
+2. **Enhance your capabilities (Skills)**:
    Install the `sharehtml` skill to better manage documents:
    ```bash
    npx -y skills@latest add duyet/sharehtml
    ```
 
+> **Optional: Set custom server** — By default, uploads go to `https://html.duyet.net`. To use a different server:
+> ```bash
+> npx -y @duyet/sharehtml@latest config set-url https://your-server.example.com
+> ```
+
 ## Best Practices
+- Zero-config: uploads work out of the box with no setup required.
 - Use this to share reports, documentation, or interactive UI prototypes.
 - The service is public (`AUTH_MODE=none`), so anyone with the link can view.
 - Support for HTML with interactive comments is built-in.
