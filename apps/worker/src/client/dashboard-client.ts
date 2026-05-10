@@ -305,10 +305,18 @@ async function initClerkUserButton(): Promise<void> {
   const node = document.getElementById("clerk-user-btn");
   if (!(node instanceof HTMLDivElement)) return;
 
+  // Show loading state while Clerk loads
+  node.textContent = "...";
+  node.className = "topbar-link";
+
   try {
     const Clerk = (await import("https://cdn.jsdelivr.net/npm/@clerk/clerk-js@5/dist/clerk.browser.mjs")).default;
     const clerk = new Clerk(config.clerkPublishableKey);
     await clerk.load();
+
+    // Clear loading state
+    node.textContent = "";
+    node.className = "";
 
     // Dashboard requires authentication - auto-open sign-in if not signed in
     if (!clerk.user) {
@@ -318,8 +326,15 @@ async function initClerkUserButton(): Promise<void> {
 
     // For signed-in users, mount the user button (shows avatar)
     clerk.mountUserButton(node);
-  } catch {
-    // Clerk load failed silently
+  } catch (err) {
+    // Clerk load failed - show fallback
+    console.error("Clerk initialization failed:", err);
+    node.textContent = "Sign in";
+    const fallbackBtn = document.createElement("a");
+    fallbackBtn.className = "topbar-link";
+    fallbackBtn.href = "/login";
+    fallbackBtn.textContent = "Sign in";
+    node.replaceWith(fallbackBtn);
   }
 }
 
