@@ -505,12 +505,6 @@ h1, h2, h3, .display-serif {
   gap: 8px;
 }
 
-.topbar-home::before {
-  content: "✦";
-  color: var(--color-ink);
-  font-size: 18px;
-}
-
 .topbar-right {
   display: flex;
   align-items: center;
