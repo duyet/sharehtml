@@ -64,6 +64,41 @@ Clerk is the recommended auth provider for self-hosted instances. The setup scri
 | `CLERK_SECRET_KEY` | Secret | Server-side API key (starts with `sk_`) |
 | `CLERK_JWT_KEY` | Secret | PEM public key for JWT verification |
 | `VIEWER_CAPABILITY_SECRET` | Secret | Required when auth is enabled |
+| `CLERK_WEBHOOK_SECRET` | Secret | Signing secret for Clerk webhooks (starts with `whsec_`) |
+### Clerk Webhooks (User Sync)
+Configure Clerk webhooks to automatically sync users when they sign up or sign in. This ensures users exist in the Registry DO before they perform actions.
+
+**Setup steps:**
+
+1. **Add webhook in Clerk Dashboard:**
+   - Go to [dashboard.clerk.com](https://dashboard.clerk.com) → **Webhooks**
+   - Click **+ Add endpoint**
+   - Enter your webhook URL: `https://<your-domain>/webhooks/clerk`
+     - Production: `https://html.duyet.net/webhooks/clerk`
+     - Dev: Use ngrok/localtunnel to expose local dev server
+   - Click **Create**
+
+2. **Subscribe to events:**
+   - Select **user.created** — Creates user in Registry DO on sign up
+   - Select **user.signedIn** — Backfills user if missing (useful for existing users)
+   - Click **Update**
+
+3. **Get the webhook secret:**
+   - On the webhook endpoint page, copy the **Signing secret** (starts with `whsec_`)
+   - Set it as a Wrangler secret:
+     ```bash
+     npx wrangler secret put CLERK_WEBHOOK_SECRET
+     # Paste the whsec_... value
+     ```
+
+4. **Test the webhook:**
+   - In Clerk Dashboard → Webhooks → Your endpoint
+   - Click **Send test webhook** → Select `user.created`
+   - Verify response: `{"ok": true}`
+
+**Endpoint URL:** `https://<your-domain>/webhooks/clerk`  
+**Events:** `user.created`, `user.signedIn`
+
 ### CLI Authentication
 When your instance uses Clerk authentication, the CLI will automatically detect it and guide you through login:
 npx @duyet/sharehtml login

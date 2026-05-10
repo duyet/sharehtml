@@ -45,6 +45,7 @@ After any PR creation (`/cp`, `/cpr`, or `gh pr create`), immediately start baby
 - **Monorepo**: `apps/worker`, `apps/cli`
 - **Deployment**: Cloudflare Workers with Wrangler
 - **Storage**: R2 for HTML, Durable Objects for metadata
+- **Clerk webhooks**: `/webhooks/clerk` endpoint syncs users on `user.created` and `user.signedIn` events
 
 ## Quality Standards
 
