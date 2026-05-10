@@ -60,6 +60,7 @@ async function renderHomeFromTemplate(c: any, email: string) {
 
   // Handle authentication conditionals
   const isAuthenticated = c.get("authUser").id !== "unauthenticated";
+  html = html.replace(/\{\{clerk_publishable_key\}\}/g, c.env.CLERK_PUBLISHABLE_KEY || "");
   html = html.replace(/\{\{#authenticated\}\}([\s\S]*?)\{\{\/authenticated\}\}/g, isAuthenticated ? "$1" : "");
   html = html.replace(/\{\{\^authenticated\}\}([\s\S]*?)\{\{\/authenticated\}\}/g, isAuthenticated ? "" : "$1");
   html = html.replace(/\{\{#clerk_button\}\}([\s\S]*?)\{\{\/clerk_button\}\}/g, c.env.CLERK_PUBLISHABLE_KEY ? "$1" : "");

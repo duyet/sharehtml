@@ -25,27 +25,19 @@ export function LoginView({ assets, redirectUrl = "/", authMode, clerkPublishabl
           .login-container {
             min-height: 100vh;
             display: flex;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
             padding: 20px;
           }
-          .login-card {
-            background: white;
-            border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            padding: 40px;
-            max-width: 400px;
-            width: 100%;
-            text-align: center;
-          }
           .login-logo {
-            font-size: 24px;
+            font-size: 32px;
             font-weight: bold;
             margin-bottom: 8px;
           }
           .login-subtitle {
             color: #666;
-            margin-bottom: 24px;
+            margin-bottom: 32px;
           }
           .clerk-container {
             min-height: 400px;
@@ -57,11 +49,9 @@ export function LoginView({ assets, redirectUrl = "/", authMode, clerkPublishabl
       </head>
       <body>
         <div class="login-container">
-          <div class="login-card">
-            <div class="login-logo">sharehtml</div>
-            <div class="login-subtitle">Sign in or create an account</div>
-            <div id="clerk-sign-in" class="clerk-container"></div>
-          </div>
+          <div class="login-logo">sharehtml</div>
+          <div class="login-subtitle">Sign in or create an account</div>
+          <div id="clerk-sign-in" class="clerk-container"></div>
         </div>
         <script>
           {raw(`
