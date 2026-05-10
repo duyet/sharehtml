@@ -215,7 +215,7 @@ app.get("/", async (c) => {
       pageSize,
       totalCount: documentsPage.totalCount,
       query,
-      requiresLogin: isAuthEnabled(c.env.AUTH_MODE),
+      requiresLogin: false,  // Home page is always public
       homeCapabilityToken,
       authMode: c.env.AUTH_MODE,
       clerkPublishableKey: c.env.CLERK_PUBLISHABLE_KEY,

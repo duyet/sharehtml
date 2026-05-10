@@ -45,9 +45,37 @@ export function clerkCdnUrl(publishableKey: string): string {
 
 /** Clerk script tag to set publishable key when AUTH_MODE === "clerk". */
 export function ClerkScripts({ publishableKey }: { publishableKey: string }): JSX.Element {
+  // Derive Frontend API URL from publishable key
+  const encoded = publishableKey.replace(/^pk_(live|test)_/, "");
+  const fqdn = atob(encoded).replace(/\$+$/, "");
+  const frontendApiUrl = `https://${fqdn}`;
+
+  // Load from Frontend API with auto-initialization
   return (
-    <script>
-      {raw(`window.__CLERK_PUBLISHABLE_KEY__=${safeJsonForScript(publishableKey)};`)}
-    </script>
+    <>
+      <script
+        crossOrigin="anonymous"
+        src={`${frontendApiUrl}/npm/@clerk/clerk-js@6.8.0/dist/clerk.browser.js`}
+        data-clerk-publishable-key={publishableKey}
+      ></script>
+    </>
+  );
+}
+
+/** UI renderer script tag for Clerk components */
+export function ClerkUIRenderer({ publishableKey }: { publishableKey: string }): JSX.Element {
+  // Derive Frontend API URL from publishable key
+  const encoded = publishableKey.replace(/^pk_(live|test)_/, "");
+  const fqdn = atob(encoded).replace(/\$+$/, "");
+  const frontendApiUrl = `https://${fqdn}`;
+
+  return (
+    <>
+      <script
+        defer
+        crossOrigin="anonymous"
+        src={`${frontendApiUrl}/npm/@clerk/ui@1.7.0/dist/ui.browser.js`}
+      ></script>
+    </>
   );
 }

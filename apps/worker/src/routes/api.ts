@@ -27,6 +27,72 @@ api.get("/auth/verify", async (c) => {
   return c.json({ ok: true, email: user.email });
 });
 
+// Simple sign-in endpoint (TODO: integrate with Clerk Backend API)
+api.post("/clerk/sign_in", async (c) => {
+  try {
+    // Parse body - could be JSON or form-data
+    const contentType = c.req.header("Content-Type") || "";
+    let email, password, redirect;
+
+    if (contentType.includes("application/json")) {
+      const data = await c.req.json();
+      email = data.email;
+      password = data.password;
+      redirect = data.redirect;
+    } else {
+      // Form data parsing
+      const formData = await c.req.formData();
+      email = formData.get("email");
+      password = formData.get("password");
+      redirect = formData.get("redirect");
+    }
+
+    if (!email || !password) {
+      // Return HTML error for form submission
+      if (contentType.includes("application/json")) {
+        return c.json({ error: "Email and password required" }, 400);
+      }
+      return c.html("<!DOCTYPE html><html><body><p style='color:red'>Email and password required</p><a href='/login'>Back</a></body></html>", 400);
+    }
+
+    // TODO: Integrate with Clerk Backend API
+    // For now, create a simple session token
+    const token = btoa(JSON.stringify({
+      email,
+      exp: Date.now() + 7 * 24 * 60 * 60 * 1000, // 7 days
+    }));
+
+    // Check if this is a form POST (HTML form submission)
+    if (!contentType.includes("application/json")) {
+      // HTML form submission - redirect to dashboard
+      return c.html(`
+        <!DOCTYPE html>
+        <html>
+        <head><title>Sign in successful</title></head>
+        <body>
+          <p>Sign in successful! Redirecting...</p>
+          <script>
+            localStorage.setItem("clerk_token", "${token}");
+            setTimeout(() => {
+              window.location.href = "${redirect || "/dashboard"}";
+            }, 500);
+          </script>
+        </body>
+        </html>
+      `);
+    }
+
+    return c.json({
+      token,
+      email,
+      message: "Sign in successful (Clerk integration pending)",
+    });
+  } catch (error) {
+    console.error("Sign in error:", error);
+    return c.json({ error: "Sign in failed" }, 500);
+  }
+});
+
 // Helper to check if user is authenticated (not placeholder)
 function isAuthenticated(user: { id: string }): boolean {
   return user.id !== "unauthenticated";

@@ -318,9 +318,9 @@ async function initClerkUserButton(): Promise<void> {
     node.textContent = "";
     node.className = "";
 
-    // Dashboard requires authentication - auto-open sign-in if not signed in
+    // Dashboard requires authentication - redirect to login if not signed in
     if (!clerk.user) {
-      clerk.openSignIn();
+      window.location.href = "/login?redirect=" + encodeURIComponent(window.location.pathname);
       return;
     }
 
