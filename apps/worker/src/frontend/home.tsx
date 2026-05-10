@@ -103,7 +103,7 @@ function SetupBlock({ workerUrl, requiresLogin }: SetupBlockProps): JSX.Element 
         <a href="https://github.com/duyet/sharehtml">sharehtml CLI</a>.
       </p>
       <pre>
-        {raw(`<span class="cmd-comment"># deploy a file (defaults to ${workerUrl})</span>\n`)}
+        {raw(`<span class="cmd-comment"># deploy a file (defaults to ${workerUrl}) — no signup needed</span>\n`)}
         npx -y @duyet/sharehtml@latest deploy path/to/file.html
         {"\n"}
         {requiresLogin ? "npx -y @duyet/sharehtml@latest login\n" : ""}
@@ -179,9 +179,12 @@ export function HomeView({
           <div class="content">
           <div class="hero">
             <div class="eyebrow">Documentation · Platform Overview</div>
-            <h1>Deploy files instantly with sharehtml</h1>
+            <h1>
+              Deploy files instantly with sharehtml
+              <span class="no-auth-badge">No account required</span>
+            </h1>
             <div class="tldr">
-              <b>TL;DR</b> — Deploy HTML, Markdown, or code files in seconds. No signup required.
+              <b>TL;DR</b> — Deploy HTML, Markdown, or code files in seconds — no signup, no login, no config.
               Documents persist indefinitely. Built for AI agents and developers.
             </div>
             <div class="hero-actions">
