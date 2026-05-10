@@ -23,9 +23,8 @@
       <a class="topbar-link" href="#" id="login-link">Sign In</a>
       <script>
         (function() {
-          const clerkPublishableKey = '{{clerk_publishable_key}}';
-          if (!clerkPublishableKey) return;
-
+          // Clerk auto-initializes via data-clerk-publishable-key attribute
+          // Just wait for window.Clerk to be available
           function initLoginLink() {
             document.getElementById('login-link')?.addEventListener('click', (e) => {
               e.preventDefault();
@@ -33,20 +32,15 @@
             });
           }
 
-          if (window.Clerk) {
-            window.Clerk.load({ publishableKey: clerkPublishableKey })
-              .then(initLoginLink)
-              .catch(() => {});
-          } else {
-            // Wait for Clerk to load (deferred scripts)
-            window.addEventListener('load', () => {
-              if (window.Clerk) {
-                window.Clerk.load({ publishableKey: clerkPublishableKey })
-                  .then(initLoginLink)
-                  .catch(() => {});
-              }
-            });
+          // Poll for Clerk (auto-init happens asynchronously)
+          function checkClerk() {
+            if (window.Clerk) {
+              initLoginLink();
+            } else {
+              setTimeout(checkClerk, 50);
+            }
           }
+          checkClerk();
         })();
       </script>
       {{/authenticated}}
