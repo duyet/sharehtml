@@ -475,6 +475,38 @@ export async function getDocumentComments(id: string): Promise<DocumentCommentsR
   return parseJson<DocumentCommentsResponse>(resp, "Fetch comments");
 }
 
+export async function addDocumentTag(id: string, tag: string): Promise<void> {
+  await requestWithAccess("Add tag", {
+    path: `/api/documents/${id}/tags`,
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ tag }),
+  });
+}
+
+export async function removeDocumentTag(id: string, tag: string): Promise<void> {
+  await requestWithAccess("Remove tag", {
+    path: `/api/documents/${id}/tags/${encodeURIComponent(tag)}`,
+    method: "DELETE",
+  });
+}
+
+export async function getDocumentTags(id: string): Promise<string[]> {
+  const resp = await requestWithAccess("Fetch tags", {
+    path: `/api/documents/${id}/tags`,
+  });
+  const data = await parseJson<{ tags: string[] }>(resp, "Fetch tags");
+  return data.tags;
+}
+
+export async function getAllTags(): Promise<{ tag: string; count: number }[]> {
+  const resp = await requestWithAccess("Fetch all tags", {
+    path: "/api/tags",
+  });
+  const data = await parseJson<{ tags: { tag: string; count: number }[] }>(resp, "Fetch all tags");
+  return data.tags;
+}
+
 export function getDocumentUrl(id: string): string {
   const { workerUrl } = getClient();
   return `${workerUrl}/d/${id}`;
