@@ -5,6 +5,7 @@ import { getAuthMiddleware } from "./utils/auth.js";
 import { api } from "./routes/api.js";
 import { viewer } from "./routes/viewer.js";
 import { docs } from "./routes/docs.js";
+import webhooks from "./routes/webhooks.js";
 import { createCapabilityToken } from "./utils/capability.js";
 import { getAssetUrls } from "./utils/assets.js";
 import { normalizeEmail } from "./utils/email.js";
@@ -142,6 +143,7 @@ app.get("/health", (c) => c.json({ status: "ok" }));
 
 // Public routes (no auth)
 app.route("/docs", docs);
+app.route("/webhooks", webhooks);
 
 app.use("/*", async (c, next) => {
   const middleware = getAuthMiddleware(c.env.AUTH_MODE);
