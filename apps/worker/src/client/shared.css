@@ -226,6 +226,19 @@ li {
   color: var(--color-muted);
 }
 
+/* ── Section ───────────────────────────────────── */
+.section {
+  margin-bottom: 64px;
+}
+
+.section h2 {
+  font-family: "Tiempos Headline", "EB Garamond", Georgia, serif;
+  font-size: 28px;
+  font-weight: 500;
+  color: var(--color-ink);
+  margin-bottom: 24px;
+}
+
 /* ── Mobile Responsive ──────────────────────────── */
 @media (max-width: 768px) {
   .topbar {
