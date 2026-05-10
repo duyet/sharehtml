@@ -65,12 +65,53 @@
       </div>
 
       <div class="setup-block" style="margin-top: 24px;">
-        <p><strong>For AI Agents:</strong> Share your screen with Claude Code and other AI agents:</p>
-        <pre><code class="language-bash">npx -y @duyet/sharehtml@latest deploy file.html --prompt="Review this file with me"</code></pre>
+        <p><strong>For AI Agents:</strong> Works with every agent — Claude Code, Cursor, Windsurf, and more.</p>
+        <div style="position: relative;">
+          <pre><code class="language-bash">npx -y @duyet/sharehtml@latest deploy path/to/file.html</code></pre>
+          <button id="copy-agent-setup" class="copy-button" style="position: absolute; top: 8px; right: 8px; padding: 4px 12px; font-size: 12px; background: var(--color-canvas); border: 1px solid var(--color-hairline); border-radius: 6px; cursor: pointer;">Copy setup instructions for my agent</button>
+        </div>
         <p style="font-size: 14px; color: var(--color-muted-soft); margin-top: 12px;">
           AI agents can view, comment, and collaborate on shared documents in real-time.
         </p>
       </div>
+      <script>
+        (function() {
+          const copyButton = document.getElementById('copy-agent-setup');
+          if (!copyButton) return;
+
+          copyButton.addEventListener('click', async () => {
+            const setupInstructions = `Deploy to the web using sharehtml: npx -y @duyet/sharehtml@latest deploy path/to/file.html
+
+The agent will upload the file and return a live URL you can view immediately.`;
+
+            try {
+              await navigator.clipboard.writeText(setupInstructions);
+              copyButton.textContent = 'Copied! Now paste into your agent';
+              setTimeout(() => {
+                copyButton.textContent = 'Copy setup instructions for my agent';
+              }, 3000);
+            } catch (err) {
+              // Fallback for older browsers
+              const textArea = document.createElement('textarea');
+              textArea.value = setupInstructions;
+              textArea.style.position = 'fixed';
+              textArea.style.opacity = '0';
+              document.body.appendChild(textArea);
+              textArea.select();
+              try {
+                document.execCommand('copy');
+                copyButton.textContent = 'Copied! Now paste into your agent';
+                setTimeout(() => {
+                  copyButton.textContent = 'Copy setup instructions for my agent';
+                }, 3000);
+              } catch (e) {
+                copyButton.textContent = 'Failed to copy';
+              }
+              document.body.removeChild(textArea);
+            }
+          });
+        })();
+      </script>
     </section>
 
     <!-- Recently Viewed -->
@@ -107,10 +148,6 @@
         <div class="feature-item">
           <h3>✦ AI Agent Skills</h3>
           <p>Deep integration for Claude Code and other AI agents.</p>
-        </div>
-        <div class="feature-item">
-          <h3>✦ Short URLs</h3>
-          <p>Compact 5-character IDs for easy sharing.</p>
         </div>
         <div class="feature-item">
           <h3>✦ Multiple Formats</h3>

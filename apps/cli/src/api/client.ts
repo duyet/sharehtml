@@ -1,5 +1,5 @@
 import { readFile } from "node:fs/promises";
-import { basename } from "node:path";
+import { basename, resolve } from "node:path";
 import { getAuthHeaders as getAccessAuthHeaders } from "../auth/access.js";
 import { getAuthHeaders as getClerkAuthHeaders } from "../auth/clerk.js";
 import { getConfig, isConfigured } from "../config/store.js";
@@ -98,6 +98,60 @@ export async function prepareDocumentUpload(
     renderedFilename,
     sourceBlob,
     sourceFilename,
+    sourceKind,
+    sourceLanguage,
+  };
+}
+
+export async function prepareContentUpload(
+  content: string | Buffer,
+  filename: string,
+  options?: {
+    title?: string;
+    sourceKind?: SourceKind;
+    sourceLanguage?: string;
+  },
+): Promise<{
+  renderedBlob: Blob;
+  renderedFilename: string;
+  sourceBlob: Blob;
+  sourceFilename: string;
+  sourceKind: string;
+  sourceLanguage?: string;
+}> {
+  const fileBuffer = typeof content === "string" ? Buffer.from(content, "utf-8") : content;
+  const sourceKind = options?.sourceKind ?? getSourceKind(filename);
+  const sourceLanguage = options?.sourceLanguage ?? (isCodeFile(filename) ? getCodeLanguage(filename) || undefined : undefined);
+  const sourceMimeType = sourceKind === "html"
+    ? "text/html"
+    : sourceKind === "markdown"
+    ? "text/markdown"
+    : "text/plain";
+  const sourceBlob = new Blob([fileBuffer], { type: sourceMimeType });
+
+  let renderedFilename = filename;
+  let renderedBlob: Blob;
+  if (isMarkdownFile(filename)) {
+    const mdText = fileBuffer.toString("utf-8");
+    const mdTitle = options?.title || defaultDocumentTitleFromFilename(filename);
+    const html = renderMarkdownToHtml(mdText, mdTitle, resolve(process.cwd(), filename));
+    renderedBlob = new Blob([html], { type: "text/html" });
+    renderedFilename = renderedFilenameToHtml(filename);
+  } else if (isCodeFile(filename)) {
+    const codeText = fileBuffer.toString("utf-8");
+    const codeTitle = options?.title || defaultDocumentTitleFromFilename(filename);
+    const html = renderCodeToHtml(codeText, codeTitle, filename);
+    renderedBlob = new Blob([html], { type: "text/html" });
+    renderedFilename = renderedFilenameToHtml(filename);
+  } else {
+    renderedBlob = new Blob([fileBuffer], { type: "text/html" });
+  }
+
+  return {
+    renderedBlob,
+    renderedFilename,
+    sourceBlob,
+    sourceFilename: filename,
     sourceKind,
     sourceLanguage,
   };
@@ -249,6 +303,44 @@ export async function updateDocument(
     path: `/api/documents/${id}`,
     method: "PUT",
     body: buildUploadFormData(prepared, title),
+  });
+  return parseJson<DeployResult>(resp, "Update");
+}
+
+export async function deployContent(
+  content: string | Buffer,
+  filename: string,
+  options?: {
+    title?: string;
+    slug?: string;
+    sourceKind?: SourceKind;
+    sourceLanguage?: string;
+  },
+): Promise<DeployResult> {
+  const prepared = await prepareContentUpload(content, filename, options);
+  const resp = await requestWithAccess("Upload", {
+    path: "/api/documents",
+    method: "POST",
+    body: buildUploadFormData(prepared, options?.title, options?.slug),
+  });
+  return parseJson<DeployResult>(resp, "Upload");
+}
+
+export async function updateContent(
+  id: string,
+  content: string | Buffer,
+  filename: string,
+  options?: {
+    title?: string;
+    sourceKind?: SourceKind;
+    sourceLanguage?: string;
+  },
+): Promise<DeployResult> {
+  const prepared = await prepareContentUpload(content, filename, options);
+  const resp = await requestWithAccess("Update", {
+    path: `/api/documents/${id}`,
+    method: "PUT",
+    body: buildUploadFormData(prepared, options?.title),
   });
   return parseJson<DeployResult>(resp, "Update");
 }
