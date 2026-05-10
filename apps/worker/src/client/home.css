@@ -195,6 +195,48 @@ h1, h2, h3, .display-serif {
   overflow-x: auto;
 }
 
+/* AI Agents section */
+.setup-block-ai {
+  margin-top: 24px;
+}
+
+.setup-block-copy-wrapper {
+  position: relative;
+}
+
+.setup-block-copy-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  padding: 4px 12px;
+  font-size: 12px;
+  background: var(--color-canvas);
+  border: 1px solid var(--color-hairline);
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.setup-block-ai-header {
+  font-size: 15px;
+  color: var(--color-body);
+  margin-top: 16px;
+}
+
+.setup-block-ai-code {
+  background: var(--color-surface-soft);
+  border-radius: 8px;
+  padding: 16px 20px;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.setup-block-ai-note {
+  font-size: 14px;
+  color: var(--color-muted-soft);
+  margin-top: 8px;
+}
+
 /* Cards */
 .recent-grid {
   display: grid;

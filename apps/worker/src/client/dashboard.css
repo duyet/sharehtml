@@ -11,13 +11,6 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-h1, h2, h3, .display-serif {
-  font-family: "Tiempos Headline", "EB Garamond", Georgia, serif;
-  color: var(--color-ink);
-  font-weight: 400;
-  letter-spacing: -0.02em;
-}
-
 .topbar {
   height: 64px;
   display: flex;
