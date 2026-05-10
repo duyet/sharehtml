@@ -15,6 +15,7 @@ h1, h2, h3, .display-serif {
   max-width: 1200px;
   margin: 0 auto;
   padding: 48px 32px 96px;
+  margin-top: 56px;
 }
 
 .hero {
