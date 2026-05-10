@@ -2,9 +2,9 @@
 
 Bun CLI for deploying local documents to [sharehtml](https://html.duyet.net) for collaborative commenting.
 ## Quick Start
-You can use the CLI instantly without manual installation. It is pre-configured to use `https://html.duyet.net` by default:
+You can use the CLI instantly without manual installation. It is pre-configured to use `https://html.duyet.net` by default. **No authentication is required to upload files.**
 ```bash
-# deploy a file
+# deploy a file — no login needed
 npx -y @duyet/sharehtml@latest deploy my-report.html
 ```
 ## AI Agent Integration
@@ -30,7 +30,12 @@ npx -y skills@latest add duyet/sharehtml
 The CLI wraps a REST API that you can call directly with curl or any HTTP client:
 
 ```bash
-# Upload using API key
+# Upload (no auth needed)
+curl -X POST https://html.duyet.net/api/documents \
+  -F "file=@report.html" \
+  -F "title=My Report"
+
+# Upload using API key (for authenticated instances)
 curl -X POST https://html.duyet.net/api/documents \
   -H "Authorization: Bearer shk_..." \
   -F "file=@report.html" \
@@ -42,16 +47,26 @@ Full API reference: [https://html.duyet.net/docs#api](https://html.duyet.net/doc
 ## Self-Hosting
 See the main repository for self-hosting instructions:
 https://github.com/duyet/sharehtml
-## Authentication
-The `login` command authenticates you with a self-hosted sharehtml instance that requires authentication.
+## Optional Features
+
+### Authentication
+
+Uploading files does not require authentication. The `login` command is only needed when connecting to a self-hosted instance that has authentication enabled (Clerk or Cloudflare Access).
+
 > **Note:** Make sure you've set your instance URL first with `npx @duyet/sharehtml config set-url <url>`.
-### Clerk Authentication
+
+#### Clerk Authentication
+
 When your instance uses Clerk:
+
 1. Run `npx @duyet/sharehtml login`
 2. Visit the displayed URL in your browser (opens `/cli-token`)
 3. Sign in with Clerk (if prompted)
 4. Copy the session token shown on the page
 5. Paste it back in your terminal
+
 The CLI validates the token with the `/api/auth/verify` endpoint and stores it locally for future requests.
-### Detection
+
+#### Detection
+
 The CLI automatically detects which authentication method your instance uses (Clerk, Cloudflare Access, or none) and prompts accordingly.
