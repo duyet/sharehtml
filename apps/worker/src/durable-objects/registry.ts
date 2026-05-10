@@ -138,6 +138,16 @@ export class RegistryDO extends DurableObject<Env> {
         PRIMARY KEY (doc_id, tag)
       )
     `);
+
+    // Create index on tag for efficient tag-based lookups
+    const indices = this.sql.exec<{ name: string }>("SELECT name FROM sqlite_master WHERE type='index' AND name='document_tags_tag_idx'").toArray();
+    if (indices.length === 0) {
+      this.sql.exec("CREATE INDEX document_tags_tag_idx ON document_tags(tag)");
+    }
+  }
+
+  private normalizeTag(tag: string): string {
+    return tag.trim().toLowerCase();
   }
 
   private pickColor(): string {
@@ -433,8 +443,12 @@ export class RegistryDO extends DurableObject<Env> {
   async setDocumentTags(docId: string, tags: string[]): Promise<void> {
     this.ctx.storage.transactionSync(() => {
       this.sql.exec("DELETE FROM document_tags WHERE doc_id = ?", docId);
-      for (const tag of tags.slice(0, 100)) {
-        this.sql.exec("INSERT INTO document_tags (doc_id, tag) VALUES (?, ?)", docId, tag);
+      // Deduplicate and normalize tags
+      const uniqueTags = [...new Set(tags.map(this.normalizeTag))].slice(0, 100);
+      for (const tag of uniqueTags) {
+        if (tag) {
+          this.sql.exec("INSERT INTO document_tags (doc_id, tag) VALUES (?, ?)", docId, tag);
+        }
       }
     });
   }
@@ -447,15 +461,19 @@ export class RegistryDO extends DurableObject<Env> {
   }
 
   async addDocumentTag(docId: string, tag: string): Promise<void> {
-    this.sql.exec("INSERT OR IGNORE INTO document_tags (doc_id, tag) VALUES (?, ?)", docId, tag);
+    const normalized = this.normalizeTag(tag);
+    if (!normalized) return;
+    this.sql.exec("INSERT OR IGNORE INTO document_tags (doc_id, tag) VALUES (?, ?)", docId, normalized);
   }
 
   async removeDocumentTag(docId: string, tag: string): Promise<void> {
-    this.sql.exec("DELETE FROM document_tags WHERE doc_id = ? AND tag = ?", docId, tag);
+    const normalized = this.normalizeTag(tag);
+    this.sql.exec("DELETE FROM document_tags WHERE doc_id = ? AND tag = ?", docId, normalized);
   }
 
   async listDocumentsByTag(ownerEmail: string, tag: string, limit: number = 50): Promise<DocumentRow[]> {
     const normalizedEmail = normalizeEmail(ownerEmail);
+    const normalizedTag = this.normalizeTag(tag);
     return this.sql
       .exec<DocumentRow>(
         `SELECT d.* FROM documents d
@@ -464,7 +482,7 @@ export class RegistryDO extends DurableObject<Env> {
          ORDER BY d.created_at DESC
          LIMIT ?`,
         normalizedEmail,
-        tag,
+        normalizedTag,
         limit,
       )
       .toArray();
