@@ -58,19 +58,19 @@ export function DashboardView({
         {authMode === "clerk" && clerkPublishableKey && <ClerkScripts publishableKey={clerkPublishableKey} />}
       </head>
       <body>
-        <div class="topbar">
+        <header class="topbar">
           <a class="topbar-home" href="/">
             sharehtml
           </a>
-          <div class="topbar-right">
+          <nav class="topbar-right">
             <a class="topbar-link" href="/docs">Docs</a>
             {isClerk
               ? <div id="clerk-user-btn"></div>
               : <span class="topbar-email">{email}</span>}
-          </div>
-        </div>
+          </nav>
+        </header>
 
-        <div class="dashboard-content">
+        <main class="dashboard-content">
           <div class="dashboard-header">
             <h1 class="dashboard-title">My Documents</h1>
             <div class="dashboard-header-actions">
@@ -84,7 +84,7 @@ export function DashboardView({
             {documents.map((doc) => {
               const badge = shareModeBadge(doc.is_shared);
               return (
-                <div class="doc-grid-card" data-doc-id={doc.id}>
+                <article class="doc-grid-card" data-doc-id={doc.id}>
                   <div class="doc-grid-preview">
                     <iframe
                       class="doc-grid-iframe"
@@ -112,7 +112,7 @@ export function DashboardView({
                       </button>
                     </div>
                   </div>
-                </div>
+                </article>
               );
             })}
           </div>
@@ -141,9 +141,9 @@ export function DashboardView({
               <div class="api-keys-list" id="api-keys-list"></div>
             </div>
           </div>
-        </div>
+        </main>
 
-        <div class="modal-backdrop" id="delete-modal" style="display:none">
+        <div class="modal-backdrop hidden" id="delete-modal">
           <div class="modal-content">
             <div class="modal-title">Delete document?</div>
             <p class="modal-description" id="delete-modal-desc">
@@ -156,7 +156,7 @@ export function DashboardView({
           </div>
         </div>
 
-        <div class="modal-backdrop" id="api-key-modal" style="display:none">
+        <div class="modal-backdrop hidden" id="api-key-modal">
           <div class="modal-content">
             <div class="modal-title">API Key Created</div>
             <p class="modal-description">Copy this key now. It will not be shown again.</p>

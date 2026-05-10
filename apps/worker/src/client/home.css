@@ -370,6 +370,9 @@ h1, h2, h3, .display-serif {
   background: #c66a4a;
 }
 
+/* Utility classes */
+.hidden { display: none !important; }
+
 /* Pagination */
 .pagination {
   display: flex;

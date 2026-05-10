@@ -54,19 +54,19 @@
   <script src="{{assets_js}}" type="module" defer></script>
 </head>
 <body>
-  <div class="topbar">
+  <header class="topbar">
     <a class="topbar-home" href="/">sharehtml</a>
-    <div class="topbar-right">
+    <nav class="topbar-right">
       <a class="topbar-link" href="/docs">Docs</a>
-      <a class="topbar-link" href="/dashboard" id="dashboard-link" style="display: none;">Dashboard</a>
+      <a class="topbar-link hidden" href="/dashboard" id="dashboard-link">Dashboard</a>
       <a class="topbar-link" href="#" id="login-link">Sign In</a>
       {{#clerk_button}}
       <div id="clerk-user-btn"></div>
       {{/clerk_button}}
-    </div>
-  </div>
+    </nav>
+  </header>
 
-  <div class="content">
+  <main class="content">
     <section class="hero">
       <h1>Deploy your ideas instantly</h1>
       <p>Share HTML, Markdown, and code with collaborative comments and reactions.</p>
@@ -86,10 +86,7 @@
 
       <div class="setup-block setup-block-ai">
         <p><strong>Add sharehtml skills to your AI agent:</strong></p>
-        <div class="setup-block-copy-wrapper">
-          <pre><code class="language-bash">npx -y skills add duyet/sharehtml</code></pre>
-          <button id="copy-agent-setup" class="setup-block-copy-btn">Copy command</button>
-        </div>
+        <pre><code class="language-bash">npx -y skills add duyet/sharehtml</code></pre>
         <p class="setup-block-ai-header">
           <strong>Or paste this prompt to your AI agent:</strong>
         </p>
@@ -98,27 +95,6 @@
           The agent will deploy files and return the live URL automatically.
         </p>
       </div>
-      <script>
-        (function() {
-          const copyButton = document.getElementById('copy-agent-setup');
-          if (!copyButton) return;
-
-          copyButton.addEventListener('click', async () => {
-            const skillCommand = 'npx -y skills add duyet/sharehtml';
-
-            try {
-              await navigator.clipboard.writeText(skillCommand);
-              const originalText = copyButton.textContent;
-              copyButton.textContent = 'Copied!';
-              setTimeout(() => {
-                copyButton.textContent = originalText;
-              }, 2000);
-            } catch (err) {
-              copyButton.textContent = 'Failed to copy';
-            }
-          });
-        })();
-      </script>
     </section>
 
     <!-- Recently Viewed -->
@@ -166,7 +142,7 @@
         </div>
       </div>
     </section>
-  </div>
+  </main>
 
   <script id="__HOME_CONFIG__" type="application/json">
     {{{home_config}}}

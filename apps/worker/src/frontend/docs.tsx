@@ -19,15 +19,15 @@ export function DocsView({ assets }: DocsParams): string {
         {assets.docsCss && <link rel="stylesheet" href={assets.docsCss} />}
       </head>
       <body>
-        <div class="topbar">
+        <header class="topbar">
           <a class="topbar-home" href="/">
             sharehtml
           </a>
-          <div class="topbar-right">
+          <nav class="topbar-right">
             <a class="topbar-link" href="/">Home</a>
             <span class="topbar-title">Documentation</span>
-          </div>
-        </div>
+          </nav>
+        </header>
 
         <div class="docs-layout">
           <aside class="docs-toc">
