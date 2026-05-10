@@ -53,7 +53,7 @@ app.route("/", viewer);
 
 app.get("/llms.txt", async (c) => {
   const registry = getRegistry(c.env);
-  const docs = await registry.listPublicDocuments(); // We'll need to implement this
+  const docs = await registry.listPublicDocuments();
   const url = new URL(c.req.url);
   const origin = `${url.protocol}//${url.host}`;
   

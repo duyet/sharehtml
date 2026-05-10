@@ -1,7 +1,6 @@
 /* Shared base styles for all pages */
 @import "./theme.css";
 @import "./components.css";
-@import url("https://fonts.googleapis.com/css2?family=EB+Garamond:wght@400;500&family=Inter:wght@400;500&family=JetBrains+Mono&display=swap");
 
 /* ── Base Typography & Layout ──────────────────── */
 body {
