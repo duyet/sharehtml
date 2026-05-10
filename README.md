@@ -2,6 +2,8 @@
 
 Deploy your ideas instantly. A simple, editorial platform for sharing HTML reports, Markdown notes, and code snippets with the world.
 This is a fork of [jonesphillip/sharehtml](https://github.com/jonesphillip/sharehtml), enhanced with a modern aesthetic and deep AI agent integration.
+
+> **No signup or authentication required for basic file sharing.** Just deploy and share.
 ![sharehtml screenshot](assets/screenshot.png)
 ## What is sharehtml?
 Deploy a local document, get a link where others can view it and collaborate with comments, reactions, and live presence. Re-deploy to update the content at the same URL. Markdown and common code files are converted to styled HTML automatically.
@@ -17,24 +19,8 @@ You can use the CLI instantly without manual installation. It is pre-configured 
 # deploy a file
 npx -y @duyet/sharehtml@latest deploy my-report.html
 ```
-## AI Agent Integration
-Enhance your AI assistant (like Claude Code) with `sharehtml` capabilities:
-npx -y skills@latest add duyet/sharehtml
-The skill teaches agents to:
-- Deploy or update documents via CLI using `npx -y @duyet/sharehtml@latest`.
-- Perform `diff` before overwriting remote files.
-- Pull and review comments/feedback.
-- Manage sharing permissions.
-## Self-Hosting
-If you want to run your own instance on Cloudflare:
-git clone https://github.com/duyet/sharehtml.git
-cd sharehtml
-pnpm install
-npx wrangler login
-pnpm run setup
-The setup script handles R2 provisioning, Durable Objects, and worker deployment.
-## Authentication
-sharehtml supports three authentication modes:
+## Optional: Authentication for Advanced Features
+sharehtml works out of the box with no authentication. Enable auth if you want persistent dashboards, private documents, or user management. sharehtml supports three authentication modes:
 | Mode | Description | Use Case |
 |------|-------------|----------|
 | **Clerk** | Full-featured auth with sign-in UI, user accounts | Recommended for production |
@@ -111,6 +97,22 @@ The login flow:
 5. CLI validates the token and stores it locally
 > **Note:** Make sure you've set your instance URL first with `npx @duyet/sharehtml config set-url <url>`.
 To change authentication mode, run `pnpm run setup` again and select a different option.
+## AI Agent Integration
+Enhance your AI assistant (like Claude Code) with `sharehtml` capabilities:
+npx -y skills@latest add duyet/sharehtml
+The skill teaches agents to:
+- Deploy or update documents via CLI using `npx -y @duyet/sharehtml@latest`.
+- Perform `diff` before overwriting remote files.
+- Pull and review comments/feedback.
+- Manage sharing permissions.
+## Self-Hosting
+If you want to run your own instance on Cloudflare:
+git clone https://github.com/duyet/sharehtml.git
+cd sharehtml
+pnpm install
+npx wrangler login
+pnpm run setup
+The setup script handles R2 provisioning, Durable Objects, and worker deployment.
 ## Architecture
 CLI ──► Worker ──► R2 (HTML storage)
          │
@@ -147,23 +149,30 @@ You can also use sharehtml directly via HTTP requests. Full API documentation: [
 
 ### Quick Start
 
-1. **Get an API key** (requires browser login first):
-   ```bash
-   curl -X POST https://html.duyet.net/api/keys \
-     -H "Content-Type: application/json" \
-     -H "Cookie: __session=<your-session>" \
-     -d '{"name": "curl-scripts"}'
-   # Returns: { "key": "shk_..." }
-   ```
+**Upload without authentication:**
+```bash
+curl -X POST https://html.duyet.net/api/documents \
+  -F "file=@report.html" \
+  -F "title=My Report"
+# Returns: { "id": "...", "url": "https://html.duyet.net/d/..." }
+```
 
-2. **Upload a document**:
-   ```bash
-   curl -X POST https://html.duyet.net/api/documents \
-     -H "Authorization: Bearer shk_..." \
-     -F "file=@report.html" \
-     -F "title=My Report"
-   # Returns: { "id": "...", "url": "https://html.duyet.net/d/..." }
-   ```
+**Upload with authentication** (for persistent dashboards and private docs):
+```bash
+# 1. Get an API key (requires browser login first):
+curl -X POST https://html.duyet.net/api/keys \
+  -H "Content-Type: application/json" \
+  -H "Cookie: __session=<your-session>" \
+  -d '{"name": "curl-scripts"}'
+# Returns: { "key": "shk_..." }
+
+# 2. Upload with auth header:
+curl -X POST https://html.duyet.net/api/documents \
+  -H "Authorization: Bearer shk_..." \
+  -F "file=@report.html" \
+  -F "title=My Report"
+# Returns: { "id": "...", "url": "https://html.duyet.net/d/..." }
+```
 
 ### Common Endpoints
 
