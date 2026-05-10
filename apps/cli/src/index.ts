@@ -12,6 +12,7 @@ import { configCmd } from "./commands/config.js";
 import { loginCmd } from "./commands/login.js";
 import { shareCmd } from "./commands/share.js";
 import { unshareCmd } from "./commands/unshare.js";
+import { tagCmd } from "./commands/tag.js";
 
 const program = new Command();
 
@@ -32,5 +33,6 @@ program.addCommand(unshareCmd);
 program.addCommand(skillCmd);
 program.addCommand(configCmd);
 program.addCommand(loginCmd);
+program.addCommand(tagCmd);
 
 program.parse();
