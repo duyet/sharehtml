@@ -157,9 +157,12 @@ export async function prepareContentUpload(
   };
 }
 
+function hasBearerToken(authContext?: AuthContext): boolean {
+  return "Authorization" in (authContext?.headers ?? {});
+}
+
 function getLoginErrorMessage(authContext?: AuthContext): string {
-  const hasBearerToken = "Authorization" in (authContext?.headers ?? {});
-  const hint = hasBearerToken ? "Session may have expired. " : "";
+  const hint = hasBearerToken(authContext) ? "Session may have expired. " : "";
   return `${hint}Run: npx @duyet/sharehtml login`;
 }
 
@@ -182,10 +185,15 @@ function isAuthErrorBody(body: string, contentType: string): boolean {
   }
 }
 
+function isUploadRequest(path: string, method?: string): boolean {
+  return method === "POST" && path === "/api/documents";
+}
+
 async function checkResponse(
   resp: Response,
   action: string,
   authContext: AuthContext,
+  requestInfo?: { path: string; method?: string },
 ): Promise<void> {
   if (isAuthRedirect(resp)) {
     throw new Error(getLoginErrorMessage(authContext));
@@ -196,8 +204,13 @@ async function checkResponse(
   if (resp.status === 401 || resp.status === 403) {
     const body = await resp.text().catch(() => "");
     const contentType = resp.headers.get("content-type") || "";
-
     if (isAuthErrorBody(body, contentType)) {
+      if (!hasBearerToken(authContext) && requestInfo && isUploadRequest(requestInfo.path, requestInfo.method)) {
+        throw new Error(
+          `${action} failed: server requires authentication for uploads. ` +
+          "This server may not support unauthenticated uploads.",
+        );
+      }
       throw new Error(getLoginErrorMessage(authContext));
     }
 
@@ -238,7 +251,7 @@ async function requestWithAccess(
     redirect: "manual",
   });
 
-  await checkResponse(resp, action, auth);
+  await checkResponse(resp, action, auth, { path: options.path, method: options.method });
   return resp;
 }
 
