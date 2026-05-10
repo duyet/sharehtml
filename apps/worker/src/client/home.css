@@ -33,33 +33,33 @@ h1, h2, h3, .display-serif {
 }
 
 .topbar {
-  height: 64px;
+  height: 56px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 0 32px;
-  background: var(--ivory);
-  border-bottom: 2px solid var(--clay);
+  background: var(--color-canvas);
+  border-bottom: 2px solid var(--color-primary);
   position: sticky;
   top: 0;
-  z-index: 10;
+  z-index: 100;
 }
 
 .topbar-home {
   font-family: "Tiempos Headline", Georgia, serif;
-  font-size: 24px;
-  font-weight: 400;
-  color: var(--clay);
+  font-size: 20px;
+  font-weight: 500;
+  color: var(--color-primary);
   text-decoration: none;
   display: flex;
   align-items: center;
   gap: 8px;
 }
 
-.topbar-home::before {
-  content: "✦";
-  color: var(--slate);
-  font-size: 18px;
+.topbar-title {
+  font-size: 14px;
+  color: var(--color-ink);
+  font-weight: 500;
 }
 
 .topbar-right {
@@ -70,17 +70,17 @@ h1, h2, h3, .display-serif {
 
 .topbar-link {
   font-size: 14px;
-  color: var(--gray-700);
+  color: var(--color-body);
   text-decoration: none;
 }
 
 .topbar-link:hover {
-  color: var(--clay);
+  color: var(--color-primary);
 }
 
 .topbar-email {
   font-size: 14px;
-  color: var(--gray-500);
+  color: var(--color-muted);
 }
 
 .content {
