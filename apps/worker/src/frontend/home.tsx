@@ -148,8 +148,7 @@ export function HomeView({
             <h1>Deploy files instantly with sharehtml</h1>
             <div class="tldr">
               <b>TL;DR</b> — Deploy HTML, Markdown, or code files in seconds. No signup required.
-              Anonymous documents expire after 24 hours; authenticate for persistent storage.
-              Built for AI agents and developers.
+              Documents persist indefinitely. Built for AI agents and developers.
             </div>
             <div class="hero-actions">
               <a href="/docs" class="btn-primary">Read the Docs</a>

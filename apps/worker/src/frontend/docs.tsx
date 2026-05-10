@@ -48,8 +48,7 @@ export function DocsView({ assets }: DocsParams): string {
               <h1>Deploy files instantly with sharehtml</h1>
               <div class="docs-tldr" id="tldr">
                 <b>TL;DR</b> — Deploy HTML, Markdown, or code files in seconds. No signup required.
-                Anonymous documents expire after 24 hours; authenticate for persistent storage.
-                Built for AI agents and developers.
+                Documents persist indefinitely. Built for AI agents and developers.
               </div>
             </header>
 
@@ -62,7 +61,7 @@ export function DocsView({ assets }: DocsParams): string {
                 <span class="docs-callout-icon">★</span>
                 <div>
                   <b>No signup required.</b> Deploy anonymously — your document will be live instantly.
-                  Anonymous documents expire after 24 hours. Authenticate for permanent storage.
+                  Documents persist indefinitely. Authenticate for account management features.
                 </div>
               </div>
 
@@ -176,13 +175,13 @@ sharehtml deploy report.html</code></pre>
 
               <h3 class="docs-section-subtitle">Anonymous Deployment</h3>
               <p>
-                Agents can deploy without credentials. Documents expire after 24 hours:
+                Agents can deploy without credentials:
               </p>
               <pre><code>npx -y @duyet/sharehtml deploy report.html</code></pre>
 
               <h3 class="docs-section-subtitle">Authenticated Deployment</h3>
               <p>
-                For persistent storage, set credentials as environment variables:
+                For account management features, set credentials as environment variables:
               </p>
 
               <div class="docs-tabs" data-tabs="auth">
@@ -389,14 +388,14 @@ curl -X DELETE https://html.duyet.net/api/keys/key_id \
 
                 <dt>Do documents expire?</dt>
                 <dd>
-                  Anonymous documents expire after 24 hours. Authenticated documents persist
-                  indefinitely. Login with your email to keep documents permanently.
+                  No, all documents persist indefinitely. Authentication enables account management
+                  features like dashboards and API keys.
                 </dd>
 
                 <dt>Is it free?</dt>
                 <dd>
-                  Yes. Anonymous usage is free with 24-hour expiry. Authenticated accounts get
-                  persistent storage at no cost.
+                  Yes. All documents persist indefinitely at no cost. Authentication enables
+                  account management features.
                 </dd>
 
                 <dt>Can I use my own domain?</dt>

@@ -12,7 +12,7 @@ sharehtml is an instant publishing platform for HTML, Markdown, and code files. 
 - Real-time collaboration with comments
 - Syntax highlighting for code
 - Anonymous or authenticated deployment
-- Documents expire after 24h (anonymous) or persist forever (authenticated)
+- Documents persist indefinitely
 
 **Default server:** `https://html.duyet.net`
 
@@ -66,7 +66,7 @@ curl -X POST https://html.duyet.net/api/documents \
 
 - No signup required
 - No authentication required for upload
-- Document expires after 24 hours
+- Documents persist indefinitely
 - Perfect for quick shares and prototypes
 
 ### Persistent documents (with account)
