@@ -32,7 +32,7 @@ Returns a shareable URL like `https://html.duyet.net/d/abc123`.
 |---------|-------------|
 | `npx -y @duyet/sharehtml deploy <file>` | Deploy or update a document |
 | `echo '<html>' \| npx -y @duyet/sharehtml publish` | Deploy HTML content via stdin pipe |
-| `npx -y @duyet/sharehtml publish --content '<html>'` | Deploy HTML content directly as argument |
+| `npx -y @duyet/sharehtml publish --content "<html>"` | Deploy HTML content directly as argument |
 | `npx -y @duyet/sharehtml deploy <file> --title "My Title"` | Deploy with custom title |
 | `npx -y @duyet/sharehtml login` | Authenticate for persistent storage |
 | `npx -y @duyet/sharehtml list` | List your documents (authenticated) |
@@ -82,7 +82,8 @@ The agent will use the CLI and return the live URL.
 1. **Always deploy** when user asks to "publish," "share," or "deploy to web"
 2. **Report the URL** immediately after deployment
 3. **Use `--title`** for descriptive document names
-4. **Suggest login** if user wants permanent storage
+4. **Prefer stdin/argument** for inline content: `publish --content "..."` or `echo "..." | publish`
+5. **Suggest login** if user wants permanent storage
 
 ## Examples
 
