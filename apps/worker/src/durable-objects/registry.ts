@@ -84,6 +84,7 @@ export class RegistryDO extends DurableObject<Env> {
       )
     `);
     this.ensureUpdatedAtIndex();
+    this.ensureDocumentTagsTable();
   }
 
   private ensureDocumentSharingColumn() {
@@ -129,6 +130,30 @@ export class RegistryDO extends DurableObject<Env> {
     if (indices.length === 0) {
       this.sql.exec("CREATE INDEX idx_documents_owner_updated ON documents (owner_email, created_at DESC)");
     }
+  }
+
+  private ensureDocumentTagsTable(): void {
+    const columns = this.sql.exec<{ name: string }>("PRAGMA table_info(document_tags)").toArray();
+    if (columns.length > 0) return;
+
+    this.sql.exec(`
+      CREATE TABLE document_tags (
+        doc_id TEXT NOT NULL,
+        tag TEXT NOT NULL,
+        added_at TEXT NOT NULL DEFAULT (datetime('now')),
+        PRIMARY KEY (doc_id, tag)
+      )
+    `);
+
+    // Create index on tag for efficient tag-based lookups
+    const indices = this.sql.exec<{ name: string }>("SELECT name FROM sqlite_master WHERE type='index' AND name='document_tags_tag_idx'").toArray();
+    if (indices.length === 0) {
+      this.sql.exec("CREATE INDEX document_tags_tag_idx ON document_tags(tag)");
+    }
+  }
+
+  private normalizeTag(tag: string): string {
+    return tag.trim().toLowerCase();
   }
 
   private pickColor(): string {
@@ -247,6 +272,7 @@ export class RegistryDO extends DurableObject<Env> {
     source_filename?: string | null;
     source_kind?: string | null;
     source_language?: string | null;
+    tags?: string[];
   }) {
     this.sql.exec(
       "INSERT INTO documents (id, title, filename, size, owner_email, is_shared, rendered_filename, source_filename, source_kind, source_language) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
@@ -261,6 +287,9 @@ export class RegistryDO extends DurableObject<Env> {
       doc.source_kind ?? null,
       doc.source_language ?? null,
     );
+    if (doc.tags && doc.tags.length > 0) {
+      await this.setDocumentTags(doc.id, doc.tags);
+    }
   }
 
   async getDocument(id: string): Promise<DocumentRow | null> {
@@ -366,6 +395,7 @@ export class RegistryDO extends DurableObject<Env> {
     source_filename?: string | null;
     source_kind?: string | null;
     source_language?: string | null;
+    tags?: string[];
   }) {
     this.sql.exec(
       `UPDATE documents
@@ -380,6 +410,9 @@ export class RegistryDO extends DurableObject<Env> {
       updates.source_language ?? null,
       id,
     );
+    if (updates.tags !== undefined) {
+      await this.setDocumentTags(id, updates.tags);
+    }
   }
 
   async setDocumentShareMode(id: string, mode: number) {
@@ -443,6 +476,7 @@ export class RegistryDO extends DurableObject<Env> {
 
   async deleteDocument(id: string) {
     this.sql.exec("DELETE FROM shared_emails WHERE doc_id = ?", id);
+    this.sql.exec("DELETE FROM document_tags WHERE doc_id = ?", id);
     this.sql.exec("DELETE FROM documents WHERE id = ?", id);
   }
 
@@ -483,6 +517,71 @@ export class RegistryDO extends DurableObject<Env> {
       totalViews: viewsResult?.total || 0,
       totalStorage: storageResult?.total || 0,
     };
+  }
+
+  // Tag methods
+
+  async setDocumentTags(docId: string, tags: string[]): Promise<void> {
+    this.ctx.storage.transactionSync(() => {
+      this.sql.exec("DELETE FROM document_tags WHERE doc_id = ?", docId);
+      // Deduplicate and normalize tags
+      const uniqueTags = [...new Set(tags.map(this.normalizeTag))].slice(0, 100);
+      for (const tag of uniqueTags) {
+        if (tag) {
+          this.sql.exec("INSERT INTO document_tags (doc_id, tag) VALUES (?, ?)", docId, tag);
+        }
+      }
+    });
+  }
+
+  async getDocumentTags(docId: string): Promise<string[]> {
+    return this.sql
+      .exec<{ tag: string }>("SELECT tag FROM document_tags WHERE doc_id = ? ORDER BY added_at ASC", docId)
+      .toArray()
+      .map((row) => row.tag);
+  }
+
+  async addDocumentTag(docId: string, tag: string): Promise<void> {
+    const normalized = this.normalizeTag(tag);
+    if (!normalized) return;
+    this.sql.exec("INSERT OR IGNORE INTO document_tags (doc_id, tag) VALUES (?, ?)", docId, normalized);
+  }
+
+  async removeDocumentTag(docId: string, tag: string): Promise<void> {
+    const normalized = this.normalizeTag(tag);
+    this.sql.exec("DELETE FROM document_tags WHERE doc_id = ? AND tag = ?", docId, normalized);
+  }
+
+  async listDocumentsByTag(ownerEmail: string, tag: string, limit: number = 50): Promise<DocumentRow[]> {
+    const normalizedEmail = normalizeEmail(ownerEmail);
+    const normalizedTag = this.normalizeTag(tag);
+    return this.sql
+      .exec<DocumentRow>(
+        `SELECT d.* FROM documents d
+         JOIN document_tags dt ON d.id = dt.doc_id
+         WHERE lower(d.owner_email) = ? AND dt.tag = ?
+         ORDER BY d.created_at DESC
+         LIMIT ?`,
+        normalizedEmail,
+        normalizedTag,
+        limit,
+      )
+      .toArray();
+  }
+
+  async getAllTags(ownerEmail: string): Promise<{ tag: string; count: number }[]> {
+    const normalizedEmail = normalizeEmail(ownerEmail);
+    return this.sql
+      .exec<{ tag: string; count: number }>(
+        `SELECT dt.tag, COUNT(*) as count
+         FROM document_tags dt
+         JOIN documents d ON dt.doc_id = d.id
+         WHERE lower(d.owner_email) = ?
+         GROUP BY dt.tag
+         ORDER BY count DESC, dt.tag ASC`,
+        normalizedEmail,
+      )
+      .toArray();
   }
 
   // API Key methods
