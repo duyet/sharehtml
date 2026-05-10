@@ -124,6 +124,15 @@ li {
   text-decoration: none;
 }
 
+button.topbar-link {
+  appearance: none;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  font-family: inherit;
+}
+
 .topbar-link:hover {
   color: var(--color-primary);
 }
