@@ -139,7 +139,7 @@ body {
   color: var(--color-body);
   overflow-x: auto;
   margin: 14px 0;
-  max-width: 680px;
+  white-space: pre;
 }
 
 .docs-section pre code {
