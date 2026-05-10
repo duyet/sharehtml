@@ -9,6 +9,7 @@
     "AUTH_MODE": "none"
   },
   "assets": {
+    "directory": "dist/client",
     "not_found_handling": "none",
     "binding": "ASSETS",
     "run_worker_first": ["/d/*", "/api/*", "/docs/*", "/health", "/"]
@@ -82,6 +83,7 @@
         "VIEWER_CAPABILITY_SECRET": "clerk-prod-viewer-capability-secret-v1-20260509"
       },
       "assets": {
+        "directory": "dist/client",
         "not_found_handling": "none",
         "binding": "ASSETS",
         "run_worker_first": ["/d/*", "/api/*", "/docs/*", "/health", "/"]
