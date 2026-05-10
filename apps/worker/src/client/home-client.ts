@@ -344,22 +344,22 @@ function initClerkUserButton(requiresLogin: boolean): void {
     const node = document.getElementById("clerk-user-btn");
     if (!(node instanceof HTMLDivElement)) return;
 
-    // Auto-open sign-in for protected pages
-    if (!clerk.isSignedIn && requiresLogin) {
-      clerk.openSignIn();
+    // For signed-in users, mount the Clerk user button
+    if (clerk.isSignedIn) {
+      clerk.mountUserButton(node);
       return;
     }
 
-    // For signed-in users, mount the user button
-    if (clerk.isSignedIn) {
-      clerk.mountUserButton(node);
-    } else {
-      // For unauthenticated users on public pages, show a "Sign in" button
-      const signInBtn = document.createElement("button");
-      signInBtn.className = "topbar-link";
-      signInBtn.textContent = "Sign in";
-      signInBtn.addEventListener("click", () => clerk.openSignIn());
-      node.replaceWith(signInBtn);
+    // For unauthenticated users, show a "Sign in" link
+    const signInBtn = document.createElement("button");
+    signInBtn.className = "topbar-link";
+    signInBtn.textContent = "Sign in";
+    signInBtn.addEventListener("click", () => clerk.openSignIn());
+    node.replaceWith(signInBtn);
+
+    // Auto-open sign-in modal for protected pages
+    if (requiresLogin) {
+      clerk.openSignIn();
     }
   }).catch(() => {
     // Clerk load failed silently — user button won't be mounted
