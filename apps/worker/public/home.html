@@ -25,18 +25,29 @@
       <script>
         (function() {
           const clerkPublishableKey = '{{clerk_publishable_key}}';
-          if (!window.Clerk || !clerkPublishableKey) return;
+          if (!clerkPublishableKey) return;
 
-          window.Clerk.load({
-            publishableKey: clerkPublishableKey
-          }).then(() => {
+          function initLoginLink() {
             document.getElementById('login-link')?.addEventListener('click', (e) => {
               e.preventDefault();
               window.Clerk?.openSignIn();
             });
-          }).catch(() => {
-            // Clerk load failed
-          });
+          }
+
+          if (window.Clerk) {
+            window.Clerk.load({ publishableKey: clerkPublishableKey })
+              .then(initLoginLink)
+              .catch(() => {});
+          } else {
+            // Wait for Clerk to load (deferred scripts)
+            window.addEventListener('load', () => {
+              if (window.Clerk) {
+                window.Clerk.load({ publishableKey: clerkPublishableKey })
+                  .then(initLoginLink)
+                  .catch(() => {});
+              }
+            });
+          }
         })();
       </script>
       {{/authenticated}}

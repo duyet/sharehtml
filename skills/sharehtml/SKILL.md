@@ -31,6 +31,9 @@ Returns a shareable URL like `https://html.duyet.net/d/abc123`.
 | Command | Description |
 |---------|-------------|
 | `npx -y @duyet/sharehtml deploy <file>` | Deploy or update a document |
+| `echo '<html>' \| npx -y @duyet/sharehtml publish` | Deploy HTML content via stdin pipe |
+| `npx -y @duyet/sharehtml publish --content '<html>'` | Deploy HTML content directly as argument |
+| `npx -y @duyet/sharehtml deploy <file> --title "My Title"` | Deploy with custom title |
 | `npx -y @duyet/sharehtml deploy <file> --title "My Title"` | Deploy with custom title |
 | `npx -y @duyet/sharehtml login` | Authenticate for persistent storage |
 | `npx -y @duyet/sharehtml list` | List your documents (authenticated) |
@@ -90,6 +93,12 @@ npx -y @duyet/sharehtml deploy analysis.md --title "Q3 Analysis"
 
 # Deploy from script
 npx -y @duyet/sharehtml deploy output.html
+
+# Deploy HTML content via stdin
+echo '<h1>Quick Report</h1><p>Data summary...</p>' | npx -y @duyet/sharehtml publish --title "Quick Report"
+
+# Deploy HTML content as argument
+npx -y @duyet/sharehtml publish --content '<h1>Instant</h1>' --title "Instant Doc"
 
 # Deploy and copy URL to clipboard
 npx -y @duyet/sharehtml deploy report.html | pbcopy  # macOS

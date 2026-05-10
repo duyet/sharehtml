@@ -24,6 +24,9 @@ npx -y skills@latest add duyet/sharehtml
 | Command | Description |
 |---------|-------------|
 | `npx @duyet/sharehtml deploy <file>` | Deploy an HTML, Markdown, or code file |
+| `echo '<html>' \| npx @duyet/sharehtml publish` | Deploy HTML content via stdin pipe |
+| `npx @duyet/sharehtml publish --content '<html>'` | Deploy HTML content directly as argument |
+| `npx @duyet/sharehtml list` | List your documents |
 | `npx @duyet/sharehtml list` | List your documents |
 | `npx @duyet/sharehtml open <id>` | Open a document in the browser |
 | `npx @duyet/sharehtml pull <id>` | Download a document locally |
