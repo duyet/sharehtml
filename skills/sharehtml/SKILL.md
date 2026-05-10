@@ -69,6 +69,11 @@ Simply ask your AI agent:
 
 The agent will use the CLI and return the live URL.
 
+**When agents should use each method:**
+- **File path**: `deploy file.html` — When content exists on disk
+- **Stdin pipe**: `echo "html" | publish` — When generating HTML dynamically
+- **--content flag**: `publish --content "html"` — When passing HTML as string literal
+
 ## File Support
 
 | Type | Description |
@@ -98,7 +103,7 @@ npx -y @duyet/sharehtml deploy output.html
 echo '<h1>Quick Report</h1><p>Data summary...</p>' | npx -y @duyet/sharehtml publish --title "Quick Report"
 
 # Deploy HTML content as argument
-npx -y @duyet/sharehtml publish --content '<h1>Instant</h1>' --title "Instant Doc"
+npx -y @duyet/sharehtml publish --content "<h1>Instant</h1>" --title "Instant Doc"
 
 # Deploy and copy URL to clipboard
 npx -y @duyet/sharehtml deploy report.html | pbcopy  # macOS
