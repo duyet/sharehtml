@@ -7,6 +7,8 @@
     "dev": "vite dev",
     "build": "vite build",
     "deploy": "CLOUDFLARE_ENV=production vite build && wrangler deploy --env production",
+    "deploy:quick": "wrangler deploy --env production",
+    "deploy:dev": "wrangler deploy",
     "test": "vitest run",
     "test:watch": "vitest",
     "e2e": "playwright test",

@@ -1,9 +1,17 @@
 import * as readline from "node:readline";
-import { getAuthToken, setAuthToken } from "../config/store.js";
+import { getAuthToken, getApiKey, setAuthToken, setApiKey } from "../config/store.js";
 
 export async function getAuthHeaders(
   workerUrl: string,
 ): Promise<{ headers: Record<string, string>; canLogin: boolean }> {
+  const apiKey = getApiKey();
+  if (apiKey) {
+    return {
+      headers: { Authorization: `Bearer ${apiKey}` },
+      canLogin: true,
+    };
+  }
+
   const token = getAuthToken();
   if (!token) {
     return { headers: {}, canLogin: true };
@@ -50,6 +58,33 @@ export async function detectClerkDeployment(workerUrl: string): Promise<boolean>
   } catch {
     return false;
   }
+}
+
+export async function loginWithApiKey(workerUrl: string): Promise<void> {
+  console.log(`\nAPI key authentication for ${workerUrl}`);
+  console.log("Paste your API key below.\n");
+
+  const key = await promptForToken();
+  if (!key) {
+    throw new Error("No API key provided");
+  }
+
+  const resp = await fetch(`${workerUrl}/api/auth/verify`, {
+    headers: { Authorization: `Bearer ${key}` },
+  });
+
+  if (!resp.ok) {
+    throw new Error(
+      `API key verification failed (${resp.status}). The key may be invalid or revoked.`,
+    );
+  }
+
+  const data = await resp.json() as { ok: boolean; email: string };
+  if (!data.ok) {
+    throw new Error("API key verification failed. The key may be invalid or revoked.");
+  }
+  setApiKey(key);
+  console.log(`Authenticated as ${data.email} (API key)`);
 }
 
 function promptForToken(): Promise<string> {

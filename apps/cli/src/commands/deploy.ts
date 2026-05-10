@@ -3,12 +3,15 @@ import { stat } from "node:fs/promises";
 import { basename, resolve } from "node:path";
 import { createInterface } from "node:readline";
 import {
+  deployContent,
   deployDocument,
   findDocumentByFilename,
   getDocument,
   getDocumentUrl,
+  updateContent,
   updateDocument,
 } from "../api/client.js";
+import { readStdin } from "../utils/stdin.js";
 import { deploymentRequiresLogin } from "../auth/capabilities.js";
 import { getDocumentMapping, removeDocumentMapping, setDocumentMapping } from "../config/store.js";
 import { updateDocumentSharing } from "./share-utils.js";
@@ -24,22 +27,144 @@ function confirm(question: string): Promise<boolean> {
   );
 }
 
+function generateFilename(opts: { slug?: string; title?: string; type?: "html" | "markdown" | "code" }): string {
+  const ext = opts.type === "markdown" ? ".md" : opts.type === "code" ? ".txt" : ".html";
+  if (opts.slug) {
+    return `${opts.slug}${ext}`;
+  }
+  if (opts.title) {
+    const slugified = opts.title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+    return `${slugified}${ext}`;
+  }
+  return `stdin${ext}`;
+}
+
 export const deployCmd = new Command("deploy")
   .aliases(["publish", "public"])
   .description("Deploy an HTML, Markdown, or code file and get a shareable link")
-  .argument("<file>", "Path to HTML, Markdown, or code file")
+  .argument("[file]", "Path to HTML, Markdown, or code file")
   .option("-t, --title <title>", "Document title (defaults to filename)")
   .option("-u, --update", "Update existing document without prompting")
   .option("--share", "Make the document shareable after deploy")
   .option("--private", "Keep the document private after deploy")
   .option("--slug <slug>", "Custom slug for the document")
-  .action(async (file: string, opts: { title?: string; update?: boolean; share?: boolean; private?: boolean; slug?: string }) => {
-    const filePath = resolve(file);
-
+  .option("--content <html>", "HTML content string (alternative to file path)")
+  .option("--type <type>", "Content type: html, markdown, code (default: html)")
+  .option("--language <lang>", "Language for code highlighting (with --type code)")
+  .option("--tags <tags>", "Comma-separated tags for the document")
+  .action(async (file: string | undefined, opts: {
+    title?: string;
+    update?: boolean;
+    share?: boolean;
+    private?: boolean;
+    slug?: string;
+    content?: string;
+    type?: "html" | "markdown" | "code";
+    language?: string;
+    tags?: string;
+  }) => {
     if (opts.share && opts.private) {
       console.error("Error: choose either --share or --private, not both");
       process.exit(1);
     }
+
+    // Parse tags
+    const tags = opts.tags ? opts.tags.split(",").map((t) => t.trim()).filter(Boolean) : [];
+
+    let contentString: string | undefined;
+    let isNonFileSource = false;
+
+    if (opts.content) {
+      contentString = opts.content;
+      isNonFileSource = true;
+    } else if (!file && !process.stdin.isTTY) {
+      const buffer = await readStdin();
+      if (buffer.length === 0) {
+        console.error("Error: No content received from stdin");
+        process.exit(1);
+      }
+      contentString = buffer.toString("utf-8");
+      isNonFileSource = true;
+    }
+
+    if (isNonFileSource) {
+      const filename = generateFilename(opts);
+      const sourceKind = opts.type ?? "html";
+      const sourceLanguage = opts.language;
+
+      try {
+        const supportsPrivateDocuments = await deploymentRequiresLogin();
+        if (opts.private && !supportsPrivateDocuments) {
+          throw new Error("Private documents require Cloudflare Access on this deployment.");
+        }
+
+        const existing = await findDocumentByFilename(filename, "source");
+        if (existing && !opts.update) {
+          const existingUrl = getDocumentUrl(existing.id);
+          console.error(`Document already exists at ${existingUrl}`);
+          console.error(`Re-run with --update to overwrite.`);
+          process.exit(1);
+        }
+
+        if (existing) {
+          console.log(`Updating ${filename}...`);
+          const result = await updateContent(existing.id, contentString!, filename, {
+            title: opts.title,
+            sourceKind,
+            sourceLanguage,
+            tags,
+          });
+          let isShared = result.isShared;
+          if ((opts.share || opts.private) && supportsPrivateDocuments) {
+            const updated = await updateDocumentSharing(existing.id, Boolean(opts.share));
+            isShared = updated.isShared;
+          }
+          console.log(`\nUpdated! ${result.url}`);
+          console.log(`  id:    ${result.id}`);
+          console.log(`  title: ${result.title}`);
+          console.log(`  size:  ${(result.size / 1024).toFixed(1)}KB`);
+          console.log(`  share: ${isShared ? "shareable" : "private"}`);
+          console.log(`  html:  ${result.url}`);
+          console.log(`  source: ${result.url}/source`);
+        } else {
+          console.log(`Deploying ${filename}...`);
+          const result = await deployContent(contentString!, filename, {
+            title: opts.title,
+            slug: opts.slug,
+            sourceKind,
+            sourceLanguage,
+            tags,
+          });
+          let isShared = result.isShared;
+          if ((opts.share || opts.private) && supportsPrivateDocuments) {
+            const updated = await updateDocumentSharing(result.id, Boolean(opts.share));
+            isShared = updated.isShared;
+          }
+          console.log(`\nDeployed! ${result.url}`);
+          console.log(`  id:    ${result.id}`);
+          console.log(`  title: ${result.title}`);
+          console.log(`  size:  ${(result.size / 1024).toFixed(1)}KB`);
+          console.log(`  share: ${isShared ? "shareable" : "private"}`);
+          console.log(`  html:  ${result.url}`);
+          console.log(`  source: ${result.url}/source`);
+          if (!opts.share && !opts.private && !isShared) {
+            const lookupFilename = renderedFilenameToHtml(filename);
+            console.log(`  next:  run 'npx @duet/sharehtml share ${lookupFilename}' to make it shareable`);
+          }
+        }
+      } catch (err) {
+        console.error(`Error: ${(err as Error).message}`);
+        process.exit(1);
+      }
+      return;
+    }
+
+    if (!file) {
+      console.error("Error: provide a file path, pipe content via stdin, or use --content");
+      process.exit(1);
+    }
+
+    const filePath = resolve(file);
 
     try {
       const stats = await stat(filePath);
@@ -93,7 +218,7 @@ export const deployCmd = new Command("deploy")
         }
 
         console.log(`Updating ${file}...`);
-        const result = await updateDocument(existing.id, filePath, opts.title);
+        const result = await updateDocument(existing.id, filePath, opts.title, tags);
         let isShared = result.isShared;
         if ((opts.share || opts.private) && supportsPrivateDocuments) {
           const updated = await updateDocumentSharing(existing.id, Boolean(opts.share));
@@ -109,7 +234,7 @@ export const deployCmd = new Command("deploy")
         console.log(`  source: ${result.url}/source`);
       } else {
         console.log(`Deploying ${file}...`);
-        const result = await deployDocument(filePath, opts.title, opts.slug);
+        const result = await deployDocument(filePath, opts.title, opts.slug, tags);
         let isShared = result.isShared;
         if ((opts.share || opts.private) && supportsPrivateDocuments) {
           const updated = await updateDocumentSharing(result.id, Boolean(opts.share));
@@ -124,7 +249,7 @@ export const deployCmd = new Command("deploy")
         console.log(`  html:  ${result.url}`);
         console.log(`  source: ${result.url}/source`);
         if (!opts.share && !opts.private && !isShared) {
-          console.log(`  next:  run 'npx @duyet/sharehtml share ${lookupFilename}' to make it shareable`);
+          console.log(`  next:  run 'npx @duet/sharehtml share ${lookupFilename}' to make it shareable`);
         }
       }
     } catch (err) {

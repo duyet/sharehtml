@@ -1,12 +1,13 @@
 import { Command } from "commander";
 import { loginWithAccess } from "../auth/access.js";
-import { loginWithClerk, detectClerkDeployment } from "../auth/clerk.js";
+import { loginWithClerk, loginWithApiKey, detectClerkDeployment } from "../auth/clerk.js";
 import { printSetupHint } from "../config/help.js";
 import { getConfig, isConfigured } from "../config/store.js";
 
 export const loginCmd = new Command("login")
   .description("Log in for CLI requests")
-  .action(async () => {
+  .option("--api-key", "Authenticate with an API key instead of a session token")
+  .action(async (opts: { apiKey?: boolean }) => {
     try {
       if (!isConfigured()) {
         console.error("Error: Not configured. Run: npx @duyet/sharehtml config set-url <url>");
@@ -17,11 +18,15 @@ export const loginCmd = new Command("login")
       const { workerUrl } = getConfig();
       console.log(`Logging in to ${workerUrl}...`);
 
-      const isClerk = await detectClerkDeployment(workerUrl);
-      if (isClerk) {
-        await loginWithClerk(workerUrl);
+      if (opts.apiKey) {
+        await loginWithApiKey(workerUrl);
       } else {
-        await loginWithAccess(workerUrl);
+        const isClerk = await detectClerkDeployment(workerUrl);
+        if (isClerk) {
+          await loginWithClerk(workerUrl);
+        } else {
+          await loginWithAccess(workerUrl);
+        }
       }
 
       console.log("Login complete.");

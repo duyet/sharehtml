@@ -1,5 +1,5 @@
 import { readFile } from "node:fs/promises";
-import { basename } from "node:path";
+import { basename, resolve } from "node:path";
 import { getAuthHeaders as getAccessAuthHeaders } from "../auth/access.js";
 import { getAuthHeaders as getClerkAuthHeaders } from "../auth/clerk.js";
 import { getConfig, isConfigured } from "../config/store.js";
@@ -103,6 +103,60 @@ export async function prepareDocumentUpload(
   };
 }
 
+export async function prepareContentUpload(
+  content: string | Buffer,
+  filename: string,
+  options?: {
+    title?: string;
+    sourceKind?: SourceKind;
+    sourceLanguage?: string;
+  },
+): Promise<{
+  renderedBlob: Blob;
+  renderedFilename: string;
+  sourceBlob: Blob;
+  sourceFilename: string;
+  sourceKind: string;
+  sourceLanguage?: string;
+}> {
+  const fileBuffer = typeof content === "string" ? Buffer.from(content, "utf-8") : content;
+  const sourceKind = options?.sourceKind ?? getSourceKind(filename);
+  const sourceLanguage = options?.sourceLanguage ?? (isCodeFile(filename) ? getCodeLanguage(filename) || undefined : undefined);
+  const sourceMimeType = sourceKind === "html"
+    ? "text/html"
+    : sourceKind === "markdown"
+    ? "text/markdown"
+    : "text/plain";
+  const sourceBlob = new Blob([fileBuffer], { type: sourceMimeType });
+
+  let renderedFilename = filename;
+  let renderedBlob: Blob;
+  if (isMarkdownFile(filename)) {
+    const mdText = fileBuffer.toString("utf-8");
+    const mdTitle = options?.title || defaultDocumentTitleFromFilename(filename);
+    const html = renderMarkdownToHtml(mdText, mdTitle, resolve(process.cwd(), filename));
+    renderedBlob = new Blob([html], { type: "text/html" });
+    renderedFilename = renderedFilenameToHtml(filename);
+  } else if (isCodeFile(filename)) {
+    const codeText = fileBuffer.toString("utf-8");
+    const codeTitle = options?.title || defaultDocumentTitleFromFilename(filename);
+    const html = renderCodeToHtml(codeText, codeTitle, filename);
+    renderedBlob = new Blob([html], { type: "text/html" });
+    renderedFilename = renderedFilenameToHtml(filename);
+  } else {
+    renderedBlob = new Blob([fileBuffer], { type: "text/html" });
+  }
+
+  return {
+    renderedBlob,
+    renderedFilename,
+    sourceBlob,
+    sourceFilename: filename,
+    sourceKind,
+    sourceLanguage,
+  };
+}
+
 function getLoginErrorMessage(authContext?: AuthContext): string {
   const hasBearerToken = "Authorization" in (authContext?.headers ?? {});
   const hint = hasBearerToken ? "Session may have expired. " : "";
@@ -192,6 +246,7 @@ function buildUploadFormData(
   prepared: Awaited<ReturnType<typeof prepareDocumentUpload>>,
   title?: string,
   slug?: string,
+  tags?: string[],
 ): FormData {
   const formData = new FormData();
   formData.append("file", prepared.renderedBlob, prepared.renderedFilename);
@@ -202,6 +257,9 @@ function buildUploadFormData(
   }
   if (title) formData.append("title", title);
   if (slug) formData.append("slug", slug);
+  if (tags && tags.length > 0) {
+    formData.append("tags", tags.join(","));
+  }
   return formData;
 }
 
@@ -209,12 +267,13 @@ export async function deployDocument(
   filePath: string,
   title?: string,
   slug?: string,
+  tags?: string[],
 ): Promise<DeployResult> {
   const prepared = await prepareDocumentUpload(filePath, title);
   const resp = await requestWithAccess("Upload", {
     path: "/api/documents",
     method: "POST",
-    body: buildUploadFormData(prepared, title, slug),
+    body: buildUploadFormData(prepared, title, slug, tags),
   });
   return parseJson<DeployResult>(resp, "Upload");
 }
@@ -243,12 +302,53 @@ export async function updateDocument(
   id: string,
   filePath: string,
   title?: string,
+  tags?: string[],
 ): Promise<DeployResult> {
   const prepared = await prepareDocumentUpload(filePath, title);
   const resp = await requestWithAccess("Update", {
     path: `/api/documents/${id}`,
     method: "PUT",
-    body: buildUploadFormData(prepared, title),
+    body: buildUploadFormData(prepared, title, undefined, tags),
+  });
+  return parseJson<DeployResult>(resp, "Update");
+}
+
+export async function deployContent(
+  content: string | Buffer,
+  filename: string,
+  options?: {
+    title?: string;
+    slug?: string;
+    sourceKind?: SourceKind;
+    sourceLanguage?: string;
+    tags?: string[];
+  },
+): Promise<DeployResult> {
+  const prepared = await prepareContentUpload(content, filename, options);
+  const resp = await requestWithAccess("Upload", {
+    path: "/api/documents",
+    method: "POST",
+    body: buildUploadFormData(prepared, options?.title, options?.slug, options?.tags),
+  });
+  return parseJson<DeployResult>(resp, "Upload");
+}
+
+export async function updateContent(
+  id: string,
+  content: string | Buffer,
+  filename: string,
+  options?: {
+    title?: string;
+    sourceKind?: SourceKind;
+    sourceLanguage?: string;
+    tags?: string[];
+  },
+): Promise<DeployResult> {
+  const prepared = await prepareContentUpload(content, filename, options);
+  const resp = await requestWithAccess("Update", {
+    path: `/api/documents/${id}`,
+    method: "PUT",
+    body: buildUploadFormData(prepared, options?.title, undefined, options?.tags),
   });
   return parseJson<DeployResult>(resp, "Update");
 }
@@ -381,6 +481,38 @@ export async function getDocumentComments(id: string): Promise<DocumentCommentsR
     path: `/api/documents/${id}/comments`,
   });
   return parseJson<DocumentCommentsResponse>(resp, "Fetch comments");
+}
+
+export async function addDocumentTag(id: string, tag: string): Promise<void> {
+  await requestWithAccess("Add tag", {
+    path: `/api/documents/${id}/tags`,
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ tag }),
+  });
+}
+
+export async function removeDocumentTag(id: string, tag: string): Promise<void> {
+  await requestWithAccess("Remove tag", {
+    path: `/api/documents/${id}/tags/${encodeURIComponent(tag)}`,
+    method: "DELETE",
+  });
+}
+
+export async function getDocumentTags(id: string): Promise<string[]> {
+  const resp = await requestWithAccess("Fetch tags", {
+    path: `/api/documents/${id}/tags`,
+  });
+  const data = await parseJson<{ tags: string[] }>(resp, "Fetch tags");
+  return data.tags;
+}
+
+export async function getAllTags(): Promise<{ tag: string; count: number }[]> {
+  const resp = await requestWithAccess("Fetch all tags", {
+    path: "/api/tags",
+  });
+  const data = await parseJson<{ tags: { tag: string; count: number }[] }>(resp, "Fetch all tags");
+  return data.tags;
 }
 
 export function getDocumentUrl(id: string): string {

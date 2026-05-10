@@ -11,7 +11,7 @@
   "assets": {
     "not_found_handling": "none",
     "binding": "ASSETS",
-    "run_worker_first": ["/d/*", "/api/*", "/health", "/"]
+    "run_worker_first": ["/d/*", "/api/*", "/docs/*", "/health", "/"]
   },
   "r2_buckets": [
     {
@@ -45,6 +45,14 @@
     {
       "tag": "v1",
       "new_sqlite_classes": ["DocumentDO", "RegistryDO"]
+    },
+    {
+      "tag": "v2",
+      "new_sqlite_classes": []
+    },
+    {
+      "tag": "v3",
+      "new_sqlite_classes": []
     }
   ],
   "env": {
@@ -76,7 +84,7 @@
       "assets": {
         "not_found_handling": "none",
         "binding": "ASSETS",
-        "run_worker_first": ["/d/*", "/api/*", "/health", "/"]
+        "run_worker_first": ["/d/*", "/api/*", "/docs/*", "/health", "/"]
       },
       "r2_buckets": [
         {

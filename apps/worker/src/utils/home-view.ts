@@ -20,6 +20,25 @@ export function formatDocumentSize(bytes: number): string {
   return `${(bytes / 1024).toFixed(1)}KB`;
 }
 
+export function formatBytes(bytes: number): string {
+  if (bytes === 0) return "0 B";
+  const k = 1024;
+  const sizes = ["B", "KB", "MB", "GB"];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return `${parseFloat((bytes / Math.pow(k, i)).toFixed(1))} ${sizes[i]}`;
+}
+
+export function formatAccountAge(dateStr: string): string {
+  const now = Date.now();
+  const then = new Date(dateStr + "Z").getTime();
+  const diff = now - then;
+  const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+
+  if (days < 30) return `${days} days`;
+  if (days < 365) return `${Math.floor(days / 30)} months`;
+  return `${Math.floor(days / 365)} years`;
+}
+
 export function buildHomePath(query: string, page: number): string {
   const params = new URLSearchParams();
   if (query) {

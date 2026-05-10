@@ -1,0 +1,211 @@
+/* ── Shared Components ───────────────────────── */
+
+/* ── Eyebrow ───────────────────────────────── */
+.eyebrow {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-muted-soft);
+  margin-bottom: 10px;
+}
+
+/* ── TL;DR Box ────────────────────────────────── */
+.tldr {
+  border: 1.5px solid var(--color-hairline);
+  border-left: 3px solid var(--color-primary);
+  border-radius: 10px;
+  background: var(--color-canvas);
+  padding: 16px 18px;
+  margin-bottom: 8px;
+}
+
+.tldr b {
+  color: var(--color-ink);
+}
+
+/* ── Collapsible Details ───────────────────────── */
+details {
+  border: 1.5px solid var(--color-hairline);
+  border-radius: 10px;
+  background: var(--color-surface-card);
+  margin: 14px 0;
+  overflow: hidden;
+}
+
+summary {
+  list-style: none;
+  cursor: pointer;
+  padding: 14px 16px;
+  font-family: "Tiempos Headline", "EB Garamond", Georgia, serif;
+  font-size: 16px;
+  color: var(--color-ink);
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  user-select: none;
+}
+
+summary::-webkit-details-marker {
+  display: none;
+}
+
+summary::before {
+  content: "▸";
+  color: var(--color-primary);
+  font-family: Inter, sans-serif;
+  font-size: 12px;
+  transition: transform 120ms;
+}
+
+details[open] summary::before {
+  transform: rotate(90deg);
+}
+
+.summary-title {
+  flex: 1;
+}
+
+.summary-meta {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 11px;
+  color: var(--color-muted-soft);
+}
+
+.details-body {
+  padding: 0 16px 16px;
+}
+
+.details-body p {
+  font-size: 14px;
+  margin-bottom: 12px;
+}
+
+/* ── Tabs ───────────────────────────────────── */
+.tabs {
+  border: 1.5px solid var(--color-hairline);
+  border-radius: 10px;
+  background: var(--color-surface-card);
+  margin: 16px 0 8px;
+  overflow: hidden;
+}
+
+.tabbar {
+  display: flex;
+  border-bottom: 1px solid var(--color-hairline);
+  background: var(--color-surface-soft);
+}
+
+.tabbar button {
+  appearance: none;
+  border: none;
+  background: none;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 12px;
+  color: var(--color-muted);
+  padding: 10px 16px;
+  cursor: pointer;
+  border-right: 1px solid var(--color-hairline);
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.tabbar button:hover {
+  background: var(--color-surface-card);
+  color: var(--color-body);
+}
+
+.tabbar button.on {
+  background: var(--color-canvas);
+  color: var(--color-ink);
+  border-bottom: 2px solid var(--color-primary);
+  margin-bottom: -1px;
+}
+
+.tabs pre {
+  display: none;
+  margin: 0;
+  padding: 16px 18px;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: var(--color-on-dark);
+  overflow-x: auto;
+  background: var(--color-surface-dark);
+}
+
+.tabs pre.on {
+  display: block;
+}
+
+/* ── Callout ─────────────────────────────────── */
+.callout,
+.docs-callout {
+  display: flex;
+  gap: 12px;
+  border: 1.5px solid var(--color-surface-card);
+  background: rgba(239, 233, 222, 0.5);
+  border-radius: 10px;
+  padding: 14px 16px;
+  margin: 18px 0;
+  font-size: 14px;
+  max-width: 680px;
+}
+
+.callout .ico,
+.docs-callout-icon {
+  color: var(--color-primary);
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.callout b,
+.docs-callout b {
+  color: var(--color-ink);
+}
+
+/* ── FAQ ─────────────────────────────────────── */
+.faq,
+.docs-faq {
+  margin-top: 8px;
+}
+
+.faq dt,
+.docs-faq dt {
+  font-family: "Tiempos Headline", "EB Garamond", Georgia, serif;
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--color-ink);
+  margin-top: 18px;
+}
+
+.faq dd,
+.docs-faq dd {
+  font-size: 14px;
+  margin: 4px 0 0;
+  max-width: 640px;
+}
+
+/* ── Highlight Box ────────────────────────────── */
+.highlight-box,
+.docs-highlight-box {
+  background: var(--color-surface-card);
+  border: 1px solid var(--color-hairline);
+  border-radius: 10px;
+  padding: 16px 18px;
+  margin: 16px 0;
+  max-width: 680px;
+}
+
+.highlight-box p,
+.docs-highlight-box p {
+  margin-bottom: 0;
+}
+
+/* ── Divider ─────────────────────────────────── */
+.divider,
+.docs-divider {
+  height: 1px;
+  background: var(--color-hairline);
+  margin: 24px 0;
+  max-width: 680px;
+}

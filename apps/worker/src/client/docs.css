@@ -1,0 +1,390 @@
+@import "./shared.css";
+
+/* Docs page specific overrides */
+body {
+  font-size: 15px;
+  padding: 64px 24px 120px;
+}
+
+/* ── Layout ─────────────────────────────────── */
+.docs-layout {
+  max-width: 1100px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 200px minmax(0, 1fr);
+  gap: 48px;
+}
+
+@media (max-width: 920px) {
+  .docs-layout {
+    grid-template-columns: 1fr;
+  }
+  .docs-toc {
+    display: none;
+  }
+}
+
+/* ── TOC Sidebar ─────────────────────────────── */
+.docs-toc {
+  position: sticky;
+  top: 88px;
+  align-self: start;
+}
+
+.docs-toc-title {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+  margin-bottom: 12px;
+}
+
+.docs-toc-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.docs-toc-item {
+  margin-bottom: 0;
+}
+
+.docs-toc-link {
+  display: block;
+  padding: 5px 0 5px 12px;
+  border-left: 2px solid var(--color-hairline);
+  font-size: 13px;
+  color: var(--color-body);
+  text-decoration: none;
+  transition: border-color 0.15s ease, color 0.15s ease;
+}
+
+.docs-toc-link:hover {
+  color: var(--color-ink);
+  border-color: var(--color-ink);
+}
+
+.docs-toc-link.active {
+  border-color: var(--color-primary);
+  color: var(--color-ink);
+  font-weight: 500;
+}
+
+/* ── Main Content ────────────────────────────── */
+.docs-content {
+  min-width: 0;
+  margin-top: 16px;
+}
+
+.docs-header {
+  margin-bottom: 24px;
+}
+
+.docs-eyebrow {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+  margin-bottom: 10px;
+}
+
+.docs-content > h1 {
+  font-size: 32px;
+  color: var(--color-ink);
+  margin-bottom: 14px;
+}
+
+.docs-tldr {
+  border: 1.5px solid var(--color-hairline);
+  border-left: 3px solid var(--color-primary);
+  border-radius: 10px;
+  background: var(--color-surface-card);
+  padding: 16px 18px;
+  margin-bottom: 24px;
+}
+
+.docs-tldr b {
+  color: var(--color-ink);
+}
+
+.docs-section {
+  margin-bottom: 48px;
+}
+
+.docs-section-title {
+  font-size: 22px;
+  color: var(--color-ink);
+  margin: 40px 0 14px;
+  scroll-margin-top: 80px;
+}
+
+.docs-section-subtitle {
+  font-size: 18px;
+  color: var(--color-ink);
+  margin: 24px 0 12px;
+  font-weight: 500;
+}
+
+.docs-section p {
+  margin-bottom: 12px;
+  max-width: 680px;
+}
+
+.docs-section ul {
+  margin-bottom: 12px;
+  padding-left: 20px;
+  max-width: 680px;
+}
+
+.docs-section li {
+  margin-bottom: 6px;
+}
+
+.docs-section code {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 13px;
+  background: var(--color-surface-soft);
+  padding: 3px 6px;
+  border-radius: 4px;
+  color: var(--color-body-strong);
+}
+
+.docs-section pre {
+  background: var(--color-surface-soft);
+  border-radius: 10px;
+  padding: 16px 18px;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: var(--color-body);
+  overflow-x: auto;
+  margin: 14px 0;
+  max-width: 680px;
+}
+
+.docs-section pre code {
+  background: transparent;
+  padding: 0;
+  color: inherit;
+}
+
+.docs-comment {
+  color: var(--color-muted-soft);
+}
+
+.docs-section a {
+  color: var(--color-primary);
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: border-color 0.15s ease;
+}
+
+.docs-section a:hover {
+  border-bottom-color: var(--color-primary);
+}
+
+/* ── Collapsible Details ───────────────────────── */
+details {
+  border: 1.5px solid var(--color-hairline);
+  border-radius: 10px;
+  background: var(--color-surface-card);
+  margin: 14px 0;
+  overflow: hidden;
+}
+
+details summary {
+  list-style: none;
+  cursor: pointer;
+  padding: 14px 16px;
+  font-family: "Tiempos Headline", "EB Garamond", Georgia, serif;
+  font-size: 16px;
+  color: var(--color-ink);
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  user-select: none;
+}
+
+details summary::-webkit-details-marker {
+  display: none;
+}
+
+details summary::before {
+  content: "▸";
+  color: var(--color-primary);
+  font-family: Inter, sans-serif;
+  font-size: 12px;
+  transition: transform 120ms;
+}
+
+details[open] summary::before {
+  transform: rotate(90deg);
+}
+
+.docs-summary-title {
+  flex: 1;
+}
+
+.docs-summary-meta {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 11px;
+  color: var(--color-muted);
+}
+
+.docs-details-body {
+  padding: 0 16px 16px;
+}
+
+.docs-details-body p {
+  font-size: 14px;
+  margin-bottom: 12px;
+}
+
+/* ── Tabs ────────────────────────────────────── */
+.docs-tabs {
+  border: 1.5px solid var(--color-hairline);
+  border-radius: 10px;
+  background: var(--color-surface-card);
+  margin: 16px 0 8px;
+  overflow: hidden;
+}
+
+.docs-tabbar {
+  display: flex;
+  border-bottom: 1px solid var(--color-hairline);
+  background: var(--color-surface-soft);
+}
+
+.docs-tabbar button {
+  appearance: none;
+  border: none;
+  background: none;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 12px;
+  color: var(--color-muted);
+  padding: 10px 16px;
+  cursor: pointer;
+  border-right: 1px solid var(--color-hairline);
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.docs-tabbar button:hover {
+  background: var(--color-surface-card);
+  color: var(--color-body);
+}
+
+.docs-tabbar button.on {
+  background: var(--color-canvas);
+  color: var(--color-ink);
+  border-bottom: 2px solid var(--color-primary);
+  margin-bottom: -1px;
+}
+
+.docs-tabs pre {
+  display: none;
+  margin: 0;
+  padding: 16px 18px;
+  border-radius: 0;
+  border: none;
+}
+
+.docs-tabs pre.on {
+  display: block;
+}
+
+/* ── Callout ──────────────────────────────────── */
+.docs-callout {
+  display: flex;
+  gap: 12px;
+  border: 1.5px solid var(--color-surface-card);
+  background: rgba(239, 233, 222, 0.5);
+  border-radius: 10px;
+  padding: 14px 16px;
+  margin: 18px 0;
+  font-size: 14px;
+  max-width: 680px;
+}
+
+.docs-callout-icon {
+  color: var(--color-primary);
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.docs-callout b {
+  color: var(--color-ink);
+}
+
+/* ── Highlight Box ────────────────────────────── */
+.docs-highlight-box {
+  background: var(--color-surface-card);
+  border: 1px solid var(--color-hairline);
+  border-radius: 10px;
+  padding: 16px 18px;
+  margin: 16px 0;
+  max-width: 680px;
+}
+
+.docs-highlight-box p {
+  margin-bottom: 0;
+}
+
+/* ── FAQ ──────────────────────────────────────── */
+.docs-faq {
+  margin-top: 8px;
+}
+
+.docs-faq dt {
+  font-family: "Tiempos Headline", "EB Garamond", Georgia, serif;
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--color-ink);
+  margin-top: 18px;
+}
+
+.docs-faq dd {
+  font-size: 14px;
+  margin: 4px 0 0;
+  max-width: 640px;
+}
+
+/* ── Divider ──────────────────────────────────── */
+.docs-divider {
+  height: 1px;
+  background: var(--color-hairline);
+  margin: 24px 0;
+  max-width: 680px;
+}
+
+/* ── Mobile Responsive ────────────────────────── */
+@media (max-width: 768px) {
+  body {
+    padding: 56px 16px 64px;
+  }
+
+  .docs-topbar {
+    padding: 0 16px;
+  }
+
+  .docs-content > h1 {
+    font-size: 26px;
+  }
+
+  .docs-section-title {
+    font-size: 20px;
+  }
+
+  .docs-section-subtitle {
+    font-size: 16px;
+  }
+
+  .docs-tabbar {
+    overflow-x: auto;
+  }
+
+  .docs-tabbar button {
+    white-space: nowrap;
+  }
+}

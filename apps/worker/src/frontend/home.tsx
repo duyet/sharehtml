@@ -5,6 +5,7 @@ import type { AssetUrls } from "../utils/assets.js";
 import { formatDocumentSize, formatRelativeTime } from "../utils/home-view.js";
 import type { AuthMode, DocumentRow, RecentViewRow } from "../types.js";
 import { toHtml, safeJsonForScript, ClerkScripts } from "./jsx.js";
+import { isAuthEnabled } from "../utils/auth.js";
 
 interface HomeParams {
   assets: AssetUrls;
@@ -130,22 +131,29 @@ export function HomeView({
             sharehtml
           </a>
           <div class="topbar-right">
-            {isClerk
-              ? <div id="clerk-user-btn"></div>
-              : <span class="topbar-email">{email}</span>}
+            <a class="topbar-link" href="/docs">Docs</a>
+            {isClerk && clerkPublishableKey ? (
+              <div id="clerk-user-btn"></div>
+            ) : isAuthEnabled(authMode) ? (
+              <a class="topbar-link" href="/login">Sign in</a>
+            ) : (
+              <span class="topbar-email">{email}</span>
+            )}
           </div>
         </div>
         
         <div class="content">
           <div class="hero">
-            <h1>Deploy your ideas instantly.</h1>
-            <p>
-              Built for AI Agents. A simple, editorial platform for sharing HTML reports, Markdown notes, 
-              and code snippets with the world.
-            </p>
-            <a href="https://github.com/duyet/sharehtml" class="btn-primary">
-              View on GitHub
-            </a>
+            <div class="eyebrow">Documentation · Platform Overview</div>
+            <h1>Deploy files instantly with sharehtml</h1>
+            <div class="tldr">
+              <b>TL;DR</b> — Deploy HTML, Markdown, or code files in seconds. No signup required.
+              Documents persist indefinitely. Built for AI agents and developers.
+            </div>
+            <div class="hero-actions">
+              <a href="/docs" class="btn-primary">Read the Docs</a>
+              <a href="https://github.com/duyet/sharehtml" class="btn-secondary">View on GitHub</a>
+            </div>
           </div>
 
           <div class="section">

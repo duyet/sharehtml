@@ -285,10 +285,49 @@ function initHomeClient(): void {
   form.addEventListener("submit", handleSearchSubmit);
   pagination.addEventListener("click", handlePaginationClick);
 
+  // Check if on login page
+  if (document.getElementById("clerk-sign-in")) {
+    initClerkSignIn();
+    return;
+  }
+
   // Clerk user button initialization
   if (config.clerkPublishableKey) {
     initClerkUserButton(config.requiresLogin ?? false);
   }
+}
+
+function initClerkSignIn(): void {
+  const clerk = (window as unknown as Record<string, unknown>).Clerk as
+    | { load: () => Promise<void>; isSignedIn: boolean; mountSignIn: (node: HTMLElement) => void; addListener: (fn: (state: unknown) => void) => () => void }
+    | undefined;
+
+  if (!clerk) return;
+
+  const loginConfig = (window as unknown as Record<string, unknown>).LOGIN_CONFIG as
+    | { redirectUrl?: string; clerkPublishableKey?: string }
+    | undefined;
+
+  clerk.load().then(() => {
+    const node = document.getElementById("clerk-sign-in");
+    if (node instanceof HTMLElement) {
+      clerk.mountSignIn(node);
+    }
+
+    // If already signed in, redirect immediately
+    if (clerk.isSignedIn && loginConfig?.redirectUrl) {
+      window.location.href = loginConfig.redirectUrl;
+    }
+
+    // Listen for sign-in/sign-up completion
+    clerk.addListener((user) => {
+      if (user && loginConfig?.redirectUrl) {
+        window.location.href = loginConfig.redirectUrl;
+      }
+    });
+  }).catch(() => {
+    // Clerk load failed
+  });
 }
 
 function initClerkUserButton(requiresLogin: boolean): void {
@@ -300,11 +339,24 @@ function initClerkUserButton(requiresLogin: boolean): void {
 
   clerk.load().then(() => {
     const node = document.getElementById("clerk-user-btn");
-    if (node instanceof HTMLDivElement) {
-      clerk.mountUserButton(node);
-    }
+    if (!(node instanceof HTMLDivElement)) return;
+
+    // Auto-open sign-in for protected pages
     if (!clerk.isSignedIn && requiresLogin) {
       clerk.openSignIn();
+      return;
+    }
+
+    // For signed-in users, mount the user button
+    if (clerk.isSignedIn) {
+      clerk.mountUserButton(node);
+    } else {
+      // For unauthenticated users on public pages, show a "Sign in" button
+      const signInBtn = document.createElement("button");
+      signInBtn.className = "topbar-link";
+      signInBtn.textContent = "Sign in";
+      signInBtn.addEventListener("click", () => clerk.openSignIn());
+      node.replaceWith(signInBtn);
     }
   }).catch(() => {
     // Clerk load failed silently — user button won't be mounted

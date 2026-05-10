@@ -89,6 +89,9 @@ export function ShellView(
           </div>
           <div class="topbar-right">
             <div class="presence-dots" id="presence-dots"></div>
+            <a class="topbar-link" href="/docs" title="Documentation">
+              docs
+            </a>
             <a class="topbar-link" href={`/d/${docId}.html`} title="View raw HTML">
               raw
             </a>
@@ -136,7 +139,7 @@ export function ShellView(
           </div>
         </div>
 
-        <div class="modal-backdrop" id="name-modal" style="display:none">
+        <div class="modal-backdrop hidden" id="name-modal">
           <div class="modal-content">
             <div class="modal-title">what should we call you?</div>
             <div class="modal-email" id="modal-email"></div>
@@ -154,7 +157,7 @@ export function ShellView(
           </div>
         </div>
 
-        <div class="modal-backdrop" id="share-modal" style="display:none">
+        <div class="modal-backdrop hidden" id="share-modal">
           <div class="modal-content">
             <div class="modal-title">share this document</div>
             <div class="share-link-row">

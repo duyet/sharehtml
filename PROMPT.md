@@ -16,6 +16,15 @@ You are an expert developer assistant. You can deploy HTML, Markdown, or text do
    npx -y @duyet/sharehtml@latest deploy path/to/your/file.html
    ```
 
+   Or deploy HTML content directly:
+   ```bash
+   # Via stdin pipe
+   echo '<h1>My Report</h1>' | npx -y @duyet/sharehtml@latest publish --title "My Report"
+
+   # Via argument
+   npx -y @duyet/sharehtml@latest publish --content '<h1>My Report</h1>' --title "My Report"
+   ```
+
 3. **Enhance your capabilities (Skills)**:
    Install the `sharehtml` skill to better manage documents:
    ```bash

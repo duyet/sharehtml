@@ -90,7 +90,12 @@ api.post("/keys", async (c) => {
     return c.json({ error: "Cannot create API keys using API key authentication" }, 403);
   }
 
-  const body = await c.req.json();
+  let body: unknown = {};
+  try {
+    body = await c.req.json();
+  } catch {
+    // Empty body is valid, name defaults to ""
+  }
   const name = isRecord(body) && typeof body.name === "string" ? body.name.trim() : "";
 
   const rawKey = generateApiKey();
@@ -739,6 +744,133 @@ api.put("/documents/:id/share", async (c) => {
   return c.json({ ok: true, mode, isShared: mode === "link", emails: responseEmails });
 });
 
+// Tag endpoints
+
+// Get document tags
+api.get("/documents/:id/tags", async (c) => {
+  const id = c.req.param("id");
+  const protectedResponse = await requireViewerBrowserCapability(c, id, { requireOrigin: false });
+  if (protectedResponse) return protectedResponse;
+
+  const registry = getRegistry(c.env);
+  const doc = await registry.getDocument(id);
+  if (!doc || !emailsMatch(doc.owner_email, c.get("authUser").email)) {
+    return c.json({ error: "not found" }, 404);
+  }
+
+  const tags = await registry.getDocumentTags(id);
+  return c.json({ tags });
+});
+
+// Replace document tags
+api.put("/documents/:id/tags", async (c) => {
+  const user = c.get("authUser");
+  if (!isAuthenticated(user)) {
+    return c.json({ error: "Authentication required" }, 401);
+  }
+
+  const id = c.req.param("id");
+  const protectedResponse = await requireViewerBrowserCapability(c, id);
+  if (protectedResponse) return protectedResponse;
+
+  const registry = getRegistry(c.env);
+  const doc = await registry.getDocument(id);
+  if (!doc) {
+    return c.json({ error: "not found" }, 404);
+  }
+
+  if (!emailsMatch(doc.owner_email, c.get("authUser").email)) {
+    return c.json({ error: "forbidden" }, 403);
+  }
+
+  const body = await c.req.json();
+  if (!isRecord(body) || !Array.isArray(body.tags)) {
+    return c.json({ error: "tags must be an array" }, 400);
+  }
+
+  const tags = body.tags.filter((t: unknown) => typeof t === "string" && t.trim()).map((t: string) => t.trim());
+  await registry.setDocumentTags(id, tags);
+
+  return c.json({ ok: true, tags });
+});
+
+// Add tag to document
+api.post("/documents/:id/tags", async (c) => {
+  const user = c.get("authUser");
+  if (!isAuthenticated(user)) {
+    return c.json({ error: "Authentication required" }, 401);
+  }
+
+  const id = c.req.param("id");
+  const protectedResponse = await requireViewerBrowserCapability(c, id);
+  if (protectedResponse) return protectedResponse;
+
+  const registry = getRegistry(c.env);
+  const doc = await registry.getDocument(id);
+  if (!doc) {
+    return c.json({ error: "not found" }, 404);
+  }
+
+  if (!emailsMatch(doc.owner_email, c.get("authUser").email)) {
+    return c.json({ error: "forbidden" }, 403);
+  }
+
+  const body = await c.req.json();
+  if (!isRecord(body) || typeof body.tag !== "string") {
+    return c.json({ error: "tag is required" }, 400);
+  }
+
+  const tag = body.tag.trim();
+  if (!tag) {
+    return c.json({ error: "tag cannot be empty" }, 400);
+  }
+
+  await registry.addDocumentTag(id, tag);
+  const tags = await registry.getDocumentTags(id);
+
+  return c.json({ ok: true, tags });
+});
+
+// Remove tag from document
+api.delete("/documents/:id/tags/:tag", async (c) => {
+  const user = c.get("authUser");
+  if (!isAuthenticated(user)) {
+    return c.json({ error: "Authentication required" }, 401);
+  }
+
+  const id = c.req.param("id");
+  const tag = c.req.param("tag");
+  const protectedResponse = await requireViewerBrowserCapability(c, id);
+  if (protectedResponse) return protectedResponse;
+
+  const registry = getRegistry(c.env);
+  const doc = await registry.getDocument(id);
+  if (!doc) {
+    return c.json({ error: "not found" }, 404);
+  }
+
+  if (!emailsMatch(doc.owner_email, c.get("authUser").email)) {
+    return c.json({ error: "forbidden" }, 403);
+  }
+
+  await registry.removeDocumentTag(id, tag);
+  const tags = await registry.getDocumentTags(id);
+
+  return c.json({ ok: true, tags });
+});
+
+// List all tags for authenticated user
+api.get("/tags", async (c) => {
+  const protectedResponse = await requireHomeBrowserCapability(c, { requireOrigin: false });
+  if (protectedResponse) return protectedResponse;
+
+  const email = c.get("authUser").email;
+  const registry = getRegistry(c.env);
+  const tags = await registry.getAllTags(email);
+
+  return c.json({ tags });
+});
+
 // Delete document
 api.delete("/documents/:id", async (c) => {
   const user = c.get("authUser");
@@ -811,6 +943,20 @@ api.get("/documents/:id/comments", async (c) => {
     },
     comments,
   });
+});
+
+// Stats endpoints
+api.get("/stats/user", async (c) => {
+  const user = c.get("authUser");
+  const registry = getRegistry(c.env);
+  const stats = await registry.getUserStats(user.email);
+  return c.json(stats);
+});
+
+api.get("/stats/global", async (c) => {
+  const registry = getRegistry(c.env);
+  const stats = await registry.getGlobalStats();
+  return c.json(stats);
 });
 
 export { api };

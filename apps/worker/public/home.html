@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>sharehtml — Deploy ideas instantly</title>
+  <link rel="stylesheet" href="{{assets_css}}">
+  {{#clerk_button}}
+  <script
+    defer
+    crossorigin="anonymous"
+    src="https://clerk.html.duyet.net/npm/@clerk/ui@1/dist/ui.browser.js"
+    type="text/javascript"
+  ></script>
+  <script
+    defer
+    data-clerk-publishable-key="{{clerk_publishable_key}}"
+    crossorigin="anonymous"
+    src="https://clerk.html.duyet.net/npm/@clerk/clerk-js@6/dist/clerk.browser.js"
+    type="text/javascript"
+  ></script>
+  <script>
+    (function() {
+      window.addEventListener("load", async function () {
+        if (!window.Clerk) return;
+        await window.Clerk.load({ ui: { ClerkUI: window.__internal_ClerkUICtor } });
+        console.log("ClerkJS is loaded");
+
+        const loginLink = document.getElementById('login-link');
+        const dashboardLink = document.getElementById('dashboard-link');
+        const userBtn = document.getElementById('clerk-user-btn');
+
+        if (window.Clerk.isSignedIn) {
+          // Show Dashboard, hide Sign In
+          if (dashboardLink) dashboardLink.style.display = '';
+          if (loginLink) loginLink.style.display = 'none';
+          // Mount user button
+          if (userBtn) window.Clerk.mountUserButton(userBtn);
+        } else {
+          // Show Sign In, hide Dashboard
+          if (dashboardLink) dashboardLink.style.display = 'none';
+          if (loginLink) {
+            loginLink.style.display = '';
+            loginLink.addEventListener('click', (e) => {
+              e.preventDefault();
+              window.Clerk.openSignIn();
+            });
+          }
+        }
+      });
+    })();
+  </script>
+  {{/clerk_button}}
+  <script src="{{assets_shared_js}}"></script>
+  <script src="{{assets_js}}" type="module" defer></script>
+</head>
+<body>
+  <header class="topbar">
+    <a class="topbar-home" href="/">sharehtml</a>
+    <nav class="topbar-right">
+      <a class="topbar-link" href="/docs">Docs</a>
+      <a class="topbar-link hidden" href="/dashboard" id="dashboard-link">Dashboard</a>
+      <a class="topbar-link" href="#" id="login-link">Sign In</a>
+      {{#clerk_button}}
+      <div id="clerk-user-btn"></div>
+      {{/clerk_button}}
+    </nav>
+  </header>
+
+  <main class="content">
+    <section class="hero">
+      <h1>Deploy your ideas instantly</h1>
+      <p>Share HTML, Markdown, and code with collaborative comments and reactions.</p>
+    </section>
+
+    <!-- Quick Start -->
+    <section class="section">
+    <h2>Quick Start</h2>
+    <p>Deploy HTML, Markdown, or code files instantly:</p>
+
+    <div class="tabs" data-tabs>
+      <div class="tabbar">
+        <button class="on" data-t="0">For Human</button>
+        <button data-t="1">For AI Agent</button>
+      </div>
+      <pre class="on"><span class="comment"># Deploy any file instantly</span>
+npx -y @duyet/sharehtml@latest deploy path/to/file.html</pre>
+      <pre><span class="comment"># Add to AI agents (Claude Code, Cursor, Windsurf, etc.)</span>
+npx -y skills add duyet/sharehtml</pre>
+    </div>
+
+    <p class="setup-block-ai-note">
+      <strong>Prompt for AI agents:</strong>
+    </p>
+    <pre class="setup-block-ai-code"><code>"Deploy this to the web using sharehtml: `npx -y @duyet/sharehtml deploy path/to/file.html`"</code></pre>
+    <p class="setup-block-ai-note">
+      The agent will deploy files and return the live URL automatically.
+    </p>
+
+    <!-- Recently Viewed -->
+    {{#has_recent_views}}
+    <section class="section">
+      <h2>Recently Viewed</h2>
+      <div class="recent-grid">
+        {{{recent_views_html}}}
+      </div>
+    </section>
+    {{/has_recent_views}}
+
+    <!-- Recently Added -->
+    <section class="section">
+      <h2>Recently Added</h2>
+      <div class="doc-list">
+        {{{documents_html}}}
+      </div>
+      {{{pagination_html}}}
+    </section>
+
+    <!-- Features -->
+    <section class="section features-section">
+      <h2>Features</h2>
+      <div class="features-grid">
+        <div class="feature-item">
+          <h3>✦ Collaborative Comments</h3>
+          <p>Threaded discussions with text anchoring and emoji reactions.</p>
+        </div>
+        <div class="feature-item">
+          <h3>✦ Live Presence</h3>
+          <p>See who's viewing and their selections in real-time.</p>
+        </div>
+        <div class="feature-item">
+          <h3>✦ AI Agent Skills</h3>
+          <p>Deep integration for Claude Code and other AI agents.</p>
+        </div>
+        <div class="feature-item">
+          <h3>✦ Multiple Formats</h3>
+          <p>HTML, Markdown, and code with syntax highlighting.</p>
+        </div>
+        <div class="feature-item">
+          <h3>✦ Self-Hosted</h3>
+          <p>Run on Cloudflare Workers with R2 storage.</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script id="__HOME_CONFIG__" type="application/json">
+    {{{home_config}}}
+  </script>
+</body>
+</html>

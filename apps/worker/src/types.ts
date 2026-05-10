@@ -43,6 +43,7 @@ export type DocumentRow = {
   source_filename: string | null;
   source_kind: string | null;
   source_language: string | null;
+  view_count?: number;
 };
 
 export type RecentViewRow = {
@@ -60,6 +61,18 @@ export type UserRow = {
   email: string;
   display_name: string;
   color: string;
+  clerk_user_id?: string;
+  image_url?: string;
+  username?: string;
+  external_id?: string;
+};
+
+export type ApiKeyRow = {
+  id: string;
+  key_hash: string;
+  user_email: string;
+  name: string;
+  created_at: string;
 };
 
 export type CommentRow = {
@@ -128,4 +141,18 @@ export type AppBindings = {
   Variables: {
     authUser: import("./utils/auth.js").AuthUser;
   };
+};
+
+export type UserStats = {
+  docCount: number;
+  storageUsed: number;
+  totalViews: number;
+  accountAge: string;
+};
+
+export type GlobalStats = {
+  totalUsers: number;
+  totalDocs: number;
+  totalViews: number;
+  totalStorage: number;
 };

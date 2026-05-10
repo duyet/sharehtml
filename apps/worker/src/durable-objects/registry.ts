@@ -1,5 +1,5 @@
 import { DurableObject } from "cloudflare:workers";
-import type { ApiKeyRow, DocumentRow, RecentViewRow, UserRow } from "../types.js";
+import type { ApiKeyRow, DocumentRow, RecentViewRow, UserRow, UserStats, GlobalStats } from "../types.js";
 import { normalizeEmail } from "../utils/email.js";
 
 const USER_COLORS = [
@@ -35,7 +35,13 @@ export class RegistryDO extends DurableObject<Env> {
         email TEXT PRIMARY KEY,
         display_name TEXT NOT NULL,
         color TEXT NOT NULL,
-        created_at TEXT NOT NULL DEFAULT (datetime('now'))
+        created_at TEXT NOT NULL DEFAULT (datetime('now')),
+        deleted_at TEXT,
+        clerk_user_id TEXT,
+        image_url TEXT,
+        username TEXT,
+        external_id TEXT,
+        last_synced_at TEXT
       )
     `);
     this.sql.exec(`
@@ -59,6 +65,7 @@ export class RegistryDO extends DurableObject<Env> {
     `);
     this.ensureDocumentSharingColumn();
     this.ensureDocumentArtifactColumns();
+    this.ensureViewCountColumn();
     this.sql.exec(`
       CREATE TABLE IF NOT EXISTS shared_emails (
         doc_id TEXT NOT NULL,
@@ -77,6 +84,8 @@ export class RegistryDO extends DurableObject<Env> {
       )
     `);
     this.ensureUpdatedAtIndex();
+    this.ensureUpdatedAtIndex();
+    this.ensureDocumentTagsTable();
   }
 
   private ensureUpdatedAtIndex() {
@@ -116,6 +125,45 @@ export class RegistryDO extends DurableObject<Env> {
     }
   }
 
+  private ensureViewCountColumn() {
+    const columns = this.sql.exec<{ name: string }>("PRAGMA table_info(documents)").toArray();
+    const hasViewCount = columns.some((column) => column.name === "view_count");
+    if (hasViewCount) return;
+
+    this.sql.exec("ALTER TABLE documents ADD COLUMN view_count INTEGER DEFAULT 0");
+  }
+
+  private ensureUpdatedAtIndex() {
+    const indices = this.sql.exec<{ name: string }>("SELECT name FROM sqlite_master WHERE type='index' AND name='idx_documents_owner_updated'").toArray();
+    if (indices.length === 0) {
+      this.sql.exec("CREATE INDEX idx_documents_owner_updated ON documents (owner_email, created_at DESC)");
+    }
+  }
+
+  private ensureDocumentTagsTable(): void {
+    const columns = this.sql.exec<{ name: string }>("PRAGMA table_info(document_tags)").toArray();
+    if (columns.length > 0) return;
+
+    this.sql.exec(`
+      CREATE TABLE document_tags (
+        doc_id TEXT NOT NULL,
+        tag TEXT NOT NULL,
+        added_at TEXT NOT NULL DEFAULT (datetime('now')),
+        PRIMARY KEY (doc_id, tag)
+      )
+    `);
+
+    // Create index on tag for efficient tag-based lookups
+    const indices = this.sql.exec<{ name: string }>("SELECT name FROM sqlite_master WHERE type='index' AND name='document_tags_tag_idx'").toArray();
+    if (indices.length === 0) {
+      this.sql.exec("CREATE INDEX document_tags_tag_idx ON document_tags(tag)");
+    }
+  }
+
+  private normalizeTag(tag: string): string {
+    return tag.trim().toLowerCase();
+  }
+
   private pickColor(): string {
     return USER_COLORS[Math.floor(Math.random() * USER_COLORS.length)];
   }
@@ -123,27 +171,102 @@ export class RegistryDO extends DurableObject<Env> {
   async getUser(email: string): Promise<UserRow | null> {
     const normalizedEmail = normalizeEmail(email);
     const rows = this.sql
-      .exec<UserRow>("SELECT email, display_name, color FROM users WHERE lower(email) = ?", normalizedEmail)
+      .exec<UserRow>("SELECT email, display_name, color, clerk_user_id, image_url, username, external_id FROM users WHERE lower(email) = ? AND deleted_at IS NULL", normalizedEmail)
       .toArray();
     if (rows.length === 0) return null;
     return rows[0];
   }
 
-  async setUser(email: string, displayName: string): Promise<UserRow> {
+  async setUser(email: string, displayName: string, clerkData?: {
+    clerkUserId?: string;
+    imageUrl?: string;
+    username?: string;
+    externalId?: string;
+  }): Promise<UserRow> {
     const normalizedEmail = normalizeEmail(email);
-    const existing = await this.getUser(email);
-    if (existing) {
-      this.sql.exec("UPDATE users SET display_name = ? WHERE email = ?", displayName, existing.email);
-      return { ...existing, display_name: displayName };
+    // Check if user exists (including deleted)
+    const rows = this.sql
+      .exec<UserRow & { deleted_at: string | null }>("SELECT email, display_name, color, clerk_user_id, image_url, username, external_id, deleted_at FROM users WHERE lower(email) = ?", normalizedEmail)
+      .toArray();
+
+    const now = new Date().toISOString();
+
+    if (rows.length > 0) {
+      const existing = rows[0];
+      if (existing.deleted_at) {
+        // Reactivate deleted user
+        this.sql.exec(
+          "UPDATE users SET display_name = ?, deleted_at = NULL, clerk_user_id = ?, image_url = ?, username = ?, external_id = ?, last_synced_at = ? WHERE email = ?",
+          displayName,
+          clerkData?.clerkUserId ?? existing.clerk_user_id,
+          clerkData?.imageUrl ?? existing.image_url,
+          clerkData?.username ?? existing.username,
+          clerkData?.externalId ?? existing.external_id,
+          now,
+          existing.email
+        );
+        return {
+          email: existing.email,
+          display_name: displayName,
+          color: existing.color,
+          clerk_user_id: clerkData?.clerkUserId ?? existing.clerk_user_id,
+          image_url: clerkData?.imageUrl ?? existing.image_url,
+          username: clerkData?.username ?? existing.username,
+          external_id: clerkData?.externalId ?? existing.external_id,
+        };
+      }
+      // Update existing user
+      this.sql.exec(
+        "UPDATE users SET display_name = ?, clerk_user_id = ?, image_url = ?, username = ?, external_id = ?, last_synced_at = ? WHERE email = ?",
+        displayName,
+        clerkData?.clerkUserId ?? existing.clerk_user_id,
+        clerkData?.imageUrl ?? existing.image_url,
+        clerkData?.username ?? existing.username,
+        clerkData?.externalId ?? existing.external_id,
+        now,
+        existing.email
+      );
+      return {
+        ...existing,
+        display_name: displayName,
+        clerk_user_id: clerkData?.clerkUserId ?? existing.clerk_user_id,
+        image_url: clerkData?.imageUrl ?? existing.image_url,
+        username: clerkData?.username ?? existing.username,
+        external_id: clerkData?.externalId ?? existing.external_id,
+      };
     }
+
+    // Create new user
     const color = this.pickColor();
     this.sql.exec(
-      "INSERT INTO users (email, display_name, color) VALUES (?, ?, ?)",
+      "INSERT INTO users (email, display_name, color, clerk_user_id, image_url, username, external_id, last_synced_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
       normalizedEmail,
       displayName,
       color,
+      clerkData?.clerkUserId ?? null,
+      clerkData?.imageUrl ?? null,
+      clerkData?.username ?? null,
+      clerkData?.externalId ?? null,
+      now
     );
-    return { email: normalizedEmail, display_name: displayName, color };
+    return {
+      email: normalizedEmail,
+      display_name: displayName,
+      color,
+      clerk_user_id: clerkData?.clerkUserId,
+      image_url: clerkData?.imageUrl,
+      username: clerkData?.username,
+      external_id: clerkData?.externalId,
+    };
+  }
+
+  async deleteUser(email: string): Promise<boolean> {
+    const normalizedEmail = normalizeEmail(email);
+    const existing = await this.getUser(email);
+    if (!existing) return false;
+    // Soft delete: mark as deleted instead of removing
+    this.sql.exec("UPDATE users SET deleted_at = datetime('now') WHERE email = ?", existing.email);
+    return true;
   }
 
   async createDocument(doc: {
@@ -157,6 +280,7 @@ export class RegistryDO extends DurableObject<Env> {
     source_filename?: string | null;
     source_kind?: string | null;
     source_language?: string | null;
+    tags?: string[];
   }) {
     this.sql.exec(
       "INSERT INTO documents (id, title, filename, size, owner_email, is_shared, rendered_filename, source_filename, source_kind, source_language) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
@@ -171,6 +295,9 @@ export class RegistryDO extends DurableObject<Env> {
       doc.source_kind ?? null,
       doc.source_language ?? null,
     );
+    if (doc.tags && doc.tags.length > 0) {
+      await this.setDocumentTags(doc.id, doc.tags);
+    }
   }
 
   async getDocument(id: string): Promise<DocumentRow | null> {
@@ -276,6 +403,7 @@ export class RegistryDO extends DurableObject<Env> {
     source_filename?: string | null;
     source_kind?: string | null;
     source_language?: string | null;
+    tags?: string[];
   }) {
     this.sql.exec(
       `UPDATE documents
@@ -290,6 +418,9 @@ export class RegistryDO extends DurableObject<Env> {
       updates.source_language ?? null,
       id,
     );
+    if (updates.tags !== undefined) {
+      await this.setDocumentTags(id, updates.tags);
+    }
   }
 
   async setDocumentShareMode(id: string, mode: number) {
@@ -325,6 +456,8 @@ export class RegistryDO extends DurableObject<Env> {
       normalizeEmail(userEmail),
       docId,
     );
+    // Increment view count on the document
+    this.sql.exec("UPDATE documents SET view_count = COALESCE(view_count, 0) + 1 WHERE id = ?", docId);
   }
 
   async getRecentViews(userEmail: string, limit = 20): Promise<RecentViewRow[]> {
@@ -406,6 +539,155 @@ export class RegistryDO extends DurableObject<Env> {
 
   async deleteDocument(id: string) {
     this.sql.exec("DELETE FROM shared_emails WHERE doc_id = ?", id);
+    this.sql.exec("DELETE FROM document_tags WHERE doc_id = ?", id);
     this.sql.exec("DELETE FROM documents WHERE id = ?", id);
+  }
+
+  async getUserStats(userEmail: string): Promise<UserStats> {
+    const normalizedEmail = normalizeEmail(userEmail);
+    const [docCountResult] = this.sql.exec<{ count: number }>(
+      "SELECT COUNT(*) as count FROM documents WHERE owner_email = ?",
+      normalizedEmail
+    ).toArray();
+    const [storageUsedResult] = this.sql.exec<{ total: number }>(
+      "SELECT COALESCE(SUM(size), 0) as total FROM documents WHERE owner_email = ?",
+      normalizedEmail
+    ).toArray();
+    const [totalViewsResult] = this.sql.exec<{ total: number }>(
+      "SELECT COALESCE(SUM(view_count), 0) as total FROM documents WHERE owner_email = ?",
+      normalizedEmail
+    ).toArray();
+    const user = await this.getUser(normalizedEmail);
+    const createdAt = user?.created_at || "";
+
+    return {
+      docCount: docCountResult?.count || 0,
+      storageUsed: storageUsedResult?.total || 0,
+      totalViews: totalViewsResult?.total || 0,
+      accountAge: createdAt,
+    };
+  }
+
+  async getGlobalStats(): Promise<GlobalStats> {
+    const [usersResult] = this.sql.exec<{ count: number }>("SELECT COUNT(*) as count FROM users").toArray();
+    const [docsResult] = this.sql.exec<{ count: number }>("SELECT COUNT(*) as count FROM documents").toArray();
+    const [viewsResult] = this.sql.exec<{ total: number }>("SELECT COALESCE(SUM(view_count), 0) as total FROM documents").toArray();
+    const [storageResult] = this.sql.exec<{ total: number }>("SELECT COALESCE(SUM(size), 0) as total FROM documents").toArray();
+
+    return {
+      totalUsers: usersResult?.count || 0,
+      totalDocs: docsResult?.count || 0,
+      totalViews: viewsResult?.total || 0,
+      totalStorage: storageResult?.total || 0,
+    };
+  }
+
+  // Tag methods
+
+  async setDocumentTags(docId: string, tags: string[]): Promise<void> {
+    this.ctx.storage.transactionSync(() => {
+      this.sql.exec("DELETE FROM document_tags WHERE doc_id = ?", docId);
+      // Deduplicate and normalize tags
+      const uniqueTags = [...new Set(tags.map(this.normalizeTag))].slice(0, 100);
+      for (const tag of uniqueTags) {
+        if (tag) {
+          this.sql.exec("INSERT INTO document_tags (doc_id, tag) VALUES (?, ?)", docId, tag);
+        }
+      }
+    });
+  }
+
+  async getDocumentTags(docId: string): Promise<string[]> {
+    return this.sql
+      .exec<{ tag: string }>("SELECT tag FROM document_tags WHERE doc_id = ? ORDER BY added_at ASC", docId)
+      .toArray()
+      .map((row) => row.tag);
+  }
+
+  async addDocumentTag(docId: string, tag: string): Promise<void> {
+    const normalized = this.normalizeTag(tag);
+    if (!normalized) return;
+    this.sql.exec("INSERT OR IGNORE INTO document_tags (doc_id, tag) VALUES (?, ?)", docId, normalized);
+  }
+
+  async removeDocumentTag(docId: string, tag: string): Promise<void> {
+    const normalized = this.normalizeTag(tag);
+    this.sql.exec("DELETE FROM document_tags WHERE doc_id = ? AND tag = ?", docId, normalized);
+  }
+
+  async listDocumentsByTag(ownerEmail: string, tag: string, limit: number = 50): Promise<DocumentRow[]> {
+    const normalizedEmail = normalizeEmail(ownerEmail);
+    const normalizedTag = this.normalizeTag(tag);
+    return this.sql
+      .exec<DocumentRow>(
+        `SELECT d.* FROM documents d
+         JOIN document_tags dt ON d.id = dt.doc_id
+         WHERE lower(d.owner_email) = ? AND dt.tag = ?
+         ORDER BY d.created_at DESC
+         LIMIT ?`,
+        normalizedEmail,
+        normalizedTag,
+        limit,
+      )
+      .toArray();
+  }
+
+  async getAllTags(ownerEmail: string): Promise<{ tag: string; count: number }[]> {
+    const normalizedEmail = normalizeEmail(ownerEmail);
+    return this.sql
+      .exec<{ tag: string; count: number }>(
+        `SELECT dt.tag, COUNT(*) as count
+         FROM document_tags dt
+         JOIN documents d ON dt.doc_id = d.id
+         WHERE lower(d.owner_email) = ?
+         GROUP BY dt.tag
+         ORDER BY count DESC, dt.tag ASC`,
+        normalizedEmail,
+      )
+      .toArray();
+  }
+
+  // API Key methods
+
+  async createApiKey(params: { id: string; keyHash: string; userEmail: string; name: string }): Promise<void> {
+    this.sql.exec(
+      "INSERT INTO api_keys (id, key_hash, user_email, name, created_at) VALUES (?, ?, ?, ?, datetime('now'))",
+      params.id,
+      params.keyHash,
+      params.userEmail,
+      params.name,
+    );
+  }
+
+  async listApiKeys(userEmail: string): Promise<ApiKeyRow[]> {
+    return this.sql.exec<ApiKeyRow>(
+      "SELECT * FROM api_keys WHERE user_email = ? ORDER BY created_at DESC",
+      userEmail,
+    ).toArray();
+  }
+
+  async getApiKeyByHash(keyHash: string): Promise<ApiKeyRow | null> {
+    const results = this.sql.exec<ApiKeyRow>(
+      "SELECT * FROM api_keys WHERE key_hash = ?",
+      keyHash,
+    ).toArray();
+    return results[0] || null;
+  }
+
+  async deleteApiKey(id: string, userEmail: string): Promise<boolean> {
+    const existing = this.sql.exec<ApiKeyRow>(
+      "SELECT * FROM api_keys WHERE id = ? AND user_email = ?",
+      id,
+      userEmail,
+    ).toArray();
+    if (existing.length === 0) {
+      return false;
+    }
+    this.sql.exec(
+      "DELETE FROM api_keys WHERE id = ? AND user_email = ?",
+      id,
+      userEmail,
+    );
+    return true;
   }
 }

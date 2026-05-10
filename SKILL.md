@@ -14,6 +14,8 @@ npx -y @duyet/sharehtml@latest <command>
 ## Key Commands
 
 - `npx -y @duyet/sharehtml@latest deploy <file>` — Deploy or update
+- `echo '<html>' \| npx -y @duyet/sharehtml@latest publish` — Deploy via stdin pipe
+- `npx -y @duyet/sharehtml@latest publish --content '<html>'` — Deploy via argument
 - `npx -y @duyet/sharehtml@latest diff <file>` — Compare local vs remote
 - `npx -y @duyet/sharehtml@latest pull <id>` — Download remote file
 - `npx -y @duyet/sharehtml@latest list` — Search documents
