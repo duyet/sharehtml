@@ -310,9 +310,16 @@ function initClerkUserButton(): void {
 
   clerk.load().then(() => {
     const node = document.getElementById("clerk-user-btn");
-    if (node instanceof HTMLDivElement) {
-      clerk.mountUserButton(node);
+    if (!(node instanceof HTMLDivElement)) return;
+
+    // Dashboard requires authentication - auto-open sign-in if not signed in
+    if (!clerk.isSignedIn) {
+      clerk.openSignIn();
+      return;
     }
+
+    // For signed-in users, mount the user button (shows avatar)
+    clerk.mountUserButton(node);
   }).catch(() => {
     // Clerk load failed silently
   });
