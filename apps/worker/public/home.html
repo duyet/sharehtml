@@ -51,6 +51,7 @@
     })();
   </script>
   {{/clerk_button}}
+  <script src="{{assets_shared_js}}"></script>
   <script src="{{assets_js}}" type="module" defer></script>
 </head>
 <body>
@@ -74,28 +75,27 @@
 
     <!-- Quick Start -->
     <section class="section">
-      <h2>Quick Start</h2>
-      <div class="setup-block">
-        <p>Deploy HTML, Markdown, or code files instantly with the sharehtml CLI:</p>
-        <pre><code class="language-bash">npx -y @duyet/sharehtml@latest deploy path/to/file.html</code></pre>
-        {{#requires_login}}
-        <p>First, authenticate with your instance:</p>
-        <pre><code class="language-bash">npx -y @duyet/sharehtml@latest login</code></pre>
-        {{/requires_login}}
-      </div>
+    <h2>Quick Start</h2>
+    <p>Deploy HTML, Markdown, or code files instantly:</p>
 
-      <div class="setup-block setup-block-ai">
-        <p><strong>Add sharehtml skills to your AI agent:</strong></p>
-        <pre><code class="language-bash">npx -y skills add duyet/sharehtml</code></pre>
-        <p class="setup-block-ai-header">
-          <strong>Or paste this prompt to your AI agent:</strong>
-        </p>
-        <pre class="setup-block-ai-code"><code>"Deploy this to the web using sharehtml: `npx -y @duyet/sharehtml deploy path/to/file.html`"</code></pre>
-        <p class="setup-block-ai-note">
-          The agent will deploy files and return the live URL automatically.
-        </p>
+    <div class="tabs" data-tabs>
+      <div class="tabbar">
+        <button class="on" data-t="0">For Human</button>
+        <button data-t="1">For AI Agent</button>
       </div>
-    </section>
+      <pre class="on"><span class="comment"># Deploy any file instantly</span>
+npx -y @duyet/sharehtml@latest deploy path/to/file.html</pre>
+      <pre><span class="comment"># Add to AI agents (Claude Code, Cursor, Windsurf, etc.)</span>
+npx -y skills add duyet/sharehtml</pre>
+    </div>
+
+    <p class="setup-block-ai-note">
+      <strong>Prompt for AI agents:</strong>
+    </p>
+    <pre class="setup-block-ai-code"><code>"Deploy this to the web using sharehtml: `npx -y @duyet/sharehtml deploy path/to/file.html`"</code></pre>
+    <p class="setup-block-ai-note">
+      The agent will deploy files and return the live URL automatically.
+    </p>
 
     <!-- Recently Viewed -->
     {{#has_recent_views}}

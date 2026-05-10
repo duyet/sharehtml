@@ -17,6 +17,7 @@ export default defineConfig({
         "collab-client": "src/client/collab-client.ts",
         "docs.css": "src/client/docs.css",
         "components.css": "src/client/components.css",
+        "shared": "src/client/shared.js",
       },
     },
   },
