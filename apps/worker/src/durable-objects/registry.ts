@@ -36,7 +36,12 @@ export class RegistryDO extends DurableObject<Env> {
         display_name TEXT NOT NULL,
         color TEXT NOT NULL,
         created_at TEXT NOT NULL DEFAULT (datetime('now')),
-        deleted_at TEXT
+        deleted_at TEXT,
+        clerk_user_id TEXT,
+        image_url TEXT,
+        username TEXT,
+        external_id TEXT,
+        last_synced_at TEXT
       )
     `);
     this.sql.exec(`
@@ -133,40 +138,93 @@ export class RegistryDO extends DurableObject<Env> {
   async getUser(email: string): Promise<UserRow | null> {
     const normalizedEmail = normalizeEmail(email);
     const rows = this.sql
-      .exec<UserRow>("SELECT email, display_name, color FROM users WHERE lower(email) = ? AND deleted_at IS NULL", normalizedEmail)
+      .exec<UserRow>("SELECT email, display_name, color, clerk_user_id, image_url, username, external_id FROM users WHERE lower(email) = ? AND deleted_at IS NULL", normalizedEmail)
       .toArray();
     if (rows.length === 0) return null;
     return rows[0];
   }
 
-  async setUser(email: string, displayName: string): Promise<UserRow> {
+  async setUser(email: string, displayName: string, clerkData?: {
+    clerkUserId?: string;
+    imageUrl?: string;
+    username?: string;
+    externalId?: string;
+  }): Promise<UserRow> {
     const normalizedEmail = normalizeEmail(email);
     // Check if user exists (including deleted)
     const rows = this.sql
-      .exec<UserRow & { deleted_at: string | null }>("SELECT email, display_name, color, deleted_at FROM users WHERE lower(email) = ?", normalizedEmail)
+      .exec<UserRow & { deleted_at: string | null }>("SELECT email, display_name, color, clerk_user_id, image_url, username, external_id, deleted_at FROM users WHERE lower(email) = ?", normalizedEmail)
       .toArray();
+
+    const now = new Date().toISOString();
 
     if (rows.length > 0) {
       const existing = rows[0];
       if (existing.deleted_at) {
         // Reactivate deleted user
-        this.sql.exec("UPDATE users SET display_name = ?, deleted_at = NULL WHERE email = ?", displayName, existing.email);
-        return { email: existing.email, display_name: displayName, color: existing.color };
+        this.sql.exec(
+          "UPDATE users SET display_name = ?, deleted_at = NULL, clerk_user_id = ?, image_url = ?, username = ?, external_id = ?, last_synced_at = ? WHERE email = ?",
+          displayName,
+          clerkData?.clerkUserId ?? existing.clerk_user_id,
+          clerkData?.imageUrl ?? existing.image_url,
+          clerkData?.username ?? existing.username,
+          clerkData?.externalId ?? existing.external_id,
+          now,
+          existing.email
+        );
+        return {
+          email: existing.email,
+          display_name: displayName,
+          color: existing.color,
+          clerk_user_id: clerkData?.clerkUserId ?? existing.clerk_user_id,
+          image_url: clerkData?.imageUrl ?? existing.image_url,
+          username: clerkData?.username ?? existing.username,
+          external_id: clerkData?.externalId ?? existing.external_id,
+        };
       }
       // Update existing user
-      this.sql.exec("UPDATE users SET display_name = ? WHERE email = ?", displayName, existing.email);
-      return { ...existing, display_name: displayName };
+      this.sql.exec(
+        "UPDATE users SET display_name = ?, clerk_user_id = ?, image_url = ?, username = ?, external_id = ?, last_synced_at = ? WHERE email = ?",
+        displayName,
+        clerkData?.clerkUserId ?? existing.clerk_user_id,
+        clerkData?.imageUrl ?? existing.image_url,
+        clerkData?.username ?? existing.username,
+        clerkData?.externalId ?? existing.external_id,
+        now,
+        existing.email
+      );
+      return {
+        ...existing,
+        display_name: displayName,
+        clerk_user_id: clerkData?.clerkUserId ?? existing.clerk_user_id,
+        image_url: clerkData?.imageUrl ?? existing.image_url,
+        username: clerkData?.username ?? existing.username,
+        external_id: clerkData?.externalId ?? existing.external_id,
+      };
     }
 
     // Create new user
     const color = this.pickColor();
     this.sql.exec(
-      "INSERT INTO users (email, display_name, color) VALUES (?, ?, ?)",
+      "INSERT INTO users (email, display_name, color, clerk_user_id, image_url, username, external_id, last_synced_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
       normalizedEmail,
       displayName,
       color,
+      clerkData?.clerkUserId ?? null,
+      clerkData?.imageUrl ?? null,
+      clerkData?.username ?? null,
+      clerkData?.externalId ?? null,
+      now
     );
-    return { email: normalizedEmail, display_name: displayName, color };
+    return {
+      email: normalizedEmail,
+      display_name: displayName,
+      color,
+      clerk_user_id: clerkData?.clerkUserId,
+      image_url: clerkData?.imageUrl,
+      username: clerkData?.username,
+      external_id: clerkData?.externalId,
+    };
   }
 
   async deleteUser(email: string): Promise<boolean> {

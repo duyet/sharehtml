@@ -49,9 +49,17 @@ webhooks.post("/clerk", async (c) => {
         .filter(Boolean)
         .join(" ") || email.split("@")[0];
 
+    // Extract additional Clerk data
+    const clerkData = {
+      clerkUserId: data.id,
+      imageUrl: data.image_url || data.profile_image_url || undefined,
+      username: data.username || undefined,
+      externalId: data.external_id || undefined,
+    };
+
     // Create or update user in Registry DO
     const registry = getRegistry(c.env);
-    await registry.setUser(email, displayName);
+    await registry.setUser(email, displayName, clerkData);
   }
 
   if (event.type === "user.deleted") {

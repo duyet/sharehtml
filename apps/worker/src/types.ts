@@ -61,6 +61,10 @@ export type UserRow = {
   email: string;
   display_name: string;
   color: string;
+  clerk_user_id?: string;
+  image_url?: string;
+  username?: string;
+  external_id?: string;
 };
 
 export type ApiKeyRow = {
