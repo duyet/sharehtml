@@ -216,6 +216,11 @@ function parseSourceFields(formData: FormData): {
   return { source, sourceKind, sourceLanguage };
 }
 
+function parseTagList(rawTags: string | null): string[] {
+  if (!rawTags) return [];
+  return rawTags.split(",").map(t => t.trim()).filter(Boolean);
+}
+
 type ShareRequest =
   | { mode: ShareMode; emails?: string[] }
   | { mode: "link" | "private" };
@@ -324,6 +329,13 @@ api.post("/documents", async (c) => {
 
   const { source, sourceKind, sourceLanguage } = parseSourceFields(formData);
 
+  // Parse tags from form field or header
+  const rawTags = formData.get("tags");
+  const tagsHeader = c.req.header("X-ShareHTML-Tags");
+  const tags = rawTags ? parseTagList(rawTags as string)
+    : tagsHeader ? parseTagList(tagsHeader)
+    : [];
+
   if (!file) {
     return c.json({ error: "file is required" }, 400);
   }
@@ -361,6 +373,7 @@ api.post("/documents", async (c) => {
       source_filename: source && sourceKind ? sourceFilename : null,
       source_kind: sourceKind,
       source_language: sourceLanguage,
+      tags,
     }),
   ];
 
@@ -385,6 +398,7 @@ api.post("/documents", async (c) => {
     filename: sourceFilename,
     size: file.size,
     isShared: !isAuthEnabled(c.env.AUTH_MODE),
+    tags,
   });
 });
 
@@ -430,10 +444,11 @@ api.get("/documents", async (c) => {
   const owner = c.get("authUser").email;
   const registry = getRegistry(c.env);
   const query = (c.req.query("q") || "").trim();
+  const tag = (c.req.query("tag") || "").trim();
   const limitQuery = Number.parseInt(c.req.query("limit") || "", 10);
   const pageQuery = Number.parseInt(c.req.query("page") || "", 10);
   const hasPaginationParams = Boolean(c.req.query("q")) || Boolean(c.req.query("limit")) ||
-    Boolean(c.req.query("page"));
+    Boolean(c.req.query("page")) || Boolean(c.req.query("tag"));
 
   if (!hasPaginationParams) {
     const documents = await registry.listDocuments(owner);
@@ -442,13 +457,14 @@ api.get("/documents", async (c) => {
 
   const limit = Number.isFinite(limitQuery) && limitQuery > 0 ? limitQuery : 10;
   const page = Number.isFinite(pageQuery) && pageQuery > 0 ? pageQuery : 1;
-  const result = await registry.listDocumentsPage(owner, { query, limit, page });
+  const result = await registry.listDocumentsPage(owner, { query, tag, limit, page });
   return c.json({
     documents: result.documents,
     totalCount: result.totalCount,
     page: result.page,
     pageSize: limit,
     query,
+    tag,
   });
 });
 
@@ -559,6 +575,13 @@ api.put("/documents/:id", async (c) => {
   const title = typeof rawTitle === "string" ? rawTitle : null;
   const { source, sourceKind, sourceLanguage } = parseSourceFields(formData);
 
+  // Parse tags from form field or header
+  const rawTags = formData.get("tags");
+  const tagsHeader = c.req.header("X-ShareHTML-Tags");
+  const tags = rawTags ? parseTagList(rawTags as string)
+    : tagsHeader ? parseTagList(tagsHeader)
+    : null;
+
   if (!file) {
     return c.json({ error: "file is required" }, 400);
   }
@@ -652,6 +675,7 @@ api.put("/documents/:id", async (c) => {
       source_filename: nextSourceFilename,
       source_kind: nextSourceKind,
       source_language: nextSourceLanguage,
+      tags,
     });
 
     const cleanupDeletes: Array<Promise<void>> = [];
@@ -685,6 +709,7 @@ api.put("/documents/:id", async (c) => {
     filename: nextSourceFilename || sourceFilename,
     size: file.size,
     isShared: Boolean(meta.is_shared),
+    tags,
   });
 });
 

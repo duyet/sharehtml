@@ -51,6 +51,7 @@ export const deployCmd = new Command("deploy")
   .option("--content <html>", "HTML content string (alternative to file path)")
   .option("--type <type>", "Content type: html, markdown, code (default: html)")
   .option("--language <lang>", "Language for code highlighting (with --type code)")
+  .option("--tags <tags>", "Comma-separated tags for the document")
   .action(async (file: string | undefined, opts: {
     title?: string;
     update?: boolean;
@@ -60,11 +61,15 @@ export const deployCmd = new Command("deploy")
     content?: string;
     type?: "html" | "markdown" | "code";
     language?: string;
+    tags?: string;
   }) => {
     if (opts.share && opts.private) {
       console.error("Error: choose either --share or --private, not both");
       process.exit(1);
     }
+
+    // Parse tags
+    const tags = opts.tags ? opts.tags.split(",").map(t => t.trim()).filter(Boolean) : [];
 
     let contentString: string | undefined;
     let isNonFileSource = false;
@@ -107,6 +112,7 @@ export const deployCmd = new Command("deploy")
             title: opts.title,
             sourceKind,
             sourceLanguage,
+            tags,
           });
           let isShared = result.isShared;
           if ((opts.share || opts.private) && supportsPrivateDocuments) {
@@ -127,6 +133,7 @@ export const deployCmd = new Command("deploy")
             slug: opts.slug,
             sourceKind,
             sourceLanguage,
+            tags,
           });
           let isShared = result.isShared;
           if ((opts.share || opts.private) && supportsPrivateDocuments) {
@@ -211,7 +218,7 @@ export const deployCmd = new Command("deploy")
         }
 
         console.log(`Updating ${file}...`);
-        const result = await updateDocument(existing.id, filePath, opts.title);
+        const result = await updateDocument(existing.id, filePath, opts.title, tags);
         let isShared = result.isShared;
         if ((opts.share || opts.private) && supportsPrivateDocuments) {
           const updated = await updateDocumentSharing(existing.id, Boolean(opts.share));
@@ -227,7 +234,7 @@ export const deployCmd = new Command("deploy")
         console.log(`  source: ${result.url}/source`);
       } else {
         console.log(`Deploying ${file}...`);
-        const result = await deployDocument(filePath, opts.title, opts.slug);
+        const result = await deployDocument(filePath, opts.title, opts.slug, tags);
         let isShared = result.isShared;
         if ((opts.share || opts.private) && supportsPrivateDocuments) {
           const updated = await updateDocumentSharing(result.id, Boolean(opts.share));

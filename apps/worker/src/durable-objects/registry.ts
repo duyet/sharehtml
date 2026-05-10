@@ -44,6 +44,12 @@ export class RegistryDO extends DurableObject<Env> {
         last_synced_at TEXT
       )
     `);
+    // Migration: add deleted_at column if it doesn't exist (ignore error if already exists)
+    try {
+      this.sql.exec(`ALTER TABLE users ADD COLUMN deleted_at TEXT`);
+    } catch {
+      // Column already exists, ignore error
+    }
     this.sql.exec(`
       CREATE TABLE IF NOT EXISTS documents (
         id TEXT PRIMARY KEY,

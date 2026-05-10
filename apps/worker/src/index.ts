@@ -13,6 +13,7 @@ import { getRegistry } from "./utils/registry.js";
 import { formatRelativeTime, formatDocumentSize, formatBytes, formatAccountAge, buildHomePath } from "./utils/home-view.js";
 import { toHtml, safeJsonForScript } from "./frontend/jsx.js";
 import { DashboardView } from "./frontend/dashboard.js";
+import { TagView } from "./frontend/tag.js";
 import { LoginView } from "./frontend/login.js";
 
 export { DocumentDO } from "./durable-objects/document.js";
@@ -219,6 +220,43 @@ app.get("/dashboard", async (c) => {
       page: documentsPage.page,
       pageSize,
       totalCount: documentsPage.totalCount,
+      homeCapabilityToken,
+      authMode: c.env.AUTH_MODE,
+      clerkPublishableKey: c.env.CLERK_PUBLISHABLE_KEY,
+    }),
+  );
+});
+
+app.get("/tag/:tag", async (c) => {
+  // Redirect unauthenticated users to login page
+  if (c.get("authUser").id === "unauthenticated") {
+    const tag = c.req.param("tag");
+    return c.redirect(`/login?redirect=/tag/${encodeURIComponent(tag)}`);
+  }
+
+  const tag = c.req.param("tag");
+  const email = normalizeEmail(c.get("authUser").email);
+
+  const registry = getRegistry(c.env);
+  const documents = await registry.listDocumentsByTag(email, tag, 50);
+
+  const url = new URL(c.req.url);
+  const workerUrl = `${url.protocol}//${url.host}`;
+  const assets = await getAssetUrls(c.env.ASSETS);
+  const homeCapabilityToken = await createCapabilityToken(c.env, {
+    scope: "home",
+    email,
+    documentId: null,
+  });
+
+  return c.html(
+    TagView({
+      assets,
+      email,
+      workerUrl,
+      tag,
+      documents,
+      totalCount: documents.length,
       homeCapabilityToken,
       authMode: c.env.AUTH_MODE,
       clerkPublishableKey: c.env.CLERK_PUBLISHABLE_KEY,
