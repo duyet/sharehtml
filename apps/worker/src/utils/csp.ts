@@ -36,6 +36,9 @@ function buildCspPolicy(options: CspOptions): string[] {
     dirs.push("frame-src 'self'");
   }
 
+  const workers = ["'self'", "blob:"];
+  dirs.push(`worker-src ${workers.join(" ")}`);
+
   return dirs;
 }
 

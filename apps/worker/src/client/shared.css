@@ -235,6 +235,11 @@ li {
   margin-bottom: 16px;
 }
 
+/* ── Utilities ────────────────────────────────── */
+.hidden {
+  display: none !important;
+}
+
 /* ── Mobile Responsive ──────────────────────────── */
 @media (max-width: 768px) {
   .topbar {
