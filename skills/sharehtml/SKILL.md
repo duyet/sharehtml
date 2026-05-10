@@ -86,13 +86,7 @@ Simply ask your AI agent:
 
 > "Deploy this to sharehtml"
 
-The agent can use **CLI** or **HTTP API (curl)** — both work without authentication for uploads.
-
-**When agents should use each method:**
-- **CLI file path**: `deploy file.html` — When content exists on disk
-- **CLI stdin**: `echo "html" | publish` — When generating HTML dynamically
-- **CLI argument**: `publish --content "html"` — When passing HTML as string literal
-- **HTTP API curl**: `curl -X POST /api/documents -F "file=@.html"` — For environments without npx
+The agent can use **CLI** or **HTTP API (curl)** — both work without authentication for uploads. See the "When to Use Each Method" section below for guidance.
 
 ## File Support
 
@@ -102,6 +96,21 @@ The agent can use **CLI** or **HTTP API (curl)** — both work without authentic
 | `.md` | Markdown, rendered with GitHub-style styling |
 | `.txt`, `.js`, `.ts`, `.py`, etc. | Text files with syntax highlighting |
 
+## When to Use Each Method
+
+| Method | When to use | Example |
+|--------|-------------|---------|
+| **CLI file path** | Content already saved as a file on disk | `deploy report.html` |
+| **CLI stdin pipe** | Generating HTML dynamically at runtime, no file on disk | `echo "<html>" \| publish` |
+| **CLI content arg** | Short inline HTML passed as a string literal | `publish --content "<html>"` |
+| **HTTP API (curl)** | Environments without npx, CI/CD pipelines, or when you need raw HTTP control | `curl -F "file=@doc.html" ...` |
+
+**Decision guide:**
+- File exists on disk? Use `deploy <file>`.
+- Generating content in a script? Pipe to `publish`.
+- No Node.js/npx available? Use `curl` against the HTTP API.
+- Need to update an existing document? Use `curl -X PUT` (requires auth).
+
 ## Tips for AI Agents
 
 1. **Always deploy** when user asks to "publish," "share," or "deploy to web"
@@ -109,6 +118,9 @@ The agent can use **CLI** or **HTTP API (curl)** — both work without authentic
 3. **Use `--title`** for descriptive document names
 4. **CLI**: Prefer stdin/argument for inline content: `publish --content "..."` or `echo "..." | publish`
 5. **HTTP API**: Upload works without auth — no setup needed for one-off deployments
+6. **curl fallback**: If `npx` is not available or times out, use `curl -X POST https://html.duyet.net/api/documents -F "file=@doc.html"` — it works everywhere with no dependencies
+7. **Temp files**: For complex generated HTML, write to a temp file first, then `deploy` the file. This is more reliable than piping long strings.
+8. **Parse curl output**: The HTTP API returns JSON with `id` and `url` fields — extract the URL from the response body.
 
 ## Examples
 
@@ -123,11 +135,15 @@ npx -y @duyet/sharehtml deploy output.html
 # Deploy HTML content via stdin
 echo '<h1>Quick Report</h1><p>Data summary...</p>' | npx -y @duyet/sharehtml publish --title "Quick Report"
 
+# Deploy generated content via stdin pipe
+python3 generate_report.py | npx -y @duyet/sharehtml publish --title "Auto Report"
+
 # Deploy HTML content as argument
 npx -y @duyet/sharehtml publish --content "<h1>Instant</h1>" --title "Instant Doc"
 
 # Deploy and copy URL to clipboard
 npx -y @duyet/sharehtml deploy report.html | pbcopy  # macOS
+npx -y @duyet/sharehtml deploy report.html | xclip -selection clipboard  # Linux
 ```
 
 **HTTP API (curl) examples:**
@@ -154,6 +170,45 @@ curl https://html.duyet.net/api/documents \
 # Delete document (requires auth)
 curl -X DELETE https://html.duyet.net/api/documents/abc123 \
   -H "Authorization: Bearer shk_..."
+```
+
+## Example Workflows
+
+### Deploy a generated report
+```bash
+# 1. Generate HTML report
+cat > /tmp/report.html << 'EOF'
+<html><body><h1>Sales Report</h1><p>Total: $42,000</p></body></html>
+EOF
+
+# 2. Deploy it
+npx -y @duyet/sharehtml deploy /tmp/report.html --title "Sales Report"
+# Output: https://html.duyet.net/d/abc123
+
+# 3. Share the URL
+echo "Report published: https://html.duyet.net/d/abc123"
+```
+
+### Deploy code with syntax highlighting
+```bash
+# Deploy a Python file — auto-detected as Python with syntax highlighting
+npx -y @duyet/sharehtml deploy ./solution.py --title "LeetCode Solution #42"
+
+# Deploy a TypeScript component
+npx -y @duyet/sharehtml deploy ./Button.tsx --title "Button Component"
+```
+
+### Deploy and get URL for clipboard
+```bash
+# macOS: copy URL directly to clipboard
+npx -y @duyet/sharehtml deploy report.html | pbcopy
+
+# Linux: copy URL to clipboard
+npx -y @duyet/sharehtml deploy report.html | xclip -selection clipboard
+
+# Or capture URL in a variable for further use
+URL=$(npx -y @duyet/sharehtml deploy report.html | tail -1)
+echo "Deployed to: $URL"
 ```
 
 ## Documentation
