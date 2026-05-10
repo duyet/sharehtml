@@ -1,6 +1,7 @@
-/* Shared base styles for all pages */
 @import "./theme.css";
 @import "./components.css";
+
+/* Shared base styles for all pages */
 
 /* ── Base Typography & Layout ──────────────────── */
 body {
