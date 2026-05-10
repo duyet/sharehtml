@@ -1,6 +1,6 @@
 {
   "name": "@duyet/sharehtml",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "description": "Bun CLI for deploying local documents to sharehtml for collaborative commenting",
   "license": "Apache-2.0",
   "type": "module",
