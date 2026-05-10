@@ -13,7 +13,7 @@ function buildCspPolicy(options: CspOptions): string[] {
   const dirs: string[] = [];
   dirs.push("default-src 'self'");
 
-  const scripts = ["'self'", "'unsafe-inline'", "https://static.cloudflareinsights.com"];
+  const scripts = ["'self'", "'unsafe-inline'", "https://static.cloudflareinsights.com", "https://cdn.jsdelivr.net"];
   if (options.clerkPublishableKey) {
     scripts.push(clerkOrigin(options.clerkPublishableKey));
   }
