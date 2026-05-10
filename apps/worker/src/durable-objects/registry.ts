@@ -155,6 +155,14 @@ export class RegistryDO extends DurableObject<Env> {
     return { email: normalizedEmail, display_name: displayName, color };
   }
 
+  async deleteUser(email: string): Promise<boolean> {
+    const normalizedEmail = normalizeEmail(email);
+    const existing = await this.getUser(email);
+    if (!existing) return false;
+    this.sql.exec("DELETE FROM users WHERE email = ?", existing.email);
+    return true;
+  }
+
   async createDocument(doc: {
     id: string;
     title: string;

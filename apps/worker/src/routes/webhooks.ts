@@ -28,8 +28,8 @@ webhooks.post("/clerk", async (c) => {
     }
   }
 
-  // Handle user.created and user.signedIn
-  if (event.type === "user.created" || event.type === "user.signedIn") {
+  // Handle user events
+  if (event.type === "user.created" || event.type === "user.updated") {
     const { data } = event;
 
     // Find primary email
@@ -52,6 +52,20 @@ webhooks.post("/clerk", async (c) => {
     // Create or update user in Registry DO
     const registry = getRegistry(c.env);
     await registry.setUser(email, displayName);
+  }
+
+  if (event.type === "user.deleted") {
+    const { data } = event;
+
+    // Find primary email from deleted user data
+    const emailObj = data.email_addresses?.[0];
+    if (!emailObj?.email_address) {
+      return c.json({ ok: true }); // No email, nothing to delete
+    }
+
+    const email = normalizeEmail(emailObj.email_address);
+    const registry = getRegistry(c.env);
+    await registry.deleteUser(email);
   }
 
   return c.json({ ok: true });

@@ -66,7 +66,7 @@ Clerk is the recommended auth provider for self-hosted instances. The setup scri
 | `VIEWER_CAPABILITY_SECRET` | Secret | Required when auth is enabled |
 | `CLERK_WEBHOOK_SECRET` | Secret | Signing secret for Clerk webhooks (starts with `whsec_`) |
 ### Clerk Webhooks (User Sync)
-Configure Clerk webhooks to automatically sync users when they sign up or sign in. This ensures users exist in the Registry DO before they perform actions.
+Configure Clerk webhooks to automatically sync users when they sign up, update profile, or delete account.
 
 **Setup steps:**
 
@@ -80,7 +80,8 @@ Configure Clerk webhooks to automatically sync users when they sign up or sign i
 
 2. **Subscribe to events:**
    - Select **user.created** — Creates user in Registry DO on sign up
-   - Select **user.signedIn** — Backfills user if missing (useful for existing users)
+   - Select **user.updated** — Syncs name/email changes to Registry DO
+   - Select **user.deleted** — Removes user from Registry DO on account deletion
    - Click **Update**
 
 3. **Get the webhook secret:**
@@ -96,8 +97,8 @@ Configure Clerk webhooks to automatically sync users when they sign up or sign i
    - Click **Send test webhook** → Select `user.created`
    - Verify response: `{"ok": true}`
 
-**Endpoint URL:** `https://<your-domain>/webhooks/clerk`  
-**Events:** `user.created`, `user.signedIn`
+**Endpoint URL:** `https://<your-domain>/webhooks/clerk`
+**Events:** `user.created`, `user.updated`, `user.deleted`
 
 ### CLI Authentication
 When your instance uses Clerk authentication, the CLI will automatically detect it and guide you through login:
