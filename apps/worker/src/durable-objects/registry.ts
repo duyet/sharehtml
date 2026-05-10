@@ -84,7 +84,6 @@ export class RegistryDO extends DurableObject<Env> {
       )
     `);
     this.ensureUpdatedAtIndex();
-    this.ensureUpdatedAtIndex();
     this.ensureDocumentTagsTable();
   }
 
@@ -131,13 +130,6 @@ export class RegistryDO extends DurableObject<Env> {
     if (hasViewCount) return;
 
     this.sql.exec("ALTER TABLE documents ADD COLUMN view_count INTEGER DEFAULT 0");
-  }
-
-  private ensureUpdatedAtIndex() {
-    const indices = this.sql.exec<{ name: string }>("SELECT name FROM sqlite_master WHERE type='index' AND name='idx_documents_owner_updated'").toArray();
-    if (indices.length === 0) {
-      this.sql.exec("CREATE INDEX idx_documents_owner_updated ON documents (owner_email, created_at DESC)");
-    }
   }
 
   private ensureDocumentTagsTable(): void {
@@ -647,47 +639,4 @@ export class RegistryDO extends DurableObject<Env> {
       .toArray();
   }
 
-  // API Key methods
-
-  async createApiKey(params: { id: string; keyHash: string; userEmail: string; name: string }): Promise<void> {
-    this.sql.exec(
-      "INSERT INTO api_keys (id, key_hash, user_email, name, created_at) VALUES (?, ?, ?, ?, datetime('now'))",
-      params.id,
-      params.keyHash,
-      params.userEmail,
-      params.name,
-    );
-  }
-
-  async listApiKeys(userEmail: string): Promise<ApiKeyRow[]> {
-    return this.sql.exec<ApiKeyRow>(
-      "SELECT * FROM api_keys WHERE user_email = ? ORDER BY created_at DESC",
-      userEmail,
-    ).toArray();
-  }
-
-  async getApiKeyByHash(keyHash: string): Promise<ApiKeyRow | null> {
-    const results = this.sql.exec<ApiKeyRow>(
-      "SELECT * FROM api_keys WHERE key_hash = ?",
-      keyHash,
-    ).toArray();
-    return results[0] || null;
-  }
-
-  async deleteApiKey(id: string, userEmail: string): Promise<boolean> {
-    const existing = this.sql.exec<ApiKeyRow>(
-      "SELECT * FROM api_keys WHERE id = ? AND user_email = ?",
-      id,
-      userEmail,
-    ).toArray();
-    if (existing.length === 0) {
-      return false;
-    }
-    this.sql.exec(
-      "DELETE FROM api_keys WHERE id = ? AND user_email = ?",
-      id,
-      userEmail,
-    );
-    return true;
-  }
 }
