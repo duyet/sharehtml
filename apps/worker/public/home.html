@@ -85,14 +85,17 @@
       </div>
 
       <div class="setup-block" style="margin-top: 24px;">
-        <p><strong>For AI Agents:</strong> Works with every agent — Claude Code, Cursor, Windsurf, and more.</p>
+        <p><strong>Add sharehtml skills to your AI agent:</strong></p>
         <div style="position: relative;">
-          <pre><code class="language-bash">npx -y @duyet/sharehtml@latest deploy path/to/file.html</code></pre>
-          <button id="copy-agent-setup" class="copy-button" style="position: absolute; top: 8px; right: 8px; padding: 4px 12px; font-size: 12px; background: var(--color-canvas); border: 1px solid var(--color-hairline); border-radius: 6px; cursor: pointer;">Copy setup instructions for my agent</button>
+          <pre><code class="language-bash">npx -y skills add duyet/sharehtml</code></pre>
+          <button id="copy-agent-setup" class="copy-button" style="position: absolute; top: 8px; right: 8px; padding: 4px 12px; font-size: 12px; background: var(--color-canvas); border: 1px solid var(--color-hairline); border-radius: 6px; cursor: pointer;">Copy command</button>
         </div>
-        <p style="font-size: 14px; color: var(--color-muted-soft); margin-top: 12px;">
-          AI agents can view, comment, and collaborate on shared documents in real-time.
+        <p style="font-size: 15px; color: var(--color-body); margin-top: 16px;">
+          <strong>Or paste this prompt to your AI agent:</strong>
         </p>
+        <pre style="background: var(--color-surface-soft); border-radius: 8px; padding: 16px 20px; font-family: "JetBrains Mono", monospace; font-size: 14px; line-height: 1.6;"><code>"Deploy this to the web using sharehtml: `npx -y @duyet/sharehtml deploy path/to/file.html`"
+
+The agent will deploy files and return the live URL automatically.</code></pre>
       </div>
       <script>
         (function() {
@@ -100,34 +103,17 @@
           if (!copyButton) return;
 
           copyButton.addEventListener('click', async () => {
-            const setupInstructions = `Deploy to the web using sharehtml: npx -y @duyet/sharehtml@latest deploy path/to/file.html
-
-The agent will upload the file and return a live URL you can view immediately.`;
+            const skillCommand = 'npx -y skills add duyet/sharehtml';
 
             try {
-              await navigator.clipboard.writeText(setupInstructions);
-              copyButton.textContent = 'Copied! Now paste into your agent';
+              await navigator.clipboard.writeText(skillCommand);
+              const originalText = copyButton.textContent;
+              copyButton.textContent = 'Copied!';
               setTimeout(() => {
-                copyButton.textContent = 'Copy setup instructions for my agent';
-              }, 3000);
+                copyButton.textContent = originalText;
+              }, 2000);
             } catch (err) {
-              // Fallback for older browsers
-              const textArea = document.createElement('textarea');
-              textArea.value = setupInstructions;
-              textArea.style.position = 'fixed';
-              textArea.style.opacity = '0';
-              document.body.appendChild(textArea);
-              textArea.select();
-              try {
-                document.execCommand('copy');
-                copyButton.textContent = 'Copied! Now paste into your agent';
-                setTimeout(() => {
-                  copyButton.textContent = 'Copy setup instructions for my agent';
-                }, 3000);
-              } catch (e) {
-                copyButton.textContent = 'Failed to copy';
-              }
-              document.body.removeChild(textArea);
+              copyButton.textContent = 'Failed to copy';
             }
           });
         })();

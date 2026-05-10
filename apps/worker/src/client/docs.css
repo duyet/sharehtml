@@ -3,42 +3,8 @@
 /* Docs page specific overrides */
 body {
   font-size: 15px;
-  padding: 56px 24px 120px;
+  padding: 64px 24px 120px;
 }
-
-/* ── Topbar (docs-specific class names) ─────── */
-.docs-topbar {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 32px;
-  background: var(--color-canvas);
-  border-bottom: 2px solid var(--color-primary);
-  z-index: 100;
-}
-
-.docs-topbar-home {
-  font-family: "Tiempos Headline", Georgia, serif;
-  font-size: 20px;
-  font-weight: 500;
-  color: var(--color-primary);
-  text-decoration: none;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.docs-topbar-title {
-  font-size: 14px;
-  color: var(--color-ink);
-  font-weight: 500;
-}
-
-/* Use shared .topbar-link styles in right section */
 
 /* ── Layout ─────────────────────────────────── */
 .docs-layout {
