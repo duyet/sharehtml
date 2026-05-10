@@ -4,11 +4,12 @@
 body {
   font-size: 15px;
   padding: 64px 24px 120px;
+  background: var(--ivory);
 }
 
 /* ── Layout ─────────────────────────────────── */
 .docs-layout {
-  max-width: 1100px;
+  max-width: 1120px;
   margin: 0 auto;
   display: grid;
   grid-template-columns: 200px minmax(0, 1fr);
@@ -33,10 +34,10 @@ body {
 
 .docs-toc-title {
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: 11px;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: var(--color-muted);
+  color: var(--g500);
   margin-bottom: 12px;
 }
 
@@ -53,21 +54,21 @@ body {
 .docs-toc-link {
   display: block;
   padding: 5px 0 5px 12px;
-  border-left: 2px solid var(--color-hairline);
+  border-left: 2px solid var(--g200);
   font-size: 13px;
-  color: var(--color-body);
+  color: var(--g700);
   text-decoration: none;
-  transition: border-color 0.15s ease, color 0.15s ease;
+  transition: border-color 150ms ease, color 150ms ease;
 }
 
 .docs-toc-link:hover {
-  color: var(--color-ink);
-  border-color: var(--color-ink);
+  color: var(--slate);
+  border-color: var(--slate);
 }
 
 .docs-toc-link.active {
-  border-color: var(--color-primary);
-  color: var(--color-ink);
+  border-color: var(--clay);
+  color: var(--slate);
   font-weight: 500;
 }
 
@@ -82,25 +83,30 @@ body {
 }
 
 .docs-content > h1 {
-  font-size: 32px;
-  color: var(--color-ink);
+  font-family: var(--font-serif);
+  font-size: 38px;
+  color: var(--slate);
   margin-bottom: 14px;
+  letter-spacing: -0.018em;
 }
 
 .docs-section {
-  margin-bottom: 48px;
+  margin-bottom: 56px;
 }
 
 .docs-section-title {
-  font-size: 22px;
-  color: var(--color-ink);
+  font-family: var(--font-serif);
+  font-size: 27px;
+  color: var(--slate);
   margin: 40px 0 14px;
   scroll-margin-top: 80px;
+  letter-spacing: -0.012em;
 }
 
 .docs-section-subtitle {
-  font-size: 18px;
-  color: var(--color-ink);
+  font-family: var(--font-serif);
+  font-size: 19px;
+  color: var(--slate);
   margin: 24px 0 12px;
   font-weight: 500;
 }
@@ -108,12 +114,14 @@ body {
 .docs-section p {
   margin-bottom: 12px;
   max-width: 680px;
+  color: var(--g700);
 }
 
 .docs-section ul {
   margin-bottom: 12px;
   padding-left: 20px;
   max-width: 680px;
+  color: var(--g700);
 }
 
 .docs-section li {
@@ -123,20 +131,20 @@ body {
 .docs-section code {
   font-family: var(--font-mono);
   font-size: 13px;
-  background: var(--color-surface-soft);
+  background: var(--g100);
   padding: 3px 6px;
   border-radius: 4px;
-  color: var(--color-body-strong);
+  color: var(--slate);
 }
 
 .docs-section pre {
-  background: var(--color-surface-soft);
+  background: var(--g100);
   border-radius: 10px;
   padding: 16px 18px;
   font-family: var(--font-mono);
   font-size: 12.5px;
   line-height: 1.6;
-  color: var(--color-body);
+  color: var(--slate);
   overflow-x: auto;
   margin: 14px 0;
   white-space: pre;
@@ -149,33 +157,33 @@ body {
 }
 
 .docs-comment {
-  color: var(--color-muted-soft);
+  color: var(--g500);
 }
 
 .docs-section a {
-  color: var(--color-primary);
+  color: var(--clay);
   text-decoration: none;
   border-bottom: 1px solid transparent;
-  transition: border-color 0.15s ease;
+  transition: border-color 150ms ease;
 }
 
 .docs-section a:hover {
-  border-bottom-color: var(--color-primary);
+  border-bottom-color: var(--clay);
 }
 
 /* ── Tabs ────────────────────────────────────── */
 .docs-tabs {
-  border: 1.5px solid var(--color-hairline);
+  border: 1.5px solid var(--g300);
   border-radius: 10px;
-  background: var(--color-surface-card);
+  background: var(--paper);
   margin: 16px 0 8px;
   overflow: hidden;
 }
 
 .docs-tabbar {
   display: flex;
-  border-bottom: 1px solid var(--color-hairline);
-  background: var(--color-surface-soft);
+  border-bottom: 1px solid var(--g200);
+  background: var(--g100);
 }
 
 .docs-tabbar button {

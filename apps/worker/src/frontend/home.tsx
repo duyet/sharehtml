@@ -181,9 +181,9 @@ export function HomeView({
 
           <div class="content">
           <div class="hero">
-            <div class="eyebrow">Documentation · Platform Overview</div>
+            <div class="eyebrow">AI Agent Publishing Platform</div>
             <h1>
-              Deploy files instantly with sharehtml
+              Deploy files <em>instantly</em> with sharehtml
             </h1>
             <div class="tldr">
               <b>TL;DR</b> — Three ways to publish: CLI file path, stdin pipe, or curl API.

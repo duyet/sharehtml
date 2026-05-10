@@ -9,25 +9,79 @@ body {
 }
 
 h1, h2, h3, .display-serif {
-  letter-spacing: -0.02em;
+  letter-spacing: -0.018em;
 }
 
 .content {
-  max-width: 1200px;
+  max-width: 1120px;
   margin: 0 auto;
-  padding: 48px 32px 96px;
+  padding: 0 32px 140px;
   margin-top: 56px;
 }
 
+/* ── Hero Section ─────────────────────────────────── */
 .hero {
-  margin-bottom: 64px;
-  text-align: center;
+  padding: 80px 0 56px;
+  border-bottom: 1.5px solid var(--g300);
+  margin-bottom: 12px;
+  position: relative;
+}
+
+.hero .eyebrow {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--g500);
+  margin-bottom: 18px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.hero .eyebrow::before {
+  content: "";
+  width: 24px;
+  height: 1.5px;
+  background: var(--clay);
 }
 
 .hero h1 {
-  font-size: 64px;
-  margin-bottom: 24px;
-  line-height: 1.05;
+  font-family: var(--font-serif);
+  font-weight: 500;
+  font-size: clamp(38px, 5.4vw, 62px);
+  line-height: 1.06;
+  margin: 0 0 8px;
+  max-width: 17ch;
+  color: var(--slate);
+}
+
+.hero h1 em {
+  font-style: italic;
+  color: var(--clay);
+}
+
+.hero .tldr {
+  font-size: 16.5px;
+  color: var(--g700);
+  margin: 22px 0 0;
+  max-width: 620px;
+  border: none;
+  border-left: none;
+  border-radius: 0;
+  background: transparent;
+  padding: 0;
+}
+
+.hero .tldr b {
+  color: var(--clay);
+}
+
+.hero-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  margin-top: 32px;
 }
 
 .no-auth-badge {
@@ -48,18 +102,18 @@ h1, h2, h3, .display-serif {
 }
 
 .method-card {
-  background: var(--color-surface-soft);
+  background: var(--paper);
   border-radius: 10px;
   padding: 16px 18px;
-  border: 1px solid var(--color-hairline);
+  border: 1.5px solid var(--g300);
 }
 
 .method-label {
-  font-family: "JetBrains Mono", monospace;
+  font-family: var(--font-mono);
   font-size: 11px;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--color-muted-soft);
+  color: var(--g500);
   margin-bottom: 10px;
 }
 
@@ -179,12 +233,28 @@ h1, h2, h3, .display-serif {
   color: var(--color-primary);
 }
 
+/* ── Section Styling ─────────────────────────────────── */
+.section {
+  margin-top: 72px;
+  scroll-margin-top: 28px;
+}
+
+.section-label {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--g500);
+  margin-bottom: 16px;
+}
+
 /* Setup Block / Feature Card style */
 .setup-block {
-  background: var(--color-canvas);
+  background: var(--paper);
   border-radius: 12px;
   padding: 32px;
-  border: 1.5px solid var(--color-hairline);
+  border: 1.5px solid var(--g300);
 }
 
 .setup-block p {
@@ -204,13 +274,13 @@ h1, h2, h3, .display-serif {
 }
 
 .setup-block pre {
-  background: var(--color-surface-soft);
+  background: var(--g100);
   border-radius: 8px;
   padding: 16px 18px;
   font-family: var(--font-mono);
-  font-size: 14px;
+  font-size: 13px;
   line-height: 1.6;
-  color: var(--color-ink);
+  color: var(--slate);
   overflow-x: auto;
   margin: 14px 0;
 }
@@ -257,25 +327,29 @@ h1, h2, h3, .display-serif {
   margin-top: 8px;
 }
 
-/* Cards */
+/* ── Cards ────────────────────────────────────────── */
 .recent-grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 24px;
+  grid-template-columns: repeat(auto-fill, minmax(316px, 1fr));
+  gap: 20px;
 }
 
 .recent-card {
-  background: var(--color-canvas);
-  border: 1.5px solid var(--color-hairline);
-  border-radius: 12px;
+  background: var(--paper);
+  border: 1.5px solid var(--g300);
+  border-radius: 14px;
   padding: 24px;
   text-decoration: none;
-  transition: transform 0.2s ease, border-color 0.2s ease;
+  transition: transform 150ms ease, box-shadow 150ms ease, border-color 150ms ease;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 .recent-card:hover {
-  transform: translateY(-4px);
-  border-color: var(--color-primary);
+  transform: translateY(-3px);
+  box-shadow: 0 10px 30px rgba(20, 20, 19, 0.10);
+  border-color: var(--slate);
 }
 
 .recent-card-title {
@@ -305,18 +379,20 @@ h1, h2, h3, .display-serif {
 }
 
 .doc-card {
-  background: var(--color-canvas);
-  border: 1.5px solid var(--color-hairline);
-  border-radius: 12px;
+  background: var(--paper);
+  border: 1.5px solid var(--g300);
+  border-radius: 14px;
   padding: 20px 24px;
   text-decoration: none;
   display: flex;
   flex-direction: column;
-  transition: border-color 0.2s ease;
+  transition: transform 150ms ease, box-shadow 150ms ease, border-color 150ms ease;
 }
 
 .doc-card:hover {
-  border-color: var(--color-primary);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(20, 20, 19, 0.08);
+  border-color: var(--slate);
 }
 
 .doc-card-top {
@@ -328,24 +404,25 @@ h1, h2, h3, .display-serif {
 
 .doc-card-title {
   font-family: var(--font-serif);
-  font-size: 18px;
+  font-size: 19px;
   font-weight: 500;
-  color: var(--color-ink);
+  color: var(--slate);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
   flex: 1;
+  letter-spacing: -0.008em;
 }
 
 .doc-card-filename {
   font-family: var(--font-mono);
-  font-size: 13px;
-  color: var(--color-muted-soft);
+  font-size: 11px;
+  color: var(--g500);
 }
 
 .doc-card-meta {
   font-size: 13px;
-  color: var(--color-muted-soft);
+  color: var(--g700);
 }
 
 /* Features Grid */
@@ -387,17 +464,19 @@ h1, h2, h3, .display-serif {
 }
 
 .pagination-link {
-  padding: 8px 16px;
-  background: var(--color-canvas);
-  border: 1.5px solid var(--color-hairline);
-  border-radius: 8px;
+  padding: 7px 14px;
+  background: var(--paper);
+  border: 1.5px solid var(--g300);
+  border-radius: 999px;
   text-decoration: none;
-  color: var(--color-body);
+  color: var(--g700);
+  font-size: 12.5px;
+  transition: border-color 120ms, color 120ms, background 120ms;
 }
 
 .pagination-link:hover:not(.disabled) {
-  border-color: var(--color-primary);
-  color: var(--color-primary);
+  border-color: var(--slate);
+  color: var(--slate);
 }
 
 .pagination-link.disabled {
@@ -406,7 +485,8 @@ h1, h2, h3, .display-serif {
 }
 
 .pagination-info {
-  color: var(--color-muted-soft);
+  color: var(--g500);
+  font-size: 12.5px;
 }
 
 @media (max-width: 768px) {

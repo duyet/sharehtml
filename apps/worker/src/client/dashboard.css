@@ -9,23 +9,19 @@
   top: 0;
   height: 64px;
   z-index: 10;
+  border-bottom: 1.5px solid var(--g300);
+  background: var(--ivory);
 }
 
 .topbar-home {
   font-family: var(--font-serif);
-  font-size: 24px;
-  font-weight: 400;
-  color: var(--clay);
+  font-size: 22px;
+  font-weight: 500;
+  color: var(--slate);
   text-decoration: none;
   display: flex;
   align-items: center;
   gap: 8px;
-}
-
-.topbar-home::before {
-  content: "\2726";
-  color: var(--slate);
-  font-size: 18px;
 }
 
 .topbar-right {
@@ -40,9 +36,9 @@
 }
 
 .dashboard-content {
-  max-width: 1200px;
+  max-width: 1120px;
   margin: 0 auto;
-  padding: 48px 32px 96px;
+  padding: 48px 32px 140px;
 }
 
 .dashboard-header {
@@ -71,17 +67,17 @@
 
 .doc-grid-card {
   background: var(--paper);
-  border: 1.5px solid var(--g200);
-  border-radius: 12px;
+  border: 1.5px solid var(--g300);
+  border-radius: 14px;
   overflow: hidden;
   box-shadow: 0 2px 8px rgba(20, 20, 19, 0.04);
   transition: transform 150ms ease, box-shadow 150ms ease, border-color 150ms ease;
 }
 
 .doc-grid-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(20, 20, 19, 0.08);
-  border-color: var(--g300);
+  transform: translateY(-3px);
+  box-shadow: 0 10px 30px rgba(20, 20, 19, 0.10);
+  border-color: var(--slate);
 }
 
 /* Preview iframe container */
@@ -112,7 +108,7 @@
 
 .doc-grid-card-title {
   font-family: var(--font-serif);
-  font-size: 17px;
+  font-size: 18px;
   color: var(--slate);
   text-decoration: none;
   display: block;
@@ -120,6 +116,7 @@
   text-overflow: ellipsis;
   white-space: nowrap;
   transition: color 150ms ease;
+  letter-spacing: -0.008em;
 }
 
 .doc-grid-card-title:hover {
@@ -215,7 +212,7 @@
 
 .doc-grid-btn:hover {
   border-color: var(--g300);
-  background: var(--ivory);
+  background: var(--g100);
 }
 
 .doc-grid-btn-view {
@@ -224,6 +221,7 @@
 
 .doc-grid-btn-view:hover {
   border-color: var(--clay);
+  background: var(--ivory);
 }
 
 .doc-grid-btn-delete {
@@ -233,6 +231,7 @@
 .doc-grid-btn-delete:hover {
   border-color: var(--rust);
   color: var(--rust);
+  background: var(--ivory);
 }
 
 /* ── Empty State ────────────────────────────────── */

@@ -29,15 +29,20 @@ export function LoginView({ assets, redirectUrl = "/", authMode, clerkPublishabl
             align-items: center;
             justify-content: center;
             padding: 20px;
+            background: var(--ivory);
           }
           .login-logo {
-            font-size: 32px;
-            font-weight: bold;
-            margin-bottom: 8px;
+            font-family: var(--font-serif);
+            font-size: 42px;
+            font-weight: 500;
+            color: var(--slate);
+            margin-bottom: 12px;
+            letter-spacing: -0.02em;
           }
           .login-subtitle {
-            color: var(--color-body);
+            color: var(--g700);
             margin-bottom: 32px;
+            font-size: 16px;
           }
           .clerk-container {
             min-height: 400px;
