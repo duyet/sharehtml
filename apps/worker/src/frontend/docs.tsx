@@ -47,7 +47,8 @@ export function DocsView({ assets }: DocsParams): string {
               <div class="eyebrow">Documentation</div>
               <h1>Deploy files instantly with sharehtml</h1>
               <div class="tldr" id="tldr">
-                <b>TL;DR</b> — Deploy HTML, Markdown, or code files in seconds. No signup required.
+                <b>TL;DR</b> — Deploy instantly. No signup, no auth required.
+                Upload HTML, Markdown, or code files and get a live URL in seconds.
                 Documents persist indefinitely. Built for AI agents and developers.
               </div>
             </header>
@@ -60,8 +61,8 @@ export function DocsView({ assets }: DocsParams): string {
               <div class="callout">
                 <span class="ico">★</span>
                 <div>
-                  <b>No signup required.</b> Deploy anonymously — your document will be live instantly.
-                  Documents persist indefinitely. Authenticate for account management features.
+                  <b>No signup, no auth required.</b> Deploy anonymously — your document will be live instantly.
+                  Documents persist indefinitely. Authenticate later for account management features like dashboards and API keys.
                 </div>
               </div>
 
@@ -179,9 +180,10 @@ sharehtml deploy report.html</code></pre>
               </p>
               <pre><code>npx -y @duyet/sharehtml deploy report.html</code></pre>
 
-              <h3 class="docs-section-subtitle">Authenticated Deployment</h3>
+              <h3 class="docs-section-subtitle">Authenticated Deployment (Optional)</h3>
               <p>
-                For account management features, set credentials as environment variables:
+                Auth is optional and only needed for account management features (dashboard, API keys, document ownership).
+                To link deployments to your account:
               </p>
 
               <div class="docs-tabs" data-tabs="auth">
@@ -224,7 +226,8 @@ SHAREHTML_API_KEY=your-api-key</pre>
 
               <p>
                 sharehtml provides a REST API for uploading and managing documents via HTTP requests.
-                Use API keys or session tokens for authentication.
+                Uploads require no authentication. Other operations (list, update, delete, sharing) require
+                an API key or session token.
               </p>
 
               <h3 class="docs-section-subtitle">Authentication</h3>
@@ -259,9 +262,8 @@ curl -X POST https://html.duyet.net/api/keys \
                   <button data-t="3">Update</button>
                   <button data-t="4">Delete</button>
                 </div>
-                <pre class="on"><span class="docs-comment"># Upload a document (multipart/form-data)</span>
+                <pre class="on"><span class="docs-comment"># Upload a document (no auth required)</span>
 curl -X POST https://html.duyet.net/api/documents \
-  -H "Authorization: Bearer shk_your_api_key_here" \
   -F "file=@report.html" \
   -F "title=Q3 Report"</pre>
                 <pre><span class="docs-comment"># List your documents</span>
