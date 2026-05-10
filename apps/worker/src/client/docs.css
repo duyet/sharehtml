@@ -152,13 +152,13 @@ body {
 }
 
 .docs-section pre {
-  background: var(--color-surface-dark);
+  background: var(--color-surface-soft);
   border-radius: 10px;
   padding: 16px 18px;
   font-family: "JetBrains Mono", monospace;
   font-size: 12.5px;
   line-height: 1.6;
-  color: var(--color-on-dark);
+  color: var(--color-body);
   overflow-x: auto;
   margin: 14px 0;
   max-width: 680px;
@@ -171,7 +171,7 @@ body {
 }
 
 .docs-comment {
-  color: var(--color-on-dark-soft);
+  color: var(--color-muted-soft);
 }
 
 .docs-section a {
