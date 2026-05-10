@@ -160,7 +160,7 @@ export function HomeView({
         {authMode === "clerk" && clerkPublishableKey && <ClerkScripts publishableKey={clerkPublishableKey} />}
       </head>
       <body>
-        <div class="topbar">
+        <header class="topbar">
           <a class="topbar-home" href="/">
             sharehtml
           </a>
@@ -174,9 +174,9 @@ export function HomeView({
               <span class="topbar-email">{email}</span>
             )}
           </div>
-        </div>
-        
-        <div class="content">
+</header>
+
+          <div class="content">
           <div class="hero">
             <div class="eyebrow">Documentation · Platform Overview</div>
             <h1>Deploy files instantly with sharehtml</h1>

@@ -36,7 +36,7 @@ export function LoginView({ assets, redirectUrl = "/", authMode, clerkPublishabl
             margin-bottom: 8px;
           }
           .login-subtitle {
-            color: #666;
+            color: var(--color-body);
             margin-bottom: 32px;
           }
           .clerk-container {

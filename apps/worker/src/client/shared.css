@@ -225,12 +225,14 @@ li {
   margin-bottom: 64px;
 }
 
-.section h2 {
-  font-family: "Tiempos Headline", "EB Garamond", Georgia, serif;
-  font-size: 28px;
+/* ── Section Labels ─────────────────────────────────── */
+.section-label {
+  font-size: 12px;
   font-weight: 500;
-  color: var(--color-ink);
-  margin-bottom: 24px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--color-muted);
+  margin-bottom: 16px;
 }
 
 /* ── Mobile Responsive ──────────────────────────── */

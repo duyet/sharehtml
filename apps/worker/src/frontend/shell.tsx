@@ -76,7 +76,7 @@ export function ShellView(
         </style>
       </head>
       <body>
-        <div class="topbar">
+        <header class="topbar">
           <a class="topbar-home" href="/">
             sharehtml
           </a>
@@ -96,10 +96,10 @@ export function ShellView(
               raw
             </a>
             <div class="export-menu">
-               <button class="topbar-link" id="export-md">md</button>
-               <button class="topbar-link" id="export-json">json</button>
+               <button class="topbar-link" id="export-md" aria-label="Export as Markdown">md</button>
+               <button class="topbar-link" id="export-json" aria-label="Export as JSON">json</button>
             </div>
-            <button class="share-btn" id="share-btn" title="Share link">
+            <button class="share-btn" id="share-btn" title="Share link" aria-label="Share document">
               {raw(
                 `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>`,
               )}
@@ -107,14 +107,14 @@ export function ShellView(
             {authMode === "clerk" && clerkPublishableKey && (
               <div id="clerk-user-btn"></div>
             )}
-            <button class="sidebar-toggle" id="sidebar-toggle">
+            <button class="sidebar-toggle" id="sidebar-toggle" aria-label="Toggle comments sidebar">
               <span class="sidebar-toggle-text">comments</span>
               {raw(
                 `<svg class="sidebar-toggle-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>`,
               )}
             </button>
           </div>
-        </div>
+        </header>
 
         <div class="sidebar-backdrop" id="sidebar-backdrop"></div>
         <div class="main">
@@ -129,7 +129,7 @@ export function ShellView(
           <div class="sidebar" id="sidebar">
             <div class="sidebar-header">
               <span id="comment-count">0 comments</span>
-              <button class="filter-toggle" id="filter-resolved" title="Show resolved">
+              <button class="filter-toggle" id="filter-resolved" title="Show resolved" aria-label="Toggle resolved comments">
                 resolved
               </button>
             </div>
