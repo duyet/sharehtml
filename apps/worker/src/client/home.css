@@ -38,11 +38,39 @@ h1, h2, h3, .display-serif {
   letter-spacing: 0.02em;
   text-transform: none;
   color: var(--color-primary);
+}
+
+.methods-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.method-card {
   background: var(--color-surface-soft);
+  border-radius: 10px;
+  padding: 16px 18px;
   border: 1px solid var(--color-hairline);
-  border-radius: 6px;
-  padding: 4px 12px;
-  margin-top: 12px;
+}
+
+.method-label {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-muted-soft);
+  margin-bottom: 10px;
+}
+
+.method-card pre {
+  background: none;
+  padding: 0;
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-break: break-all;
 }
 
 .eyebrow {
@@ -384,6 +412,10 @@ h1, h2, h3, .display-serif {
 @media (max-width: 768px) {
   .hero h1 {
     font-size: 40px;
+  }
+
+  .methods-grid {
+    grid-template-columns: 1fr;
   }
 
   .stats-band {
