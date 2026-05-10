@@ -243,8 +243,8 @@ curl https://html.duyet.net/api/documents \
 curl -X POST https://html.duyet.net/api/keys \
   -H "Content-Type: application/json" \
   -H "Cookie: __session=your_session_token" \
-  -d '{{"name": "My Script"}}'
-# Returns: { "key": "shk_..." }</pre>
+  -d '&#123;"name": "My Script"&#125;'
+# Returns: &#123; "key": "shk_..." &#125;</pre>
               </div>
 
               <h3 class="docs-section-subtitle">Documents</h3>
@@ -345,7 +345,7 @@ curl -X POST https://html.duyet.net/api/keys \
   -H "Content-Type: application/json" \
   -H "Cookie: __session=your_session_token" \
   -d '{{"name": "My CI/CD Key"}}'
-# Returns: { "key": "shk_...", "id": "..." }</pre>
+# Returns: &#123; "key": "shk_...", "id": "..." &#125;</pre>
                 <pre><span class="docs-comment"># List your API keys</span>
 curl https://html.duyet.net/api/keys \
   -H "Cookie: __session=your_session_token"</pre>
