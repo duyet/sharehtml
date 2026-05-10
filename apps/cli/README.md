@@ -24,6 +24,21 @@ npx -y skills@latest add duyet/sharehtml
 | `npx @duyet/sharehtml delete <id>` | Delete a document |
 | `npx @duyet/sharehtml login` | Authenticate with your sharehtml instance |
 | `npx @duyet/sharehtml config set-url <url>` | Set the sharehtml URL |
+
+## HTTP API
+
+The CLI wraps a REST API that you can call directly with curl or any HTTP client:
+
+```bash
+# Upload using API key
+curl -X POST https://html.duyet.net/api/documents \
+  -H "Authorization: Bearer shk_..." \
+  -F "file=@report.html" \
+  -F "title=My Report"
+```
+
+Full API reference: [https://html.duyet.net/docs#api](https://html.duyet.net/docs#api)
+
 ## Self-Hosting
 See the main repository for self-hosting instructions:
 https://github.com/duyet/sharehtml

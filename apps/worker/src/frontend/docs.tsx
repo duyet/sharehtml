@@ -218,38 +218,160 @@ SHAREHTML_API_KEY=your-api-key</pre>
             </section>
 
             <section class="docs-section" id="api">
-              <h2 class="docs-section-title">API Reference</h2>
+              <h2 class="docs-section-title">REST API Reference</h2>
 
               <p>
-                sharehtml provides a simple HTTP API for uploading and managing documents.
+                sharehtml provides a REST API for uploading and managing documents via HTTP requests.
+                Use API keys or session tokens for authentication.
               </p>
 
-              <div class="docs-tabs" data-tabs="api">
+              <h3 class="docs-section-subtitle">Authentication</h3>
+
+              <div class="docs-tabs" data-tabs="auth-methods">
                 <div class="docs-tabbar">
-                  <button class="on" data-t="0">Upload document</button>
-                  <button data-t="1">Get document</button>
-                  <button data-t="2">Update share</button>
+                  <button class="on" data-t="0">API Key</button>
+                  <button data-t="1">Session Token</button>
+                  <button data-t="2">Create API Key</button>
                 </div>
-                <pre class="on"><span class="docs-comment"># Upload a document</span>
-curl -X POST https://html.duyet.net/api/documents \
-  -H "Content-Type: text/html" \
-  --data-binary @index.html</pre>
-                <pre><span class="docs-comment"># Get document metadata</span>
-curl https://html.duyet.net/api/documents/doc_abc123</pre>
-                <pre><span class="docs-comment"># Update share settings</span>{raw(`
-curl -X PUT https://html.duyet.net/api/documents/doc_abc123/share \
+                <pre class="on"><span class="docs-comment"># Using API Key (recommended for scripts)</span>
+curl https://html.duyet.net/api/documents \
+  -H "Authorization: Bearer shk_your_api_key_here"</pre>
+                <pre><span class="docs-comment"># Using Session Token (from browser cookies)</span>
+curl https://html.duyet.net/api/documents \
+  -H "Cookie: __session=your_session_token"</pre>
+                <pre><span class="docs-comment"># Create an API Key (requires session auth)</span>
+curl -X POST https://html.duyet.net/api/keys \
   -H "Content-Type: application/json" \
-  -d '{"mode":"link"}'`)}</pre>
+  -H "Cookie: __session=your_session_token" \
+  -d '{{"name": "My Script"}}'
+# Returns: { "key": "shk_..." }</pre>
+              </div>
+
+              <h3 class="docs-section-subtitle">Documents</h3>
+
+              <div class="docs-tabs" data-tabs="documents">
+                <div class="docs-tabbar">
+                  <button class="on" data-t="0">Upload</button>
+                  <button data-t="1">List</button>
+                  <button data-t="2">Get</button>
+                  <button data-t="3">Update</button>
+                  <button data-t="4">Delete</button>
+                </div>
+                <pre class="on"><span class="docs-comment"># Upload a document (multipart/form-data)</span>
+curl -X POST https://html.duyet.net/api/documents \
+  -H "Authorization: Bearer shk_your_api_key_here" \
+  -F "file=@report.html" \
+  -F "title=Q3 Report"</pre>
+                <pre><span class="docs-comment"># List your documents</span>
+curl https://html.duyet.net/api/documents \
+  -H "Authorization: Bearer shk_your_api_key_here" \
+  -G \
+  -d "limit=20" \
+  -d "page=1"</pre>
+                <pre><span class="docs-comment"># Get document metadata</span>
+curl https://html.duyet.net/api/documents/doc_abc123 \
+  -H "Authorization: Bearer shk_your_api_key_here"</pre>
+                <pre><span class="docs-comment"># Update a document</span>
+curl -X PUT https://html.duyet.net/api/documents/doc_abc123 \
+  -H "Authorization: Bearer shk_your_api_key_here" \
+  -F "file=@updated.html" \
+  -F "title=Updated Title"</pre>
+                <pre><span class="docs-comment"># Delete a document</span>
+curl -X DELETE https://html.duyet.net/api/documents/doc_abc123 \
+  -H "Authorization: Bearer shk_your_api_key_here"</pre>
+              </div>
+
+              <h3 class="docs-section-subtitle">Downloads</h3>
+
+              <div class="docs-tabs" data-tabs="downloads">
+                <div class="docs-tabbar">
+                  <button class="on" data-t="0">Raw</button>
+                  <button data-t="1">Source</button>
+                  <button data-t="2">Rendered</button>
+                </div>
+                <pre class="on"><span class="docs-comment"># Download raw document (source if available, else rendered)</span>
+curl https://html.duyet.net/api/documents/doc_abc123/raw \
+  -H "Authorization: Bearer shk_your_api_key_here" \
+  -o document.html</pre>
+                <pre><span class="docs-comment"># Download original source file</span>
+curl https://html.duyet.net/api/documents/doc_abc123/source \
+  -H "Authorization: Bearer shk_your_api_key_here" \
+  -o document.md</pre>
+                <pre><span class="docs-comment"># Download rendered HTML</span>
+curl https://html.duyet.net/api/documents/doc_abc123/rendered \
+  -H "Authorization: Bearer shk_your_api_key_here" \
+  -o document.html</pre>
+              </div>
+
+              <h3 class="docs-section-subtitle">Sharing</h3>
+
+              <div class="docs-tabs" data-tabs="sharing">
+                <div class="docs-tabbar">
+                  <button class="on" data-t="0">Get Status</button>
+                  <button data-t="1">Set Public</button>
+                  <button data-t="2">Set Private</button>
+                </div>
+                <pre class="on"><span class="docs-comment"># Get sharing status</span>
+curl https://html.duyet.net/api/documents/doc_abc123/share \
+  -H "Authorization: Bearer shk_your_api_key_here"</pre>
+                <pre><span class="docs-comment"># Make document public (anyone with link can view)</span>
+curl -X PUT https://html.duyet.net/api/documents/doc_abc123/share \
+  -H "Authorization: Bearer shk_your_api_key_here" \
+  -H "Content-Type: application/json" \
+  -d '{{"mode": "link"}}'</pre>
+                <pre><span class="docs-comment"># Make document private (only you can view)</span>
+curl -X PUT https://html.duyet.net/api/documents/doc_abc123/share \
+  -H "Authorization: Bearer shk_your_api_key_here" \
+  -H "Content-Type: application/json" \
+  -d '{{"mode": "private"}}'</pre>
+              </div>
+
+              <h3 class="docs-section-subtitle">Comments</h3>
+
+              <pre><span class="docs-comment"># Get document comments</span>
+curl https://html.duyet.net/api/documents/doc_abc123/comments \
+  -H "Authorization: Bearer shk_your_api_key_here"</pre>
+
+              <h3 class="docs-section-subtitle">API Keys</h3>
+
+              <div class="docs-tabs" data-tabs="apikeys">
+                <div class="docs-tabbar">
+                  <button class="on" data-t="0">Create</button>
+                  <button data-t="1">List</button>
+                  <button data-t="2">Delete</button>
+                </div>
+                <pre class="on"><span class="docs-comment"># Create API key (requires session auth, not API key)</span>
+curl -X POST https://html.duyet.net/api/keys \
+  -H "Content-Type: application/json" \
+  -H "Cookie: __session=your_session_token" \
+  -d '{{"name": "My CI/CD Key"}}'
+# Returns: { "key": "shk_...", "id": "..." }</pre>
+                <pre><span class="docs-comment"># List your API keys</span>
+curl https://html.duyet.net/api/keys \
+  -H "Cookie: __session=your_session_token"</pre>
+                <pre><span class="docs-comment"># Delete an API key</span>
+curl -X DELETE https://html.duyet.net/api/keys/key_id \
+  -H "Cookie: __session=your_session_token"</pre>
               </div>
 
               <h3 class="docs-section-subtitle">Response Format</h3>
               <pre>{raw(`{
   "id": "doc_abc123",
-  "title": "My Document",
   "url": "https://html.duyet.net/d/doc_abc123",
-  "created_at": "2025-01-15T10:30:00Z",
-  "expires_at": "2025-01-16T10:30:00Z"
+  "title": "My Document",
+  "filename": "document.html",
+  "size": 4096,
+  "isShared": true
 }`)}</pre>
+
+              <h3 class="docs-section-subtitle">Error Responses</h3>
+              <pre>{raw(`{
+  "error": "Authentication required"
+}
+
+// HTTP 401 — Missing or invalid auth
+// HTTP 403 — Forbidden (not owner)
+// HTTP 404 — Not found`)}</pre>
             </section>
 
             <section class="docs-section" id="faq">

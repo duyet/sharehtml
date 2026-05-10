@@ -104,6 +104,45 @@ Browser ◄┘──► Durable Objects
 | `npx @duyet/sharehtml unshare <id>` | Make a document private again |
 | `npx @duyet/sharehtml login` | Authenticate with your sharehtml instance |
 | `npx @duyet/sharehtml config set-url <url>` | Set the sharehtml instance URL |
+
+## REST API
+
+You can also use sharehtml directly via HTTP requests. Full API documentation: [https://html.duyet.net/docs#api](https://html.duyet.net/docs#api)
+
+### Quick Start
+
+1. **Get an API key** (requires browser login first):
+   ```bash
+   curl -X POST https://html.duyet.net/api/keys \
+     -H "Content-Type: application/json" \
+     -H "Cookie: __session=<your-session>" \
+     -d '{"name": "curl-scripts"}'
+   # Returns: { "key": "shk_..." }
+   ```
+
+2. **Upload a document**:
+   ```bash
+   curl -X POST https://html.duyet.net/api/documents \
+     -H "Authorization: Bearer shk_..." \
+     -F "file=@report.html" \
+     -F "title=My Report"
+   # Returns: { "id": "...", "url": "https://html.duyet.net/d/..." }
+   ```
+
+### Common Endpoints
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/documents` | POST | Upload document |
+| `/api/documents` | GET | List your documents |
+| `/api/documents/:id` | GET | Get document metadata |
+| `/api/documents/:id` | PUT | Update document |
+| `/api/documents/:id` | DELETE | Delete document |
+| `/api/documents/:id/share` | PUT | Set sharing mode |
+| `/api/keys` | POST | Create API key |
+
+See [full API docs](https://html.duyet.net/docs#api) for all endpoints, authentication methods, and examples.
+
 ## License
 Apache-2.0
 ---
