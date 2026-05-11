@@ -3,19 +3,14 @@ export type CspOptions = {
   hasFrame?: boolean;
 };
 
-function clerkOrigin(publishableKey: string): string {
-  const encoded = publishableKey.replace(/^pk_(live|test)_/, "");
-  const fqdn = atob(encoded).replace(/\$+$/, "");
-  return `https://${fqdn}`;
-}
-
 function buildCspPolicy(options: CspOptions): string[] {
   const dirs: string[] = [];
   dirs.push("default-src 'self'");
 
   const scripts = ["'self'", "'unsafe-inline'", "https://static.cloudflareinsights.com", "https://cdn.jsdelivr.net"];
+  // Clerk CDN is added by default when using Clerk
   if (options.clerkPublishableKey) {
-    scripts.push(clerkOrigin(options.clerkPublishableKey));
+    scripts.push("https://cdn.jsdelivr.net");
   }
   dirs.push(`script-src ${scripts.join(" ")}`);
 
@@ -25,8 +20,10 @@ function buildCspPolicy(options: CspOptions): string[] {
   dirs.push("font-src 'self' https://fonts.gstatic.com");
 
   const connects = ["'self'", "wss:", "https://cdn.jsdelivr.net"];
+  // Clerk Frontend API (if using custom domain, this should be added separately)
   if (options.clerkPublishableKey) {
-    connects.push(clerkOrigin(options.clerkPublishableKey));
+    // Note: Using Clerk CDN, so connect to Clerk's API servers
+    connects.push("https://clerk.com");
   }
   dirs.push(`connect-src ${connects.join(" ")}`);
 
