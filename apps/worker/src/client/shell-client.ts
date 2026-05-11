@@ -101,7 +101,7 @@ let VIEWER_CAPABILITY_TOKEN = config.viewerCapabilityToken;
 
 // State
 let ws: WebSocket | null = null;
-let userName = localStorage.getItem("comment_name_" + USER_EMAIL) || "";
+let userName = "anonymous";
 let userColor = "";
 const users = new Map<string, UserPresence>();
 let comments: Comment[] = [];
@@ -161,10 +161,6 @@ const sidebarToggle = getRequiredElementById("sidebar-toggle", HTMLButtonElement
 const presenceDots = getRequiredElementById("presence-dots", HTMLDivElement);
 const commentCount = getRequiredElementById("comment-count", HTMLSpanElement);
 const filterResolved = getRequiredElementById("filter-resolved", HTMLButtonElement);
-const nameModal = getRequiredElementById("name-modal", HTMLDivElement);
-const modalEmail = getRequiredElementById("modal-email", HTMLDivElement);
-const nameInput = getRequiredElementById("name-input", HTMLInputElement);
-const nameSubmit = getRequiredElementById("name-submit", HTMLButtonElement);
 const shareBtn = getRequiredElementById("share-btn", HTMLButtonElement);
 const shareModal = getRequiredElementById("share-modal", HTMLDivElement);
 const shareLinkInput = getRequiredElementById("share-link-input", HTMLInputElement);
@@ -925,30 +921,7 @@ function init() {
   void loadDocumentIntoIframe();
 }
 
-function showNameModal() {
-  modalEmail.textContent = USER_EMAIL;
-  nameModal.style.display = "flex";
-  nameInput.focus();
-}
-
 function setupEventListeners() {
-  // Name modal
-  nameInput.addEventListener("input", () => {
-    nameSubmit.disabled = !nameInput.value.trim();
-  });
-  nameSubmit.addEventListener("click", () => {
-    userName = nameInput.value.trim();
-    if (!userName) return;
-    localStorage.setItem("comment_name_" + USER_EMAIL, userName);
-    nameModal.style.display = "none";
-    connectWs();
-  });
-  nameInput.addEventListener("keydown", (e) => {
-    if (e.key === "Enter" && nameInput.value.trim()) {
-      nameSubmit.click();
-    }
-  });
-
   // Sidebar toggle — default collapsed, restore persisted state
   sidebar.classList.add("collapsed");
   if (localStorage.getItem(sidebarKey) === "open") {

@@ -94,7 +94,6 @@ export function ShellView(
             ) : isAuthEnabled(authMode) ? (
               <a class="topbar-link" href="/login" title="Sign in">sign in</a>
             ) : null}
-            <div class="presence-dots" id="presence-dots"></div>
             <a class="topbar-link" href="/docs" title="Documentation">
               docs
             </a>
@@ -105,6 +104,7 @@ export function ShellView(
               <button class="topbar-link" id="export-md" aria-label="Export as Markdown">md</button>
               <button class="topbar-link" id="export-json" aria-label="Export as JSON">json</button>
             </div>
+            <div class="presence-dots" id="presence-dots"></div>
             <button class="share-btn" id="share-btn" title="Share link" aria-label="Share document">
               {raw(
                 `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>`,
@@ -142,24 +142,6 @@ export function ShellView(
             <div class="sidebar-content" id="sidebar-content">
               <div class="sidebar-empty">select text in the document to add a comment</div>
             </div>
-          </div>
-        </div>
-
-        <div class="modal-backdrop hidden" id="name-modal">
-          <div class="modal-content">
-            <div class="modal-title">what should we call you?</div>
-            <div class="modal-email" id="modal-email"></div>
-            <input
-              class="modal-input"
-              id="name-input"
-              type="text"
-              placeholder="your name"
-              autocomplete="off"
-            />
-            <br />
-            <button class="modal-submit" id="name-submit" disabled>
-              continue
-            </button>
           </div>
         </div>
 
