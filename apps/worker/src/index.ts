@@ -184,9 +184,7 @@ app.get("/tag/:tag", async (c) => {
 
 app.get("/", async (c) => {
   try {
-    console.log("[HOME] Starting home page render");
     const email = normalizeEmail(c.get("authUser").email);
-    console.log("[HOME] Email:", email);
     const url = new URL(c.req.url);
     const query = (url.searchParams.get("q") || "").trim();
     const requestedPage = Number.parseInt(url.searchParams.get("page") || "1", 10);
@@ -194,26 +192,18 @@ app.get("/", async (c) => {
     const pageSize = 10;
     const workerUrl = `${url.protocol}//${url.host}`;
 
-    console.log("[HOME] Fetching assets");
     const assets = await getAssetUrls(c.env.ASSETS);
-    console.log("[HOME] Assets fetched");
-
-    console.log("[HOME] Fetching registry data");
     const registry = getRegistry(c.env);
     const [documentsPage, recentViews] = await Promise.all([
       registry.listDocumentsPage(email, { query, limit: pageSize, page }),
       registry.getRecentViews(email, 3),
     ]);
-    console.log("[HOME] Registry data fetched");
 
     const homeCapabilityToken = await createCapabilityToken(c.env, {
       scope: "home",
       email,
       documentId: null,
     });
-    console.log("[HOME] Capability token created");
-
-    console.log("[HOME] Rendering HomeView");
   return c.html(
     HomeView({
       assets,
@@ -241,10 +231,9 @@ app.get("/", async (c) => {
       },
     },
   );
-    console.log("[HOME] Home page rendered successfully");
   } catch (err) {
-    console.error("[HOME] Error:", err.message, err.stack);
-    return c.json({ error: "Home page failed to load", message: err?.message || "Unknown error" }, 500);
+    console.error("Home page error:", err);
+    return c.json({ error: "Home page failed to load" }, 500);
   }
 });
 
