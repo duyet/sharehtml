@@ -3,7 +3,7 @@
 import { raw } from "hono/utils/html";
 import type { AssetUrls } from "../utils/assets.js";
 import type { AuthMode } from "../types.js";
-import { toHtml, ClerkScripts } from "./jsx.js";
+import { toHtml } from "./jsx.js";
 
 interface LoginParams {
   assets: AssetUrls;
@@ -14,6 +14,19 @@ interface LoginParams {
 
 export function LoginView({ assets, redirectUrl = "/", authMode, clerkPublishableKey }: LoginParams): string {
   const isClerk = authMode === "clerk" && clerkPublishableKey;
+
+  // Derive Clerk Frontend API URL from publishable key
+  let clerkScriptUrl = "";
+  if (isClerk && clerkPublishableKey) {
+    try {
+      const encoded = clerkPublishableKey.replace(/^pk_(live|test)_/, "");
+      const fqdn = atob(encoded).replace(/\$+$/, "");
+      clerkScriptUrl = `https://${fqdn}/npm/@clerk/clerk-js@6.8.0/dist/clerk.browser.js`;
+    } catch (e) {
+      console.error("Failed to parse Clerk publishable key:", e);
+    }
+  }
+
   const jsx = (
     <html lang="en">
       <head>
@@ -22,7 +35,13 @@ export function LoginView({ assets, redirectUrl = "/", authMode, clerkPublishabl
         <title>Sign in - sharehtml</title>
         <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
         {assets.homeCss && <link rel="stylesheet" href={assets.homeCss} />}
-        {isClerk && <ClerkScripts publishableKey={clerkPublishableKey} />}
+        {clerkScriptUrl && (
+          <script
+            crossOrigin="anonymous"
+            src={clerkScriptUrl}
+            data-clerk-publishable-key={clerkPublishableKey}
+          ></script>
+        )}
         <style>{`
           body {
             margin: 0;
@@ -44,15 +63,16 @@ export function LoginView({ assets, redirectUrl = "/", authMode, clerkPublishabl
         <div id="clerk-sign-in"></div>
         <script>
           {raw(`
-            window.__LOGIN_CONFIG__ = ${JSON.stringify({ redirectUrl })};
+            window.__LOGIN_CONFIG__ = ${JSON.stringify({ redirectUrl, clerkPublishableKey: isClerk ? clerkPublishableKey : undefined })};
 
             (async function() {
               if (!window.Clerk) {
                 console.error("Clerk not loaded");
+                document.getElementById("clerk-sign-in").innerHTML = "<p>Error: Clerk failed to load.</p>";
                 return;
               }
 
-              const clerk = new window.Clerk("${clerkPublishableKey}");
+              const clerk = new window.Clerk("${clerkPublishableKey || ""}");
               await clerk.load();
 
               // Mount sign-in component
