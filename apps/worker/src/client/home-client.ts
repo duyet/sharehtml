@@ -481,8 +481,6 @@ async function initClerkUserButton(requiresLogin: boolean): Promise<void> {
     return;
   }
 
-  console.log("initClerkUserButton called, requiresLogin:", requiresLogin);
-
   const clerkConfig = (window as unknown as Record<string, unknown>).__HOME_CONFIG__ as
     | { clerkPublishableKey?: string }
     | undefined;
@@ -494,32 +492,17 @@ async function initClerkUserButton(requiresLogin: boolean): Promise<void> {
     return;
   }
 
-  // Load Clerk script dynamically
-  const scriptUrl = "https://cdn.jsdelivr.net/npm/@clerk/clerk-js@6.8.0/dist/clerk.browser.js";
-
-  // Check if script is already loaded
-  if (!document.querySelector(`script[src="${scriptUrl}"]`)) {
-    await new Promise<void>((resolve, reject) => {
-      const script = document.createElement("script");
-      script.src = scriptUrl;
-      script.crossOrigin = "anonymous";
-      script.onload = () => resolve();
-      script.onerror = () => reject(new Error("Failed to load Clerk"));
-      document.head.appendChild(script);
-    });
-  }
-
-  // Wait for window.Clerk to be available
+  // Wait for Clerk script to load and window.Clerk to be available
   let Clerk = (window as unknown as Record<string, unknown>).Clerk as { new(key: string): unknown } | undefined;
   let attempts = 0;
-  while (!Clerk && attempts < 50) {
-    await new Promise(resolve => setTimeout(resolve, 100));
+  while (!Clerk && attempts < 100) {
+    await new Promise(resolve => setTimeout(resolve, 50));
     Clerk = (window as unknown as Record<string, unknown>).Clerk as { new(key: string): unknown } | undefined;
     attempts++;
   }
 
   if (!Clerk) {
-    console.log("initClerkUserButton: Clerk not available after loading script");
+    console.log("initClerkUserButton: Clerk not available after waiting, using fallback");
     node.innerHTML = '<a href="/login" class="topbar-link">Sign in</a>';
     if (requiresLogin) {
       window.location.href = "/login?redirect=" + encodeURIComponent(window.location.pathname);
