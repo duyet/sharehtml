@@ -183,26 +183,27 @@ app.get("/tag/:tag", async (c) => {
 });
 
 app.get("/", async (c) => {
-  const email = normalizeEmail(c.get("authUser").email);
-  const url = new URL(c.req.url);
-  const query = (url.searchParams.get("q") || "").trim();
-  const requestedPage = Number.parseInt(url.searchParams.get("page") || "1", 10);
-  const page = Number.isFinite(requestedPage) && requestedPage > 0 ? requestedPage : 1;
-  const pageSize = 10;
-  const workerUrl = `${url.protocol}//${url.host}`;
+  try {
+    const email = normalizeEmail(c.get("authUser").email);
+    const url = new URL(c.req.url);
+    const query = (url.searchParams.get("q") || "").trim();
+    const requestedPage = Number.parseInt(url.searchParams.get("page") || "1", 10);
+    const page = Number.isFinite(requestedPage) && requestedPage > 0 ? requestedPage : 1;
+    const pageSize = 10;
+    const workerUrl = `${url.protocol}//${url.host}`;
 
-  const registry = getRegistry(c.env);
-  const [documentsPage, recentViews, assets] = await Promise.all([
-    registry.listDocumentsPage(email, { query, limit: pageSize, page }),
-    registry.getRecentViews(email, 3),
-    getAssetUrls(c.env.ASSETS),
-  ]);
+    const registry = getRegistry(c.env);
+    const [documentsPage, recentViews, assets] = await Promise.all([
+      registry.listDocumentsPage(email, { query, limit: pageSize, page }),
+      registry.getRecentViews(email, 3),
+      getAssetUrls(c.env.ASSETS),
+    ]);
 
-  const homeCapabilityToken = await createCapabilityToken(c.env, {
-    scope: "home",
-    email,
-    documentId: null,
-  });
+    const homeCapabilityToken = await createCapabilityToken(c.env, {
+      scope: "home",
+      email,
+      documentId: null,
+    });
 
   return c.html(
     HomeView({
@@ -231,6 +232,10 @@ app.get("/", async (c) => {
       },
     },
   );
+  } catch (err) {
+    console.error("Home page error:", err);
+    return c.json({ error: "Home page failed to load", message: err?.message || "Unknown error" }, 500);
+  }
 });
 
 export default app;
