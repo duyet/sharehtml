@@ -136,7 +136,7 @@ export function DashboardView({
           <div class="dashboard-section">
             <div class="section-label">API Keys</div>
             <div class="api-keys-panel" id="api-keys-panel">
-              <div class="api-keys-empty">
+              <div class="api-keys-empty" id="api-keys-empty">
                 <p>API keys allow programmatic access to deploy documents.</p>
                 <button class="btn-primary" id="create-api-key-btn">Create API Key</button>
               </div>
