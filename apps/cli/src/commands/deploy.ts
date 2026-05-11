@@ -148,12 +148,9 @@ export const deployCmd = new Command("deploy")
             isShared = updated.isShared;
           }
           console.log(`\nUpdated! ${result.url}`);
-          console.log(`  id:    ${result.id}`);
-          console.log(`  title: ${result.title}`);
-          console.log(`  size:  ${(result.size / 1024).toFixed(1)}KB`);
-          console.log(`  share: ${isShared ? "shareable" : "private"}`);
-          console.log(`  html:  ${result.url}`);
-          console.log(`  source: ${result.url}/source`);
+          console.log(`  Size: ${(result.size / 1024).toFixed(1)}KB`);
+          console.log(`  Live view: ${result.url}.html`);
+          console.log(`  Comment: ${result.url}/`);
         } else {
           console.log(`Deploying ${filename}...`);
           const result = await deployContent(contentString!, filename, {
@@ -169,12 +166,9 @@ export const deployCmd = new Command("deploy")
             isShared = updated.isShared;
           }
           console.log(`\nDeployed! ${result.url}`);
-          console.log(`  id:    ${result.id}`);
-          console.log(`  title: ${result.title}`);
-          console.log(`  size:  ${(result.size / 1024).toFixed(1)}KB`);
-          console.log(`  share: ${isShared ? "shareable" : "private"}`);
-          console.log(`  html:  ${result.url}`);
-          console.log(`  source: ${result.url}/source`);
+          console.log(`  Size: ${(result.size / 1024).toFixed(1)}KB`);
+          console.log(`  Live view: ${result.url}.html`);
+          console.log(`  Comment: ${result.url}/`);
           if (!opts.share && !opts.private && !isShared) {
             const lookupFilename = renderedFilenameToHtml(filename);
             console.log(`  next:  run 'npx @duet/sharehtml share ${lookupFilename}' to make it shareable`);
