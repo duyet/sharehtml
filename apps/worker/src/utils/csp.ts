@@ -36,6 +36,9 @@ function buildCspPolicy(options: CspOptions): string[] {
     dirs.push("frame-src 'self'");
   }
 
+  // Allow workers from blob: URLs (needed for Clerk SDK)
+  dirs.push("worker-src 'self' blob:");
+
   return dirs;
 }
 

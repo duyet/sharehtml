@@ -68,35 +68,14 @@ app.get("/llms.txt", async (c) => {
   return c.text(lines.join("\n"));
 });
 
-// Public login page (no auth required)
+// Redirect /login to home
 app.get("/login", async (c) => {
-  const url = new URL(c.req.url);
-  const redirectUrl = url.searchParams.get("redirect") || "/dashboard";
-
-  const assets = await getAssetUrls(c.env.ASSETS);
-
-  return c.html(
-    LoginView({
-      assets,
-      redirectUrl,
-      authMode: c.env.AUTH_MODE,
-      clerkPublishableKey: c.env.CLERK_PUBLISHABLE_KEY,
-    }),
-    {
-      headers: {
-        "Content-Security-Policy": cspHeader({
-          clerkPublishableKey: c.env.CLERK_PUBLISHABLE_KEY,
-        }),
-      },
-    },
-  );
+  return c.redirect("/");
 });
 
 app.get("/dashboard", async (c) => {
-  // Redirect unauthenticated users to login page
-  if (c.get("authUser").id === "unauthenticated") {
-    return c.redirect("/login?redirect=/dashboard");
-  }
+  // Don't redirect - show page with sign-in prompt for unauthenticated users
+  // Clerk dialog will handle authentication
 
   const email = normalizeEmail(c.get("authUser").email);
   const url = new URL(c.req.url);

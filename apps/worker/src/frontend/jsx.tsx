@@ -1,3 +1,5 @@
+/** @jsxRuntime automatic */
+/** @jsxImportSource hono/jsx */
 import { raw } from "hono/utils/html";
 import type { HtmlEscapedString } from "hono/utils/html";
 
@@ -51,8 +53,8 @@ export function ClerkScripts({ publishableKey }: { publishableKey: string }): JS
       <script>
         {raw(`window.__CLERK_PUBLISHABLE_KEY__=${safeJsonForScript(publishableKey)};`)}
       </script>
-      <script defer src={`${cdn}/npm/@clerk/ui@1/dist/ui.browser.js`}></script>
-      <script defer data-clerk-publishable-key={publishableKey} src={`${cdn}/npm/@clerk/clerk-js@6/dist/clerk.browser.js`}></script>
+      <script defer crossorigin="anonymous" src={`${cdn}/npm/@clerk/ui@1/dist/ui.browser.js`}></script>
+      <script defer crossorigin="anonymous" data-clerk-publishable-key={publishableKey} src={`${cdn}/npm/@clerk/clerk-js@6/dist/clerk.browser.js`}></script>
     </>
   );
 }

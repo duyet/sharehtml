@@ -299,23 +299,44 @@ function hideApiKeyModal(): void {
   if (modal) modal.style.display = "none";
 }
 
-function initClerkUserButton(): void {
+async function initClerkUserButton(): Promise<void> {
   if (!config?.clerkPublishableKey) return;
 
-  const clerk = (window as unknown as Record<string, unknown>).Clerk as
-    | { load: () => Promise<void>; isSignedIn: boolean; mountUserButton: (node: HTMLDivElement) => void; openSignIn: () => void }
-    | undefined;
+  let attempts = 0;
+  const maxAttempts = 50;
+  let clerk: any;
+
+  while (!clerk && attempts < maxAttempts) {
+    clerk = (window as any).Clerk;
+    if (!clerk) {
+      await new Promise(resolve => setTimeout(resolve, 100));
+      attempts++;
+    }
+  }
 
   if (!clerk) return;
 
-  clerk.load().then(() => {
+  try {
+    await clerk.load();
     const node = document.getElementById("clerk-user-btn");
     if (node instanceof HTMLDivElement) {
       clerk.mountUserButton(node);
     }
-  }).catch(() => {
-    // Clerk load failed silently
-  });
+  } catch (err) {
+    // Fallback: show a simple sign-in link
+    const node = document.getElementById("clerk-user-btn");
+    if (node) {
+      const signInLink = document.createElement("a");
+      signInLink.href = "#";
+      signInLink.className = "dashboard-header-link";
+      signInLink.textContent = "Sign in";
+      signInLink.addEventListener("click", (e) => {
+        e.preventDefault();
+        if (clerk?.openSignIn) clerk.openSignIn();
+      });
+      node.replaceWith(signInLink);
+    }
+  }
 }
 
 function initDashboard(): void {
@@ -441,7 +462,7 @@ function initDashboard(): void {
   void loadApiKeys();
 
   // Clerk
-  initClerkUserButton();
+  void initClerkUserButton();
 }
 
 initDashboard();

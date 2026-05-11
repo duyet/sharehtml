@@ -62,12 +62,12 @@ export function DashboardView({
           <a class="topbar-home" href="/">
             sharehtml
           </a>
-          <nav class="topbar-right">
+          <div class="topbar-right">
             <a class="topbar-link" href="/docs">Docs</a>
             {isClerk
               ? <div id="clerk-user-btn"></div>
               : <span class="topbar-email">{email}</span>}
-          </nav>
+          </div>
         </header>
 
         <main class="dashboard-content">

@@ -1,4 +1,5 @@
 @import "./theme.css";
+@import "./shared.css";
 
 body {
   font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -8,46 +9,6 @@ body {
   background: var(--color-canvas);
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
-}
-
-.topbar {
-  height: 64px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 32px;
-  background: var(--color-canvas);
-  border-bottom: 2px solid var(--color-primary);
-  position: sticky;
-  top: 0;
-  z-index: 10;
-}
-
-.topbar-home {
-  font-family: "Tiempos Headline", Georgia, serif;
-  font-size: 24px;
-  font-weight: 400;
-  color: var(--color-primary);
-  text-decoration: none;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.topbar-home::before {
-  content: "\2726";
-  color: var(--color-ink);
-  font-size: 18px;
-}
-
-.topbar-right {
-  display: flex;
-  align-items: center;
-  gap: 24px;
-}
-
-.topbar-email {
-  font-size: 14px;
   color: var(--color-muted);
 }
 
@@ -65,7 +26,7 @@ body {
 }
 
 .dashboard-title {
-  font-size: 36px;
+  font-size: clamp(28px, 3vw, 36px);
 }
 
 .dashboard-count {
@@ -436,7 +397,7 @@ body {
 
 .modal-title {
   font-family: "Tiempos Headline", Georgia, serif;
-  font-size: 24px;
+  font-size: clamp(20px, 2vw, 24px);
   color: var(--color-ink);
   margin-bottom: 12px;
 }
@@ -502,10 +463,6 @@ body {
 
   .dashboard-content {
     padding: 32px 16px 64px;
-  }
-
-  .dashboard-title {
-    font-size: 28px;
   }
 
   .api-keys-empty {

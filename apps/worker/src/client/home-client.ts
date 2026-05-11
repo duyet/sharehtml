@@ -113,12 +113,39 @@ function getHomeClientElements(): HomeClientElements | null {
   const meta = document.getElementById("documents-meta");
   const setupTemplate = document.getElementById("documents-setup-template");
 
-  if (!(form instanceof HTMLFormElement)) return null;
-  if (!(input instanceof HTMLInputElement)) return null;
-  if (!(list instanceof HTMLDivElement)) return null;
-  if (!(pagination instanceof HTMLDivElement)) return null;
-  if (!(meta instanceof HTMLDivElement)) return null;
-  if (!(setupTemplate instanceof HTMLTemplateElement)) return null;
+  console.log("getHomeClientElements:", {
+    form: form?.constructor.name,
+    input: input?.constructor.name,
+    list: list?.constructor.name,
+    pagination: pagination?.constructor.name,
+    meta: meta?.constructor.name,
+    setupTemplate: setupTemplate?.constructor.name
+  });
+
+  if (!(form instanceof HTMLFormElement)) {
+    console.log("getHomeClientElements: form not found or not HTMLFormElement");
+    return null;
+  }
+  if (!(input instanceof HTMLInputElement)) {
+    console.log("getHomeClientElements: input not found or not HTMLInputElement");
+    return null;
+  }
+  if (!(list instanceof HTMLDivElement)) {
+    console.log("getHomeClientElements: list not found or not HTMLDivElement");
+    return null;
+  }
+  if (!(pagination instanceof HTMLDivElement)) {
+    console.log("getHomeClientElements: pagination not found or not HTMLDivElement");
+    return null;
+  }
+  if (!(meta instanceof HTMLDivElement)) {
+    console.log("getHomeClientElements: meta not found or not HTMLDivElement");
+    return null;
+  }
+  if (!(setupTemplate instanceof HTMLTemplateElement)) {
+    console.log("getHomeClientElements: setupTemplate not found or not HTMLTemplateElement");
+    return null;
+  }
 
   return { form, input, list, pagination, meta, setupTemplate };
 }
@@ -202,12 +229,68 @@ function updateHomeUrl(query: string, page: number): void {
   window.history.replaceState({}, "", buildHomePath(query, page));
 }
 
-function initHomeClient(): void {
-  const config = getHomeClientConfig();
-  if (!config) return;
+async function initClerkUserButton(requiresLogin: boolean): Promise<void> {
+  const node = document.getElementById("clerk-user-btn");
+  if (!node) return;
 
+  // Wait for Clerk to load
+  let attempts = 0;
+  const maxAttempts = 50;
+  let clerk: any;
+
+  while (!clerk && attempts < maxAttempts) {
+    clerk = (window as any).Clerk;
+    if (!clerk) {
+      await new Promise(resolve => setTimeout(resolve, 100));
+      attempts++;
+    }
+  }
+
+  if (!clerk) {
+    console.log("Clerk not available after timeout");
+    return;
+  }
+
+  try {
+    await clerk.load();
+
+    // Mount the Clerk user button - it automatically shows sign-in for unauthenticated users
+    clerk.mountUserButton(node);
+  } catch (err) {
+    console.error("Clerk initialization error:", err);
+    // Fallback: show a simple sign-in button that redirects to /dashboard
+    const signInBtn = document.createElement("a");
+    signInBtn.className = "topbar-link";
+    signInBtn.textContent = "Sign in";
+    signInBtn.href = "/dashboard";
+    node.replaceWith(signInBtn);
+  }
+}
+
+function initHomeClient(): void {
+  console.log("initHomeClient: Starting initialization");
+
+  // Get config
+  const config = getHomeClientConfig();
+  if (!config) {
+    console.log("initHomeClient: No config found");
+    return;
+  }
+  console.log("initHomeClient: Config found", config);
+
+  // Initialize Clerk user button
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", () => void initClerkUserButton(config.requiresLogin ?? false));
+  } else {
+    void initClerkUserButton(config.requiresLogin ?? false);
+  }
+
+  // Try to get home client elements (may be null on pages without search forms)
   const elements = getHomeClientElements();
-  if (!elements) return;
+  if (!elements) {
+    console.log("initHomeClient: No home elements found, skipping home initialization");
+    return;
+  }
 
   const { form, input, list, pagination, meta, setupTemplate } = elements;
 
@@ -288,111 +371,7 @@ function initHomeClient(): void {
   // Initialize tabs
   initTabs();
 
-  // Check if on login page
-  if (document.getElementById("clerk-sign-in")) {
-    initClerkSignIn();
-    return;
-  }
-
-  // Clerk user button initialization
-  if (config.clerkPublishableKey) {
-    initClerkUserButton(config.requiresLogin ?? false);
-  }
-}
-
-function initClerkSignIn(): void {
-  const clerk = (window as unknown as Record<string, unknown>).Clerk as
-    | { load: () => Promise<void>; isSignedIn: boolean; mountSignIn: (node: HTMLElement) => void; addListener: (fn: (state: unknown) => void) => () => void }
-    | undefined;
-
-  if (!clerk) return;
-
-  const loginConfig = (window as unknown as Record<string, unknown>).LOGIN_CONFIG as
-    | { redirectUrl?: string; clerkPublishableKey?: string }
-    | undefined;
-
-  clerk.load().then(() => {
-    const node = document.getElementById("clerk-sign-in");
-    if (node instanceof HTMLElement) {
-      clerk.mountSignIn(node);
-    }
-
-    // If already signed in, redirect immediately
-    if (clerk.isSignedIn && loginConfig?.redirectUrl) {
-      window.location.href = loginConfig.redirectUrl;
-    }
-
-    // Listen for sign-in/sign-up completion
-    clerk.addListener((user) => {
-      if (user && loginConfig?.redirectUrl) {
-        window.location.href = loginConfig.redirectUrl;
-      }
-    });
-  }).catch(() => {
-    // Clerk load failed
-  });
-}
-
-function initClerkUserButton(requiresLogin: boolean): void {
-  const clerk = (window as unknown as Record<string, unknown>).Clerk as
-    | { load: () => Promise<void>; isSignedIn: boolean; mountUserButton: (node: HTMLDivElement) => void; openSignIn: () => void; addListener: (fn: (state: unknown) => void) => () => void }
-    | undefined;
-
-  if (!clerk) return;
-
-  clerk.load().then(() => {
-    const node = document.getElementById("clerk-user-btn");
-    if (!(node instanceof HTMLDivElement)) return;
-
-    // Auto-open sign-in for protected pages
-    if (!clerk.isSignedIn && requiresLogin) {
-      clerk.openSignIn();
-      return;
-    }
-
-    // For signed-in users, mount the user button
-    if (clerk.isSignedIn) {
-      clerk.mountUserButton(node);
-    } else {
-      // For unauthenticated users on public pages, show a "Sign in" button
-      const signInBtn = document.createElement("button");
-      signInBtn.className = "topbar-link";
-      signInBtn.textContent = "Sign in";
-      signInBtn.addEventListener("click", () => clerk.openSignIn());
-      node.replaceWith(signInBtn);
-    }
-  }).catch(() => {
-    // Clerk load failed silently — user button won't be mounted
-  });
-}
-
-function initTabs(): void {
-  const tabs = document.querySelectorAll(".tabs");
-  tabs.forEach((tab) => {
-    const tabbar = tab.querySelector(".tabbar");
-    if (!tabbar) return;
-
-    const buttons = tabbar.querySelectorAll("button");
-    const panes = tab.querySelectorAll("pre");
-
-    buttons.forEach((btn) => {
-      btn.addEventListener("click", () => {
-        const tabIndex = btn.getAttribute("data-t");
-        if (tabIndex === null) return;
-
-        // Remove .on from all buttons and panes
-        buttons.forEach((b) => b.classList.remove("on"));
-        panes.forEach((p) => p.classList.remove("on"));
-
-        // Add .on to clicked button and corresponding pane
-        btn.classList.add("on");
-        const targetPane = panes[Number.parseInt(tabIndex, 10)];
-        if (targetPane) {
-          targetPane.classList.add("on");
-        }
-      });
-    });
-  });
+  console.log("initHomeClient: Initialization complete");
 }
 
 initHomeClient();
