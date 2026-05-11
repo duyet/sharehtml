@@ -45,13 +45,12 @@ export function clerkCdnUrl(publishableKey: string): string {
 
 /** Clerk script tag to set publishable key when AUTH_MODE === "clerk". */
 export function ClerkScripts({ publishableKey }: { publishableKey: string }): JSX.Element {
-  // Load Clerk from CDN - script must be in head so it loads before client JS
+  // Load Clerk from CDN
   return (
     <>
       <script
         crossOrigin="anonymous"
         src="https://cdn.jsdelivr.net/npm/@clerk/clerk-js@6.8.0/dist/clerk.browser.js"
-        async
       ></script>
     </>
   );
