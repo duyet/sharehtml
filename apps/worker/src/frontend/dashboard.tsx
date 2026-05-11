@@ -4,7 +4,7 @@ import { raw } from "hono/utils/html";
 import type { AssetUrls } from "../utils/assets.js";
 import { formatDocumentSize, formatRelativeTime } from "../utils/home-view.js";
 import type { AuthMode, DocumentRow, ShareMode } from "../types.js";
-import { toHtml, safeJsonForScript, ClerkScripts } from "./jsx.js";
+import { toHtml, safeJsonForScript, ClerkScripts, SetupBlock } from "./jsx.js";
 
 interface DashboardParams {
   assets: AssetUrls;
@@ -122,12 +122,8 @@ export function DashboardView({
           {documents.length === 0 && (
             <div class="dashboard-empty">
               <p>No documents yet.</p>
-              <p>Deploy files instantly using the CLI:</p>
-              <pre>npx -y @duyet/sharehtml@latest deploy path/to/file.html</pre>
-              <p class="dashboard-ai-prompt">
-                <b>For AI Agents:</b> Ask your agent to "deploy this file using sharehtml" —
-                works with Claude Code, Cursor, Windsurf, and more.
-              </p>
+              <div class="section-label">Quick Start</div>
+              <SetupBlock workerUrl={workerUrl} />
             </div>
           )}
 

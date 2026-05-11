@@ -1,5 +1,43 @@
+/** @jsxRuntime automatic */
+/** @jsxImportSource hono/jsx */
 import { raw } from "hono/utils/html";
 import type { HtmlEscapedString } from "hono/utils/html";
+
+export function SetupBlock({ workerUrl }: { workerUrl: string }): JSX.Element {
+  return (
+    <div class="setup-block">
+      <div class="methods-grid">
+        <div class="method-card">
+          <div class="method-label">CLI — file path</div>
+          <pre>{raw(`<span class="cmd-comment"># deploy a file (defaults to ${workerUrl})</span>\nnpx -y @duyet/sharehtml@latest deploy file.html`)}</pre>
+        </div>
+        <div class="method-card">
+          <div class="method-label">CLI — stdin pipe</div>
+          <pre>cat file.html | npx -y @duyet/sharehtml@latest deploy -</pre>
+        </div>
+        <div class="method-card">
+          <div class="method-label">HTTP — curl API</div>
+          <pre>curl -X POST {workerUrl}/api/documents -F "file=@report.html"</pre>
+        </div>
+      </div>
+
+      <p class="setup-skills-label">
+        Add <b>sharehtml skills</b> to your AI Agent (Claude Code, etc.):
+      </p>
+      <pre>
+        npx -y skills@latest add duyet/sharehtml
+      </pre>
+
+      <p class="setup-skills-label">
+        Or copy &amp; paste this prompt to your AI Agent (Cursor, Windsurf, Claude, etc.):
+      </p>
+      <pre>
+        Deploy this to the web using sharehtml:
+        {"`"}npx -y @duyet/sharehtml@latest deploy path/to/file.html{"`"}
+      </pre>
+    </div>
+  );
+}
 
 // Hono JSX.Element = HtmlEscapedString | Promise<HtmlEscapedString>.
 // Our views are synchronous, so we narrow out the Promise at runtime.

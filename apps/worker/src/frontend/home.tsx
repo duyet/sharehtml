@@ -4,7 +4,7 @@ import { raw } from "hono/utils/html";
 import type { AssetUrls } from "../utils/assets.js";
 import { formatDocumentSize, formatRelativeTime, buildHomePath } from "../utils/home-view.js";
 import { isAuthEnabled, type AuthMode, type DocumentRow, type RecentViewRow } from "../types.js";
-import { toHtml, safeJsonForScript, ClerkScripts } from "./jsx.js";
+import { toHtml, safeJsonForScript, ClerkScripts, SetupBlock } from "./jsx.js";
 
 interface HomeParams {
   assets: AssetUrls;
@@ -29,10 +29,6 @@ interface DocCardProps {
 
 interface RecentDocCardProps {
   doc: RecentViewRow;
-}
-
-interface SetupBlockProps {
-  workerUrl: string;
 }
 
 function DocCard({ doc, subtitle }: DocCardProps): JSX.Element {
@@ -90,42 +86,6 @@ function Pagination({ page, pageSize, totalCount, query }: PaginationProps): JSX
       >
         Next →
       </a>
-    </div>
-  );
-}
-
-function SetupBlock({ workerUrl }: SetupBlockProps): JSX.Element {
-  return (
-    <div class="setup-block">
-      <div class="methods-grid">
-        <div class="method-card">
-          <div class="method-label">CLI — file path</div>
-          <pre>{raw(`<span class="cmd-comment"># deploy a file (defaults to ${workerUrl})</span>\nnpx -y @duyet/sharehtml@latest deploy file.html`)}</pre>
-        </div>
-        <div class="method-card">
-          <div class="method-label">CLI — stdin pipe</div>
-          <pre>cat file.html | npx -y @duyet/sharehtml@latest deploy -</pre>
-        </div>
-        <div class="method-card">
-          <div class="method-label">HTTP — curl API</div>
-          <pre>curl -X POST https://html.duyet.net/api/documents -F "file=@report.html"</pre>
-        </div>
-      </div>
-
-      <p class="setup-skills-label">
-        Add <b>sharehtml skills</b> to your AI Agent (Claude Code, etc.):
-      </p>
-      <pre>
-        npx -y skills@latest add duyet/sharehtml
-      </pre>
-
-      <p class="setup-skills-label">
-        Or copy &amp; paste this prompt to your AI Agent (Cursor, Windsurf, Claude, etc.):
-      </p>
-      <pre>
-        Deploy this to the web using sharehtml:
-        `npx -y @duyet/sharehtml@latest deploy path/to/file.html`
-      </pre>
     </div>
   );
 }
