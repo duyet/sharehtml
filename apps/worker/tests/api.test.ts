@@ -34,13 +34,25 @@ function getArrayField(value: Record<string, unknown>, key: string): unknown[] {
   return field;
 }
 
-function upload(filename: string, content: string, title?: string) {
+function buildUploadForm(filename: string, content: string, title?: string): FormData {
   const form = new FormData();
   form.append("file", new File([content], filename, { type: "text/html" }));
   if (title) form.append("title", title);
+  return form;
+}
+
+function upload(filename: string, content: string, title?: string) {
   return exports.default.fetch("https://example.com/api/documents", {
     method: "POST",
-    body: form,
+    body: buildUploadForm(filename, content, title),
+  });
+}
+
+function publishV1(filename: string, content: string, title?: string, extraHeaders?: Record<string, string>) {
+  return exports.default.fetch("https://example.com/api/v1/publish", {
+    method: "POST",
+    body: buildUploadForm(filename, content, title),
+    headers: extraHeaders,
   });
 }
 
@@ -250,5 +262,28 @@ describe("Document API", () => {
     expect(getStringField(document, "id")).toBe(docId);
     expect(getStringField(document, "title")).toBe("Comments Test");
     expect(Array.isArray(body.comments)).toBe(true);
+  });
+});
+
+describe("v1/publish endpoint", () => {
+  it("returns 201 with same shape as POST /api/documents", async () => {
+    const res = await publishV1("v1-test.html", html, "V1 Test");
+    expect(res.status).toBe(201);
+    const doc = getRecord(await res.json());
+    expect(getStringField(doc, "id")).toBeTruthy();
+    expect(getStringField(doc, "url")).toMatch(/\/d\//);
+    expect(getStringField(doc, "title")).toBe("V1 Test");
+    expect(getStringField(doc, "filename")).toBe("v1-test.html");
+    expect(typeof doc.size).toBe("number");
+    expect(typeof doc.isShared).toBe("boolean");
+  });
+
+  it("accepts X-ShareHTML-Client header and succeeds", async () => {
+    const res = await publishV1("client-header.html", html, "Client Header Test", {
+      "X-ShareHTML-Client": "test-client",
+    });
+    expect(res.status).toBe(201);
+    const doc = getRecord(await res.json());
+    expect(getStringField(doc, "id")).toBeTruthy();
   });
 });

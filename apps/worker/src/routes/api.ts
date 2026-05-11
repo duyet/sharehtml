@@ -1,4 +1,4 @@
-import { Hono } from "hono";
+import { Hono, type Context } from "hono";
 import { isAuthEnabled, isRecord, isShareMode, isSourceKind, parseDocumentSnapshot, shareModeFromInt, shareModeToInt, type AppBindings, type DocumentSnapshot, type ShareMode, type SourceKind } from "../types.js";
 import { nanoid, generateSlug } from "../utils/ids.js";
 import { loadDocWithAccessCheck } from "../utils/document-access.js";
@@ -398,7 +398,7 @@ async function restoreDocumentSnapshot(
   }
 }
 
-api.post("/documents", async (c) => {
+async function handlePublishDocument(c: Context<AppBindings>, statusCode: 200 | 201 = 200) {
   const user = c.get("authUser");
   const authenticated = isAuthenticated(user);
 
@@ -485,8 +485,11 @@ api.post("/documents", async (c) => {
     size: file.size,
     // Anonymous uploads always shared; authenticated uploads respect AUTH_MODE
     isShared: !authenticated ? true : !isAuthEnabled(c.env.AUTH_MODE),
-  });
-});
+  }, statusCode);
+}
+
+api.post("/documents", (c) => handlePublishDocument(c, 200));
+api.post("/v1/publish", (c) => handlePublishDocument(c, 201));
 
 api.get("/documents/by-filename", async (c) => {
   const protectedResponse = await requireHomeBrowserCapability(c, { requireOrigin: false });
