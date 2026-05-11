@@ -42,7 +42,7 @@ Returns a shareable URL like `https://html.duyet.net/d/abc123`.
 **HTTP API (curl):**
 | Command | Description |
 |---------|-------------|
-| `curl -X POST https://html.duyet.net/api/documents -F "file=@doc.html"` | Upload document (no auth required) |
+| `curl -X POST https://html.duyet.net/api/v1/publish -H "X-ShareHTML-Client: my-app" -F "file=@doc.html"` | Upload document (no auth required) |
 | `curl https://html.duyet.net/api/documents/<id>` | Get document metadata |
 | `curl -X PUT https://html.duyet.net/api/documents/<id> -F "file=@updated.html"` | Update document (requires auth) |
 | `curl -X DELETE https://html.duyet.net/api/documents/<id>` | Delete document (requires auth) |
@@ -58,7 +58,8 @@ npx -y @duyet/sharehtml deploy report.html
 
 **HTTP API (curl):**
 ```bash
-curl -X POST https://html.duyet.net/api/documents \
+curl -X POST https://html.duyet.net/api/v1/publish \
+  -H "X-ShareHTML-Client: my-app" \
   -F "file=@report.html" \
   -F "title=My Report"
 # Returns: {"id":"abc123","url":"https://html.duyet.net/d/abc123",...}
@@ -118,7 +119,7 @@ The agent can use **CLI** or **HTTP API (curl)** — both work without authentic
 3. **Use `--title`** for descriptive document names
 4. **CLI**: Prefer stdin/argument for inline content: `publish --content "..."` or `echo "..." | publish`
 5. **HTTP API**: Upload works without auth — no setup needed for one-off deployments
-6. **curl fallback**: If `npx` is not available or times out, use `curl -X POST https://html.duyet.net/api/documents -F "file=@doc.html"` — it works everywhere with no dependencies
+6. **curl fallback**: If `npx` is not available or times out, use `curl -X POST https://html.duyet.net/api/v1/publish -H "X-ShareHTML-Client: my-app" -F "file=@doc.html"` — it works everywhere with no dependencies
 7. **Temp files**: For complex generated HTML, write to a temp file first, then `deploy` the file. This is more reliable than piping long strings.
 8. **Parse curl output**: The HTTP API returns JSON with `id` and `url` fields — extract the URL from the response body.
 
@@ -149,12 +150,16 @@ npx -y @duyet/sharehtml deploy report.html | xclip -selection clipboard  # Linux
 **HTTP API (curl) examples:**
 ```bash
 # Upload document (no auth required)
-curl -X POST https://html.duyet.net/api/documents \
+# Canonical endpoint: POST /api/v1/publish
+# Legacy endpoint still works: POST /api/documents
+curl -X POST https://html.duyet.net/api/v1/publish \
+  -H "X-ShareHTML-Client: my-app" \
   -F "file=@report.html" \
   -F "title=My Report"
 
 # Upload with source (markdown + rendered)
-curl -X POST https://html.duyet.net/api/documents \
+curl -X POST https://html.duyet.net/api/v1/publish \
+  -H "X-ShareHTML-Client: my-app" \
   -F "file=@report.html" \
   -F "source=@report.md" \
   -F "sourceKind=markdown" \

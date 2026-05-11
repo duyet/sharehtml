@@ -14,6 +14,8 @@ import {
   renderMarkdownToHtml,
 } from "../utils/document-render.js";
 
+const CLI_VERSION = "0.0.8";
+
 interface DeployResult {
   id: string;
   url: string;
@@ -247,7 +249,7 @@ async function requestWithAccess(
   const auth = await getAuth(workerUrl);
   const resp = await fetch(`${workerUrl}${options.path}`, {
     ...options,
-    headers: auth.headers,
+    headers: { ...auth.headers, "X-ShareHTML-Client": `cli/${CLI_VERSION}` },
     redirect: "manual",
   });
 
@@ -284,7 +286,7 @@ export async function deployDocument(
 ): Promise<DeployResult> {
   const prepared = await prepareDocumentUpload(filePath, title);
   const resp = await requestWithAccess("Upload", {
-    path: "/api/documents",
+    path: "/api/v1/publish",
     method: "POST",
     body: buildUploadFormData(prepared, title, slug, tags),
   });
@@ -339,7 +341,7 @@ export async function deployContent(
 ): Promise<DeployResult> {
   const prepared = await prepareContentUpload(content, filename, options);
   const resp = await requestWithAccess("Upload", {
-    path: "/api/documents",
+    path: "/api/v1/publish",
     method: "POST",
     body: buildUploadFormData(prepared, options?.title, options?.slug, options?.tags),
   });

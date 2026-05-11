@@ -2,7 +2,7 @@ import { Hono } from "hono";
 import { HTTPException } from "hono/http-exception";
 import { isAuthEnabled, type AppBindings } from "./types.js";
 import { getAuthMiddleware } from "./utils/auth.js";
-import { api } from "./routes/api.js";
+import { api, v1 } from "./routes/api.js";
 import { viewer } from "./routes/viewer.js";
 import { docs } from "./routes/docs.js";
 import webhooks from "./routes/webhooks.js";
@@ -48,6 +48,7 @@ app.use("/*", async (c, next) => {
 });
 
 app.route("/api", api);
+app.route("/api/v1", v1);
 app.route("/", viewer);
 
 app.get("/llms.txt", async (c) => {

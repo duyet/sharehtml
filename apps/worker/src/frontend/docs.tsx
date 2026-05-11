@@ -65,7 +65,8 @@ export function DocsView({ assets }: DocsParams): string {
                 <pre class="on"><span class="docs-comment"># Deploy with CLI — no install needed</span>{"\n"}
 npx -y @duyet/sharehtml deploy path/to/file.html</pre>
                 <pre><span class="docs-comment"># Deploy with curl — no dependencies</span>{"\n"}
-curl -X POST https://html.duyet.net/api/documents \
+curl -X POST https://html.duyet.net/api/v1/publish \
+  -H "X-ShareHTML-Client: my-app" \
   -F "file=@report.html" \
   -F "title=My Report"</pre>
               </div>
@@ -97,7 +98,8 @@ curl -X POST https://html.duyet.net/api/documents \
                     <pre class="on"><span class="docs-comment"># Deploy with npx</span>{"\n"}
 npx -y @duyet/sharehtml deploy report.html</pre>
                     <pre><span class="docs-comment"># Deploy with curl</span>{"\n"}
-curl -X POST https://html.duyet.net/api/documents \
+curl -X POST https://html.duyet.net/api/v1/publish \
+  -H "X-ShareHTML-Client: my-app" \
   -F "file=@report.html"</pre>
                   </div>
 
@@ -152,7 +154,8 @@ sharehtml deploy report.html</code></pre>
                     </p>
                   </div>
                   <p>Agents can also deploy directly via HTTP API:</p>
-                  <pre><code>curl -X POST https://html.duyet.net/api/documents \
+                  <pre><code>curl -X POST https://html.duyet.net/api/v1/publish \
+  -H "X-ShareHTML-Client: my-app" \
   -F "file=@report.html" \
   -F "title=Agent Report"</code></pre>
                   <p>The agent will deploy files and return the live URL automatically.</p>
@@ -219,7 +222,8 @@ sharehtml deploy report.html</code></pre>
                 <pre class="on"><span class="docs-comment"># Deploy with CLI</span>{"\n"}
 npx -y @duyet/sharehtml deploy report.html</pre>
                 <pre><span class="docs-comment"># Deploy with HTTP API</span>{"\n"}
-curl -X POST https://html.duyet.net/api/documents \
+curl -X POST https://html.duyet.net/api/v1/publish \
+  -H "X-ShareHTML-Client: my-app" \
   -F "file=@report.html" \
   -F "title=Agent Report"</pre>
               </div>
@@ -296,6 +300,50 @@ curl -X POST https://html.duyet.net/api/keys \
 # Returns: &#123; "key": "shk_..." &#125;</pre>
               </div>
 
+              <h3 class="docs-section-subtitle">Endpoints</h3>
+
+              <table class="docs-table">
+                <thead>
+                  <tr>
+                    <th>Method</th>
+                    <th>Path</th>
+                    <th>Description</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><code>POST</code></td>
+                    <td><code>/api/v1/publish</code></td>
+                    <td>Upload a document — canonical endpoint</td>
+                  </tr>
+                  <tr>
+                    <td><code>POST</code></td>
+                    <td><code>/api/documents</code></td>
+                    <td>Upload a document — kept for backward compatibility</td>
+                  </tr>
+                  <tr>
+                    <td><code>GET</code></td>
+                    <td><code>/api/documents</code></td>
+                    <td>List your documents (auth required)</td>
+                  </tr>
+                  <tr>
+                    <td><code>GET</code></td>
+                    <td><code>/api/documents/:id</code></td>
+                    <td>Get document metadata</td>
+                  </tr>
+                  <tr>
+                    <td><code>PUT</code></td>
+                    <td><code>/api/documents/:id</code></td>
+                    <td>Update a document</td>
+                  </tr>
+                  <tr>
+                    <td><code>DELETE</code></td>
+                    <td><code>/api/documents/:id</code></td>
+                    <td>Delete a document</td>
+                  </tr>
+                </tbody>
+              </table>
+
               <h3 class="docs-section-subtitle">Documents</h3>
 
               <div class="docs-tabs" data-tabs="documents">
@@ -307,7 +355,8 @@ curl -X POST https://html.duyet.net/api/keys \
                   <button data-t="4">Delete</button>
                 </div>
                 <pre class="on"><span class="docs-comment"># Upload a document (no auth required)</span>{"\n"}
-curl -X POST https://html.duyet.net/api/documents \
+curl -X POST https://html.duyet.net/api/v1/publish \
+  -H "X-ShareHTML-Client: my-app" \
   -F "file=@report.html" \
   -F "title=Q3 Report"</pre>
                 <pre><span class="docs-comment"># List your documents</span>{"\n"}
