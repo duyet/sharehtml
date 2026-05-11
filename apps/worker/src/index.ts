@@ -194,12 +194,15 @@ app.get("/", async (c) => {
     const pageSize = 10;
     const workerUrl = `${url.protocol}//${url.host}`;
 
+    console.log("[HOME] Fetching assets");
+    const assets = await getAssetUrls(c.env.ASSETS);
+    console.log("[HOME] Assets fetched");
+
     console.log("[HOME] Fetching registry data");
     const registry = getRegistry(c.env);
-    const [documentsPage, recentViews, assets] = await Promise.all([
+    const [documentsPage, recentViews] = await Promise.all([
       registry.listDocumentsPage(email, { query, limit: pageSize, page }),
       registry.getRecentViews(email, 3),
-      getAssetUrls(c.env.ASSETS),
     ]);
     console.log("[HOME] Registry data fetched");
 
