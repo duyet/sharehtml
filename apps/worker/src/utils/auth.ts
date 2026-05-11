@@ -173,6 +173,15 @@ export const clerkAuthMiddleware = createMiddleware<AppBindings>(async (c, next)
     return;
   }
 
+  // Check if CLERK_SECRET_KEY is available
+  if (!c.env.CLERK_SECRET_KEY) {
+    // No secret key configured - allow unauthenticated access
+    // Clerk.js will handle sign-in on the client side
+    c.set("authUser", { id: "unauthenticated", email: "unauthenticated@clerk", source: "dev" });
+    await next();
+    return;
+  }
+
   const clerkClient = createClerkClient({
     secretKey: c.env.CLERK_SECRET_KEY,
     publishableKey: c.env.CLERK_PUBLISHABLE_KEY,
