@@ -188,7 +188,7 @@ function isAuthErrorBody(body: string, contentType: string): boolean {
 }
 
 function isUploadRequest(path: string, method?: string): boolean {
-  return method === "POST" && path === "/api/documents";
+  return method === "POST" && (path === "/api/v1/publish" || path === "/api/documents");
 }
 
 async function checkResponse(

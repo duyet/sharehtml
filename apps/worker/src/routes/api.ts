@@ -398,7 +398,7 @@ async function restoreDocumentSnapshot(
   }
 }
 
-async function handlePublish(c: Context<AppBindings>) {
+async function handlePublish(c: Context<AppBindings>, statusCode: 200 | 201 = 200) {
   const user = c.get("authUser");
   const authenticated = isAuthenticated(user);
 
@@ -485,13 +485,13 @@ async function handlePublish(c: Context<AppBindings>) {
     size: file.size,
     // Anonymous uploads always shared; authenticated uploads respect AUTH_MODE
     isShared: !authenticated ? true : !isAuthEnabled(c.env.AUTH_MODE),
-  });
+  }, statusCode);
 }
 
-api.post("/documents", handlePublish);
+api.post("/documents", (c) => handlePublish(c, 200));
 
 const v1 = new Hono<AppBindings>();
-v1.post("/publish", handlePublish);
+v1.post("/publish", (c) => handlePublish(c, 201));
 
 export { v1 };
 
