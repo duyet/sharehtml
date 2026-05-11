@@ -309,18 +309,59 @@ async function initClerkUserButton(): Promise<void> {
   node.textContent = "...";
   node.className = "topbar-link";
 
+  // Load Clerk script dynamically
+  const scriptUrl = "https://cdn.jsdelivr.net/npm/@clerk/clerk-js@6.8.0/dist/clerk.browser.js";
+
+  // Check if script is already loaded
+  if (!document.querySelector(`script[src="${scriptUrl}"]`)) {
+    await new Promise<void>((resolve, reject) => {
+      const script = document.createElement("script");
+      script.src = scriptUrl;
+      script.crossOrigin = "anonymous";
+      script.onload = () => resolve();
+      script.onerror = () => reject(new Error("Failed to load Clerk"));
+      document.head.appendChild(script);
+    });
+  }
+
+  // Wait for window.Clerk to be available
+  let Clerk = (window as unknown as Record<string, unknown>).Clerk as { new(key: string): unknown } | undefined;
+  let attempts = 0;
+  while (!Clerk && attempts < 50) {
+    await new Promise(resolve => setTimeout(resolve, 100));
+    Clerk = (window as unknown as Record<string, unknown>).Clerk as { new(key: string): unknown } | undefined;
+    attempts++;
+  }
+
+  if (!Clerk) {
+    console.log("initClerkUserButton: Clerk not available after loading script");
+    node.innerHTML = '<a href="/login" class="topbar-link">Sign in</a>';
+    return;
+  }
+
   try {
-    const Clerk = (await import("https://cdn.jsdelivr.net/npm/@clerk/clerk-js@5/dist/clerk.browser.mjs")).default;
-    const clerk = new Clerk(config.clerkPublishableKey);
+    const clerk = new Clerk(config.clerkPublishableKey) as { load(): Promise<unknown>; user?: unknown; mountUserButton(el: HTMLElement): void; openSignIn(opts?: unknown): void };
     await clerk.load();
 
     // Clear loading state
     node.textContent = "";
     node.className = "";
 
-    // Dashboard requires authentication - redirect to login if not signed in
+    // Dashboard requires authentication - open sign-in modal if not signed in
     if (!clerk.user) {
-      window.location.href = "/login?redirect=" + encodeURIComponent(window.location.pathname);
+      clerk.openSignIn({
+        afterSignInUrl: window.location.pathname,
+        afterSignUpUrl: window.location.pathname,
+      });
+      // Show button for manual sign-in trigger
+      node.innerHTML = '<button class="topbar-link" style="background:none;border:none;color:inherit;cursor:pointer;font:inherit;padding:0;">Sign in</button>';
+      const signInBtn = node.querySelector("button");
+      signInBtn?.addEventListener("click", () => {
+        clerk.openSignIn({
+          afterSignInUrl: window.location.pathname,
+          afterSignUpUrl: window.location.pathname,
+        });
+      });
       return;
     }
 
@@ -329,12 +370,7 @@ async function initClerkUserButton(): Promise<void> {
   } catch (err) {
     // Clerk load failed - show fallback
     console.error("Clerk initialization failed:", err);
-    node.textContent = "Sign in";
-    const fallbackBtn = document.createElement("a");
-    fallbackBtn.className = "topbar-link";
-    fallbackBtn.href = "/login";
-    fallbackBtn.textContent = "Sign in";
-    node.replaceWith(fallbackBtn);
+    node.innerHTML = '<a href="/login" class="topbar-link">Sign in</a>';
   }
 }
 
