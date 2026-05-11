@@ -912,11 +912,7 @@ async function removeEmail(email: string): Promise<boolean> {
 
 // Init
 function init() {
-  if (!userName) {
-    showNameModal();
-  } else {
-    connectWs();
-  }
+  connectWs();
   setupEventListeners();
 
   // Tell iframe whether to hide its scrollbar (desktop only — on mobile sidebar is overlay)
@@ -953,10 +949,10 @@ function setupEventListeners() {
     }
   });
 
-  // Sidebar toggle — restore persisted state (inline <head> script handles flicker)
-  if (localStorage.getItem(sidebarKey) === "collapsed") {
-    sidebar.classList.add("collapsed");
-  } else {
+  // Sidebar toggle — default collapsed, restore persisted state
+  sidebar.classList.add("collapsed");
+  if (localStorage.getItem(sidebarKey) === "open") {
+    sidebar.classList.remove("collapsed");
     sidebarBackdrop.classList.add("visible");
   }
   document.documentElement.classList.remove("sidebar-start-collapsed");
