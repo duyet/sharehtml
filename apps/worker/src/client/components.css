@@ -17,7 +17,7 @@
   border-radius: 10px;
   background: var(--color-canvas);
   padding: 16px 18px;
-  margin-bottom: 8px;
+  margin: 16px 0;
 }
 
 .tldr b {

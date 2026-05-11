@@ -62,9 +62,9 @@ export function DocsView({ assets }: DocsParams): string {
                   <button class="on" data-t="0">CLI (npx)</button>
                   <button data-t="1">curl</button>
                 </div>
-                <pre class="on"><span class="docs-comment"># Deploy with CLI — no install needed</span>
+                <pre class="on"><span class="docs-comment"># Deploy with CLI — no install needed</span>{"\n"}
 npx -y @duyet/sharehtml deploy path/to/file.html</pre>
-                <pre><span class="docs-comment"># Deploy with curl — no dependencies</span>
+                <pre><span class="docs-comment"># Deploy with curl — no dependencies</span>{"\n"}
 curl -X POST https://html.duyet.net/api/documents \
   -F "file=@report.html" \
   -F "title=My Report"</pre>
@@ -94,9 +94,9 @@ curl -X POST https://html.duyet.net/api/documents \
                       <button class="on" data-t="0">CLI</button>
                       <button data-t="1">curl</button>
                     </div>
-                    <pre class="on"><span class="docs-comment"># Deploy with npx</span>
+                    <pre class="on"><span class="docs-comment"># Deploy with npx</span>{"\n"}
 npx -y @duyet/sharehtml deploy report.html</pre>
-                    <pre><span class="docs-comment"># Deploy with curl</span>
+                    <pre><span class="docs-comment"># Deploy with curl</span>{"\n"}
 curl -X POST https://html.duyet.net/api/documents \
   -F "file=@report.html"</pre>
                   </div>
@@ -216,9 +216,9 @@ sharehtml deploy report.html</code></pre>
                   <button class="on" data-t="0">CLI</button>
                   <button data-t="1">curl</button>
                 </div>
-                <pre class="on"><span class="docs-comment"># Deploy with CLI</span>
+                <pre class="on"><span class="docs-comment"># Deploy with CLI</span>{"\n"}
 npx -y @duyet/sharehtml deploy report.html</pre>
-                <pre><span class="docs-comment"># Deploy with HTTP API</span>
+                <pre><span class="docs-comment"># Deploy with HTTP API</span>{"\n"}
 curl -X POST https://html.duyet.net/api/documents \
   -F "file=@report.html" \
   -F "title=Agent Report"</pre>
@@ -236,14 +236,14 @@ curl -X POST https://html.duyet.net/api/documents \
                   <button data-t="1">CLI login</button>
                   <button data-t="2">.env file</button>
                 </div>
-                <pre class="on"><span class="docs-comment"># Set environment variables</span>
+                <pre class="on"><span class="docs-comment"># Set environment variables</span>{"\n"}
 export SHAREHTML_EMAIL="you@example.com"
 export SHAREHTML_API_KEY="your-api-key"
 npx @duyet/sharehtml deploy report.html</pre>
-                <pre><span class="docs-comment"># Login once, CLI caches credentials</span>
+                <pre><span class="docs-comment"># Login once, CLI caches credentials</span>{"\n"}
 npx -y @duyet/sharehtml login
 npx @duyet/sharehtml deploy report.html</pre>
-                <pre><span class="docs-comment"># Or add to .env file</span>
+                <pre><span class="docs-comment"># Or add to .env file</span>{"\n"}
 SHAREHTML_EMAIL=you@example.com
 SHAREHTML_API_KEY=your-api-key</pre>
               </div>
@@ -282,13 +282,13 @@ SHAREHTML_API_KEY=your-api-key</pre>
                   <button data-t="1">Session Token</button>
                   <button data-t="2">Create API Key</button>
                 </div>
-                <pre class="on"><span class="docs-comment"># Using API Key (recommended for scripts)</span>
+                <pre class="on"><span class="docs-comment"># Using API Key (recommended for scripts)</span>{"\n"}
 curl https://html.duyet.net/api/documents \
   -H "Authorization: Bearer shk_your_api_key_here"</pre>
-                <pre><span class="docs-comment"># Using Session Token (from browser cookies)</span>
+                <pre><span class="docs-comment"># Using Session Token (from browser cookies)</span>{"\n"}
 curl https://html.duyet.net/api/documents \
   -H "Cookie: __session=your_session_token"</pre>
-                <pre><span class="docs-comment"># Create an API Key (requires session auth)</span>
+                <pre><span class="docs-comment"># Create an API Key (requires session auth)</span>{"\n"}
 curl -X POST https://html.duyet.net/api/keys \
   -H "Content-Type: application/json" \
   -H "Cookie: __session=your_session_token" \
@@ -306,25 +306,25 @@ curl -X POST https://html.duyet.net/api/keys \
                   <button data-t="3">Update</button>
                   <button data-t="4">Delete</button>
                 </div>
-                <pre class="on"><span class="docs-comment"># Upload a document (no auth required)</span>
+                <pre class="on"><span class="docs-comment"># Upload a document (no auth required)</span>{"\n"}
 curl -X POST https://html.duyet.net/api/documents \
   -F "file=@report.html" \
   -F "title=Q3 Report"</pre>
-                <pre><span class="docs-comment"># List your documents</span>
+                <pre><span class="docs-comment"># List your documents</span>{"\n"}
 curl https://html.duyet.net/api/documents \
   -H "Authorization: Bearer shk_your_api_key_here" \
   -G \
   -d "limit=20" \
   -d "page=1"</pre>
-                <pre><span class="docs-comment"># Get document metadata</span>
+                <pre><span class="docs-comment"># Get document metadata</span>{"\n"}
 curl https://html.duyet.net/api/documents/doc_abc123 \
   -H "Authorization: Bearer shk_your_api_key_here"</pre>
-                <pre><span class="docs-comment"># Update a document</span>
+                <pre><span class="docs-comment"># Update a document</span>{"\n"}
 curl -X PUT https://html.duyet.net/api/documents/doc_abc123 \
   -H "Authorization: Bearer shk_your_api_key_here" \
   -F "file=@updated.html" \
   -F "title=Updated Title"</pre>
-                <pre><span class="docs-comment"># Delete a document</span>
+                <pre><span class="docs-comment"># Delete a document</span>{"\n"}
 curl -X DELETE https://html.duyet.net/api/documents/doc_abc123 \
   -H "Authorization: Bearer shk_your_api_key_here"</pre>
               </div>
@@ -337,15 +337,15 @@ curl -X DELETE https://html.duyet.net/api/documents/doc_abc123 \
                   <button data-t="1">Source</button>
                   <button data-t="2">Rendered</button>
                 </div>
-                <pre class="on"><span class="docs-comment"># Download raw document (source if available, else rendered)</span>
+                <pre class="on"><span class="docs-comment"># Download raw document (source if available, else rendered)</span>{"\n"}
 curl https://html.duyet.net/api/documents/doc_abc123/raw \
   -H "Authorization: Bearer shk_your_api_key_here" \
   -o document.html</pre>
-                <pre><span class="docs-comment"># Download original source file</span>
+                <pre><span class="docs-comment"># Download original source file</span>{"\n"}
 curl https://html.duyet.net/api/documents/doc_abc123/source \
   -H "Authorization: Bearer shk_your_api_key_here" \
   -o document.md</pre>
-                <pre><span class="docs-comment"># Download rendered HTML</span>
+                <pre><span class="docs-comment"># Download rendered HTML</span>{"\n"}
 curl https://html.duyet.net/api/documents/doc_abc123/rendered \
   -H "Authorization: Bearer shk_your_api_key_here" \
   -o document.html</pre>
@@ -359,15 +359,15 @@ curl https://html.duyet.net/api/documents/doc_abc123/rendered \
                   <button data-t="1">Set Public</button>
                   <button data-t="2">Set Private</button>
                 </div>
-                <pre class="on"><span class="docs-comment"># Get sharing status</span>
+                <pre class="on"><span class="docs-comment"># Get sharing status</span>{"\n"}
 curl https://html.duyet.net/api/documents/doc_abc123/share \
   -H "Authorization: Bearer shk_your_api_key_here"</pre>
-                <pre><span class="docs-comment"># Make document public (anyone with link can view)</span>
+                <pre><span class="docs-comment"># Make document public (anyone with link can view)</span>{"\n"}
 curl -X PUT https://html.duyet.net/api/documents/doc_abc123/share \
   -H "Authorization: Bearer shk_your_api_key_here" \
   -H "Content-Type: application/json" \
   -d '{{"mode": "link"}}'</pre>
-                <pre><span class="docs-comment"># Make document private (only you can view)</span>
+                <pre><span class="docs-comment"># Make document private (only you can view)</span>{"\n"}
 curl -X PUT https://html.duyet.net/api/documents/doc_abc123/share \
   -H "Authorization: Bearer shk_your_api_key_here" \
   -H "Content-Type: application/json" \
@@ -376,7 +376,7 @@ curl -X PUT https://html.duyet.net/api/documents/doc_abc123/share \
 
               <h3 class="docs-section-subtitle">Comments</h3>
 
-              <pre><span class="docs-comment"># Get document comments</span>
+              <pre><span class="docs-comment"># Get document comments</span>{"\n"}
 curl https://html.duyet.net/api/documents/doc_abc123/comments \
   -H "Authorization: Bearer shk_your_api_key_here"</pre>
 
@@ -388,16 +388,16 @@ curl https://html.duyet.net/api/documents/doc_abc123/comments \
                   <button data-t="1">List</button>
                   <button data-t="2">Delete</button>
                 </div>
-                <pre class="on"><span class="docs-comment"># Create API key (requires session auth, not API key)</span>
+                <pre class="on"><span class="docs-comment"># Create API key (requires session auth, not API key)</span>{"\n"}
 curl -X POST https://html.duyet.net/api/keys \
   -H "Content-Type: application/json" \
   -H "Cookie: __session=your_session_token" \
   -d '{{"name": "My CI/CD Key"}}'
 # Returns: &#123; "key": "shk_...", "id": "..." &#125;</pre>
-                <pre><span class="docs-comment"># List your API keys</span>
+                <pre><span class="docs-comment"># List your API keys</span>{"\n"}
 curl https://html.duyet.net/api/keys \
   -H "Cookie: __session=your_session_token"</pre>
-                <pre><span class="docs-comment"># Delete an API key</span>
+                <pre><span class="docs-comment"># Delete an API key</span>{"\n"}
 curl -X DELETE https://html.duyet.net/api/keys/key_id \
   -H "Cookie: __session=your_session_token"</pre>
               </div>
