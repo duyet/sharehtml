@@ -15,17 +15,10 @@ interface LoginParams {
 export function LoginView({ assets, redirectUrl = "/", authMode, clerkPublishableKey }: LoginParams): string {
   const isClerk = authMode === "clerk" && clerkPublishableKey;
 
-  // Derive Clerk Frontend API URL from publishable key
-  let clerkScriptUrl = "";
-  if (isClerk && clerkPublishableKey) {
-    try {
-      const encoded = clerkPublishableKey.replace(/^pk_(live|test)_/, "");
-      const fqdn = atob(encoded).replace(/\$+$/, "");
-      clerkScriptUrl = `https://${fqdn}/npm/@clerk/clerk-js@6.8.0/dist/clerk.browser.js`;
-    } catch (e) {
-      console.error("Failed to parse Clerk publishable key:", e);
-    }
-  }
+  // Use Clerk from CDN (works with any publishable key)
+  const clerkScriptUrl = isClerk
+    ? "https://cdn.jsdelivr.net/npm/@clerk/clerk-js@6.8.0/dist/clerk.browser.js"
+    : "";
 
   const jsx = (
     <html lang="en">
