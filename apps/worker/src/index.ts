@@ -13,7 +13,6 @@ import { normalizeEmail } from "./utils/email.js";
 import { getRegistry } from "./utils/registry.js";
 import { DashboardView } from "./frontend/dashboard.js";
 import { TagView } from "./frontend/tag.js";
-import { LoginView } from "./frontend/login.js";
 import { HomeView } from "./frontend/home.js";
 
 export { DocumentDO } from "./durable-objects/document.js";
@@ -68,37 +67,50 @@ app.get("/llms.txt", async (c) => {
   return c.text(lines.join("\n"));
 });
 
-// Public login page (no auth required)
-app.get("/login", async (c) => {
-  const url = new URL(c.req.url);
-  const redirectUrl = url.searchParams.get("redirect") || "/dashboard";
-
-  const assets = await getAssetUrls(c.env.ASSETS);
-
-  return c.html(
-    LoginView({
-      assets,
-      redirectUrl,
-      authMode: c.env.AUTH_MODE,
-      clerkPublishableKey: c.env.CLERK_PUBLISHABLE_KEY,
-    }),
-    {
-      headers: {
-        "Content-Security-Policy": cspHeader({
-          clerkPublishableKey: c.env.CLERK_PUBLISHABLE_KEY,
-        }),
-      },
-    },
-  );
-});
+// Legacy /login route — Clerk modal now handles sign-in inline.
+app.get("/login", (c) => c.redirect("/"));
 
 app.get("/dashboard", async (c) => {
-  // Redirect unauthenticated users to login page
-  if (c.get("authUser").id === "unauthenticated") {
-    return c.redirect("/login?redirect=/dashboard");
+  const authUser = c.get("authUser");
+  const isAuthenticated = authUser.id !== "unauthenticated";
+
+  // Unauthenticated visitors see an empty dashboard; the client-side Clerk modal
+  // (mounted via dashboard-client.ts) prompts for sign-in.
+  if (!isAuthenticated) {
+    const url = new URL(c.req.url);
+    const workerUrl = `${url.protocol}//${url.host}`;
+    const assets = await getAssetUrls(c.env.ASSETS);
+    const homeCapabilityToken = await createCapabilityToken(c.env, {
+      scope: "home",
+      email: "",
+      documentId: null,
+    });
+    return c.html(
+      DashboardView({
+        assets,
+        email: "",
+        workerUrl,
+        documents: [],
+        page: 1,
+        pageSize: 10,
+        totalCount: 0,
+        homeCapabilityToken,
+        authMode: c.env.AUTH_MODE,
+        clerkPublishableKey: c.env.CLERK_PUBLISHABLE_KEY,
+        cfBeaconToken: c.env.CF_BEACON_TOKEN,
+        requiresAuth: true,
+      }),
+      {
+        headers: {
+          "Content-Security-Policy": cspHeader({
+            clerkPublishableKey: c.env.CLERK_PUBLISHABLE_KEY,
+          }),
+        },
+      },
+    );
   }
 
-  const email = normalizeEmail(c.get("authUser").email);
+  const email = normalizeEmail(authUser.email);
   const url = new URL(c.req.url);
   const page = Number.parseInt(url.searchParams.get("page") || "1", 10);
   const pageSize = 10;
@@ -127,6 +139,7 @@ app.get("/dashboard", async (c) => {
       homeCapabilityToken,
       authMode: c.env.AUTH_MODE,
       clerkPublishableKey: c.env.CLERK_PUBLISHABLE_KEY,
+      cfBeaconToken: c.env.CF_BEACON_TOKEN,
     }),
     {
       headers: {

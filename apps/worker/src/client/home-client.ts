@@ -1,5 +1,6 @@
 import "./home.css";
 
+import { setupClerkTopbar } from "./clerk-topbar.js";
 import { BROWSER_CAPABILITY_HEADER } from "../utils/security-constants.js";
 import { isRecord } from "../types.js";
 import {
@@ -113,39 +114,12 @@ function getHomeClientElements(): HomeClientElements | null {
   const meta = document.getElementById("documents-meta");
   const setupTemplate = document.getElementById("documents-setup-template");
 
-  console.log("getHomeClientElements:", {
-    form: form?.constructor.name,
-    input: input?.constructor.name,
-    list: list?.constructor.name,
-    pagination: pagination?.constructor.name,
-    meta: meta?.constructor.name,
-    setupTemplate: setupTemplate?.constructor.name
-  });
-
-  if (!(form instanceof HTMLFormElement)) {
-    console.log("getHomeClientElements: form not found or not HTMLFormElement");
-    return null;
-  }
-  if (!(input instanceof HTMLInputElement)) {
-    console.log("getHomeClientElements: input not found or not HTMLInputElement");
-    return null;
-  }
-  if (!(list instanceof HTMLDivElement)) {
-    console.log("getHomeClientElements: list not found or not HTMLDivElement");
-    return null;
-  }
-  if (!(pagination instanceof HTMLDivElement)) {
-    console.log("getHomeClientElements: pagination not found or not HTMLDivElement");
-    return null;
-  }
-  if (!(meta instanceof HTMLDivElement)) {
-    console.log("getHomeClientElements: meta not found or not HTMLDivElement");
-    return null;
-  }
-  if (!(setupTemplate instanceof HTMLTemplateElement)) {
-    console.log("getHomeClientElements: setupTemplate not found or not HTMLTemplateElement");
-    return null;
-  }
+  if (!(form instanceof HTMLFormElement)) return null;
+  if (!(input instanceof HTMLInputElement)) return null;
+  if (!(list instanceof HTMLDivElement)) return null;
+  if (!(pagination instanceof HTMLDivElement)) return null;
+  if (!(meta instanceof HTMLDivElement)) return null;
+  if (!(setupTemplate instanceof HTMLTemplateElement)) return null;
 
   return { form, input, list, pagination, meta, setupTemplate };
 }
@@ -230,40 +204,14 @@ function updateHomeUrl(query: string, page: number): void {
 }
 
 function initHomeClient(): void {
-  console.log("initHomeClient: Starting initialization");
-
-  // Check if on login page FIRST (before requiring config)
-  if (document.getElementById("auth-form") || document.getElementById("clerk-sign-in")) {
-    console.log("initHomeClient: On login page, calling initClerkSignIn");
-    if (document.readyState === "loading") {
-      document.addEventListener("DOMContentLoaded", () => void initClerkSignIn());
-    } else {
-      void initClerkSignIn();
-    }
-    return;
-  }
-
-  // Get config for non-login pages
   const config = getHomeClientConfig();
-  if (!config) {
-    console.log("initHomeClient: No config found");
-    return;
-  }
-  console.log("initHomeClient: Config found", config);
+  if (!config) return;
 
-  // Initialize Clerk user button
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", () => void initClerkUserButton(config.requiresLogin ?? false));
-  } else {
-    void initClerkUserButton(config.requiresLogin ?? false);
-  }
+  // Mount Clerk topbar widgets (Sign-in button OR Dashboard link + UserButton).
+  setupClerkTopbar({ openSignInOnLoad: false });
 
-  // Try to get home client elements (may be null on pages without search forms)
   const elements = getHomeClientElements();
-  if (!elements) {
-    console.log("initHomeClient: No home elements found, skipping home initialization");
-    return;
-  }
+  if (!elements) return;
 
   const { form, input, list, pagination, meta, setupTemplate } = elements;
 
@@ -341,213 +289,7 @@ function initHomeClient(): void {
   form.addEventListener("submit", handleSearchSubmit);
   pagination.addEventListener("click", handlePaginationClick);
 
-  // Initialize tabs
   initTabs();
-
-  // Check if on login page
-  if (document.getElementById("auth-form") || document.getElementById("clerk-sign-in")) {
-    console.log("initHomeClient: On login page, calling initClerkSignIn");
-    // Wait for DOM ready before initializing Clerk sign-in
-    if (document.readyState === "loading") {
-      document.addEventListener("DOMContentLoaded", () => void initClerkSignIn());
-    } else {
-      void initClerkSignIn();
-    }
-    return;
-  }
-
-  console.log("initHomeClient: Not on login page, initializing Clerk user button");
-  const userBtn = document.getElementById("clerk-user-btn");
-  if (userBtn) userBtn.textContent = "JS-3";
-
-  // Clerk user button initialization
-  // Always show Sign in button for now
-  if (document.readyState === "loading") {
-    console.log("initHomeClient: Waiting for DOMContentLoaded");
-    document.addEventListener("DOMContentLoaded", () => void initClerkUserButton(config.requiresLogin ?? false));
-  } else {
-    console.log("initHomeClient: DOM ready, calling initClerkUserButton");
-    void initClerkUserButton(config.requiresLogin ?? false);
-  }
-}
-
-async function initClerkSignIn(): Promise<void> {
-  console.log("initClerkSignIn: Headless mode starting");
-
-  const loginConfig = (window as unknown as Record<string, unknown>).__LOGIN_CONFIG__ as
-    | { redirectUrl?: string; clerkPublishableKey?: string }
-    | undefined;
-
-  const clerkPublishableKey = loginConfig?.clerkPublishableKey;
-  if (!clerkPublishableKey) {
-    console.error("initClerkSignIn: No clerkPublishableKey");
-    return;
-  }
-
-  // Show the form
-  const loadingEl = document.getElementById("auth-loading");
-  const formEl = document.getElementById("auth-form");
-  const submitBtn = document.getElementById("submit-btn") as HTMLButtonElement;
-  const errorEl = document.getElementById("form-error");
-
-  console.log("initClerkSignIn: Elements:", { loadingEl, formEl, submitBtn, errorEl });
-
-  if (loadingEl) loadingEl.style.display = "none";
-  if (formEl) {
-    formEl.style.display = "block";
-    console.log("initClerkSignIn: Form displayed");
-  }
-
-  // Handle sign-in button click (not form submit to avoid Enter key issues)
-  submitBtn?.addEventListener("click", async (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-
-    console.log("Sign-in button clicked");
-
-    const email = (document.getElementById("email") as HTMLInputElement)?.value;
-    const password = (document.getElementById("password") as HTMLInputElement)?.value;
-
-    console.log("Form data:", { email, password: password ? "***" : "empty" });
-
-    if (!email || !password) {
-      if (errorEl) {
-        errorEl.textContent = "Please fill in all fields";
-        errorEl.style.display = "block";
-      }
-      return;
-    }
-
-    // Disable submit button
-    if (submitBtn) {
-      submitBtn.disabled = true;
-      submitBtn.textContent = "Signing in...";
-    }
-    if (errorEl) errorEl.style.display = "none";
-
-    try {
-      console.log("Sending sign-in request...");
-      // Use Clerk's Backend API via our proxy endpoint
-      const response = await fetch("/api/clerk/sign_in", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password, clerkPublishableKey }),
-      });
-
-      const data = await response.json();
-      console.log("Sign-in response:", data);
-
-      if (!response.ok) {
-        throw new Error(data.error || "Sign in failed");
-      }
-
-      // Show success message
-      if (formEl) formEl.style.display = "none";
-      const successEl = document.getElementById("auth-success");
-      if (successEl) successEl.style.display = "block";
-
-      // Store token and redirect after delay
-      if (data.token) {
-        localStorage.setItem("clerk_token", data.token);
-        setTimeout(() => {
-          window.location.href = loginConfig?.redirectUrl || "/dashboard";
-        }, 1500);
-      }
-    } catch (err) {
-      console.error("Sign in error:", err);
-      if (errorEl) {
-        errorEl.textContent = err instanceof Error ? err.message : "Sign in failed";
-        errorEl.style.display = "block";
-      }
-      if (submitBtn) {
-        submitBtn.disabled = false;
-        submitBtn.textContent = "Sign in";
-      }
-    }
-  });
-
-  // Also prevent Enter key from submitting form
-  formEl?.addEventListener("submit", (e) => {
-    e.preventDefault();
-    console.log("Form submit prevented, clicking button instead");
-    submitBtn?.click();
-  });
-}
-
-async function initClerkUserButton(requiresLogin: boolean): Promise<void> {
-  const node = document.getElementById("clerk-user-btn");
-  if (!node) {
-    console.log("clerk-user-btn element not found");
-    return;
-  }
-
-  const clerkConfig = (window as unknown as Record<string, unknown>).__HOME_CONFIG__ as
-    | { clerkPublishableKey?: string }
-    | undefined;
-
-  const clerkPublishableKey = clerkConfig?.clerkPublishableKey;
-
-  if (!clerkPublishableKey) {
-    console.log("initClerkUserButton: No clerkPublishableKey in config");
-    return;
-  }
-
-  // Wait for Clerk script to load and window.Clerk to be available
-  let Clerk = (window as unknown as Record<string, unknown>).Clerk as { new(key: string): unknown } | undefined;
-  let attempts = 0;
-  while (!Clerk && attempts < 100) {
-    await new Promise(resolve => setTimeout(resolve, 50));
-    Clerk = (window as unknown as Record<string, unknown>).Clerk as { new(key: string): unknown } | undefined;
-    attempts++;
-  }
-
-  if (!Clerk) {
-    console.log("initClerkUserButton: Clerk not available after waiting, using fallback");
-    node.innerHTML = '<a href="/login" class="topbar-link">Sign in</a>';
-    if (requiresLogin) {
-      window.location.href = "/login?redirect=" + encodeURIComponent(window.location.pathname);
-    }
-    return;
-  }
-
-  try {
-    const clerk = new Clerk(clerkPublishableKey) as { load(): Promise<unknown>; user?: unknown; mountUserButton(el: HTMLElement, opts?: unknown): void; openSignIn(opts?: unknown): void };
-    await clerk.load();
-
-    // If user is authenticated, show user button
-    if (clerk.user) {
-      clerk.mountUserButton(node, {
-        afterSignOutUrl: "/",
-      });
-      return;
-    }
-
-    // Show sign-in button that opens modal
-    node.innerHTML = '<button class="topbar-link" style="background:none;border:none;color:inherit;cursor:pointer;font:inherit;padding:0;">Sign in</button>';
-
-    const signInBtn = node.querySelector("button");
-    signInBtn?.addEventListener("click", (e) => {
-      e.preventDefault();
-      clerk.openSignIn({
-        afterSignInUrl: window.location.pathname,
-        afterSignUpUrl: window.location.pathname,
-      });
-    });
-
-    // If this is a protected page and user is not authenticated, open sign-in
-    if (requiresLogin && !clerk.user) {
-      clerk.openSignIn({
-        afterSignInUrl: window.location.pathname,
-        afterSignUpUrl: window.location.pathname,
-      });
-    }
-  } catch (err) {
-    console.error("Clerk initialization error:", err);
-    node.innerHTML = '<a href="/login" class="topbar-link">Sign in</a>';
-    if (requiresLogin) {
-      window.location.href = "/login?redirect=" + encodeURIComponent(window.location.pathname);
-    }
-  }
 }
 
 function initTabs(): void {

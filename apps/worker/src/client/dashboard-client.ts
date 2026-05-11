@@ -1,5 +1,6 @@
 import "./dashboard.css";
 
+import { setupClerkTopbar } from "./clerk-topbar.js";
 import { BROWSER_CAPABILITY_HEADER } from "../utils/security-constants.js";
 import { isRecord } from "../types.js";
 import { formatDocumentSize, formatRelativeTime } from "../utils/home-view.js";
@@ -26,6 +27,7 @@ interface DashboardConfig {
   homeCapabilityToken: string;
   authMode: string;
   clerkPublishableKey?: string;
+  requiresAuth?: boolean;
 }
 
 function escapeHtml(value: string): string {
@@ -58,6 +60,7 @@ function getConfig(): DashboardConfig | null {
     homeCapabilityToken: config.homeCapabilityToken,
     authMode: typeof config.authMode === "string" ? config.authMode : "none",
     clerkPublishableKey: typeof config.clerkPublishableKey === "string" ? config.clerkPublishableKey : undefined,
+    requiresAuth: config.requiresAuth === true,
   };
 }
 
@@ -299,66 +302,6 @@ function hideApiKeyModal(): void {
   if (modal) modal.style.display = "none";
 }
 
-async function initClerkUserButton(): Promise<void> {
-  if (!config?.clerkPublishableKey) return;
-
-  const node = document.getElementById("clerk-user-btn");
-  if (!(node instanceof HTMLDivElement)) return;
-
-  // Show loading state while Clerk loads
-  node.textContent = "...";
-  node.className = "topbar-link";
-
-  // Wait for window.Clerk to be available (script loads in <head>)
-  let Clerk = (window as unknown as Record<string, unknown>).Clerk as { new(key: string): unknown } | undefined;
-  let attempts = 0;
-  while (!Clerk && attempts < 100) {
-    await new Promise(resolve => setTimeout(resolve, 50));
-    Clerk = (window as unknown as Record<string, unknown>).Clerk as { new(key: string): unknown } | undefined;
-    attempts++;
-  }
-
-  if (!Clerk) {
-    console.log("initClerkUserButton: Clerk not available after waiting");
-    node.innerHTML = '<a href="/login" class="topbar-link">Sign in</a>';
-    return;
-  }
-
-  try {
-    const clerk = new Clerk(config.clerkPublishableKey) as { load(): Promise<unknown>; user?: unknown; mountUserButton(el: HTMLElement): void; openSignIn(opts?: unknown): void };
-    await clerk.load();
-
-    // Clear loading state
-    node.textContent = "";
-    node.className = "";
-
-    // Dashboard requires authentication - open sign-in modal if not signed in
-    if (!clerk.user) {
-      clerk.openSignIn({
-        afterSignInUrl: window.location.pathname,
-        afterSignUpUrl: window.location.pathname,
-      });
-      // Show button for manual sign-in trigger
-      node.innerHTML = '<button class="topbar-link" style="background:none;border:none;color:inherit;cursor:pointer;font:inherit;padding:0;">Sign in</button>';
-      const signInBtn = node.querySelector("button");
-      signInBtn?.addEventListener("click", () => {
-        clerk.openSignIn({
-          afterSignInUrl: window.location.pathname,
-          afterSignUpUrl: window.location.pathname,
-        });
-      });
-      return;
-    }
-
-    // For signed-in users, mount the user button (shows avatar)
-    clerk.mountUserButton(node);
-  } catch (err) {
-    // Clerk load failed - show fallback
-    console.error("Clerk initialization failed:", err);
-    node.innerHTML = '<a href="/login" class="topbar-link">Sign in</a>';
-  }
-}
-
 function initDashboard(): void {
   config = getConfig();
   if (!config) return;
@@ -478,11 +421,15 @@ function initDashboard(): void {
     });
   }
 
-  // Load API keys on init
-  void loadApiKeys();
+  // Skip API keys + interactive widgets when the page is rendered for an
+  // unauthenticated user; Clerk modal is the only intended interaction.
+  if (!config.requiresAuth) {
+    void loadApiKeys();
+  }
 
-  // Clerk
-  void initClerkUserButton();
+  // Mount Clerk topbar (Dashboard link + UserButton when signed in, Sign in button otherwise).
+  // For unauthenticated dashboard visits, also auto-open the sign-in modal.
+  setupClerkTopbar({ openSignInOnLoad: config.requiresAuth === true });
 }
 
 initDashboard();

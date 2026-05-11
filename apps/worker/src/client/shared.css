@@ -142,6 +142,27 @@ button.topbar-link {
   color: var(--color-muted);
 }
 
+.clerk-topbar {
+  display: inline-flex;
+  align-items: center;
+  gap: 16px;
+  min-height: 28px;
+}
+
+.clerk-topbar[data-state="loading"]::before {
+  content: "";
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--color-muted, #d4d4d4);
+  opacity: 0.25;
+}
+
+.clerk-user-button {
+  display: inline-flex;
+  align-items: center;
+}
+
 /* ── Buttons ───────────────────────────────── */
 .btn-primary {
   display: inline-block;

@@ -3,38 +3,50 @@ export type CspOptions = {
   hasFrame?: boolean;
 };
 
+function clerkFapiOrigin(publishableKey: string): string | null {
+  const encoded = publishableKey.replace(/^pk_(live|test)_/, "");
+  try {
+    const fqdn = atob(encoded).replace(/\$+$/, "");
+    return fqdn ? `https://${fqdn}` : null;
+  } catch {
+    return null;
+  }
+}
+
 function buildCspPolicy(options: CspOptions): string[] {
   const dirs: string[] = [];
+  const clerkOrigin = options.clerkPublishableKey ? clerkFapiOrigin(options.clerkPublishableKey) : null;
+
   dirs.push("default-src 'self'");
 
-  const scripts = ["'self'", "'unsafe-inline'", "https://static.cloudflareinsights.com", "https://cdn.jsdelivr.net"];
-  // Clerk CDN is added by default when using Clerk
-  if (options.clerkPublishableKey) {
-    scripts.push("https://cdn.jsdelivr.net");
-  }
+  const scripts = [
+    "'self'",
+    "'unsafe-inline'",
+    "https://static.cloudflareinsights.com",
+    "https://cdn.jsdelivr.net",
+  ];
+  if (clerkOrigin) scripts.push(clerkOrigin);
   dirs.push(`script-src ${scripts.join(" ")}`);
 
-  const styles = ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"];
-  dirs.push(`style-src ${styles.join(" ")}`);
-
+  dirs.push("style-src 'self' 'unsafe-inline' https://fonts.googleapis.com");
   dirs.push("font-src 'self' https://fonts.gstatic.com");
 
   const connects = ["'self'", "wss:", "https://cdn.jsdelivr.net"];
-  // Clerk Frontend API (if using custom domain, this should be added separately)
-  if (options.clerkPublishableKey) {
-    // Note: Using Clerk CDN, so connect to Clerk's API servers
-    connects.push("https://clerk.com");
+  if (clerkOrigin) {
+    connects.push(clerkOrigin);
+    connects.push("https://clerk-telemetry.com");
   }
   dirs.push(`connect-src ${connects.join(" ")}`);
 
-  dirs.push("img-src 'self' data:");
+  const imgs = ["'self'", "data:", "https://img.clerk.com"];
+  if (clerkOrigin) imgs.push(clerkOrigin);
+  dirs.push(`img-src ${imgs.join(" ")}`);
 
   if (options.hasFrame) {
     dirs.push("frame-src 'self'");
   }
 
-  const workers = ["'self'", "blob:"];
-  dirs.push(`worker-src ${workers.join(" ")}`);
+  dirs.push("worker-src 'self' blob:");
 
   return dirs;
 }
@@ -42,4 +54,3 @@ function buildCspPolicy(options: CspOptions): string[] {
 export function cspHeader(options: CspOptions): string {
   return buildCspPolicy(options).join("; ");
 }
-

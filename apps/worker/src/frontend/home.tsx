@@ -170,7 +170,7 @@ export function HomeView({
           <div class="topbar-right">
             <a class="topbar-link" href="/docs">Docs</a>
             {isClerk && clerkPublishableKey ? (
-              <div id="clerk-user-btn"></div>
+              <div class="clerk-topbar" id="clerk-topbar" data-state="loading"></div>
             ) : isAuthEnabled(authMode) ? (
               <a class="topbar-link" href="/login">Sign in</a>
             ) : (

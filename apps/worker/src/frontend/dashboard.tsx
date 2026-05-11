@@ -18,6 +18,7 @@ interface DashboardParams {
   authMode: AuthMode;
   clerkPublishableKey?: string;
   cfBeaconToken?: string;
+  requiresAuth?: boolean;
 }
 
 function shareModeBadge(mode: number): { label: string; cls: string } {
@@ -38,6 +39,7 @@ export function DashboardView({
   authMode,
   clerkPublishableKey,
   cfBeaconToken,
+  requiresAuth = false,
 }: DashboardParams): string {
   const isClerk = authMode === "clerk";
   const jsx = (
@@ -65,7 +67,7 @@ export function DashboardView({
           <nav class="topbar-right">
             <a class="topbar-link" href="/docs">Docs</a>
             {isClerk
-              ? <div id="clerk-user-btn"></div>
+              ? <div class="clerk-topbar" id="clerk-topbar" data-state="loading"></div>
               : <span class="topbar-email">{email}</span>}
           </nav>
         </header>
@@ -177,6 +179,7 @@ export function DashboardView({
               homeCapabilityToken,
               authMode,
               clerkPublishableKey: isClerk ? clerkPublishableKey : undefined,
+              requiresAuth,
             })}`,
           )}
         </script>

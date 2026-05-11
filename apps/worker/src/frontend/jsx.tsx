@@ -43,28 +43,27 @@ export function clerkCdnUrl(publishableKey: string): string {
   return `https://${fqdn}`;
 }
 
-/** Clerk script tag to set publishable key when AUTH_MODE === "clerk". */
+/**
+ * Clerk SDK script tags following the official JavaScript CDN quickstart.
+ * Loads @clerk/ui (renders prebuilt components) and @clerk/clerk-js (core SDK)
+ * from the project's Frontend API host. The `data-clerk-publishable-key` attribute
+ * on clerk.browser.js auto-instantiates `window.Clerk` so the client never needs
+ * `new Clerk(key)`.
+ */
 export function ClerkScripts({ publishableKey }: { publishableKey: string }): JSX.Element {
-  // Load Clerk from CDN
-  return (
-    <>
-      <script
-        crossOrigin="anonymous"
-        src="https://cdn.jsdelivr.net/npm/@clerk/clerk-js@6.8.0/dist/clerk.browser.js"
-      ></script>
-    </>
-  );
-}
-
-/** UI renderer script tag for Clerk components */
-export function ClerkUIRenderer({ publishableKey }: { publishableKey: string }): JSX.Element {
-  // Load Clerk UI from CDN
+  const fapi = clerkCdnUrl(publishableKey);
   return (
     <>
       <script
         defer
         crossOrigin="anonymous"
-        src="https://cdn.jsdelivr.net/npm/@clerk/ui@1.7.0/dist/ui.browser.js"
+        src={`${fapi}/npm/@clerk/ui@1/dist/ui.browser.js`}
+      ></script>
+      <script
+        defer
+        crossOrigin="anonymous"
+        data-clerk-publishable-key={publishableKey}
+        src={`${fapi}/npm/@clerk/clerk-js@6/dist/clerk.browser.js`}
       ></script>
     </>
   );
