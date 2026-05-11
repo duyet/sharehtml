@@ -9,7 +9,8 @@ npx -y @duyet/sharehtml@latest deploy my-report.html
 ```
 Or use curl to hit the API directly:
 ```bash
-curl -X POST https://html.duyet.net/api/documents \
+curl -X POST https://html.duyet.net/api/v1/publish \
+  -H "X-ShareHTML-Client: my-app" \
   -F "file=@my-report.html" \
   -F "title=My Report"
 # Returns: { "id": "abcde", "url": "https://html.duyet.net/d/abcde" }
@@ -23,7 +24,7 @@ npx -y skills@latest add duyet/sharehtml
 | `npx @duyet/sharehtml deploy <file>` | Deploy an HTML, Markdown, or code file |
 | `echo '<html>' \| npx @duyet/sharehtml publish` | Deploy HTML content via stdin pipe |
 | `npx @duyet/sharehtml publish --content '<html>'` | Deploy HTML content directly as argument |
-| `cat report.html \| curl -X POST https://html.duyet.net/api/documents -F "file=@-;filename=report.html"` | Upload via curl stdin pipe |
+| `cat report.html \| curl -X POST https://html.duyet.net/api/v1/publish -H "X-ShareHTML-Client: my-app" -F "file=@-;filename=report.html"` | Upload via curl stdin pipe |
 | `npx @duyet/sharehtml list` | List your documents |
 | `npx @duyet/sharehtml open <id>` | Open a document in the browser |
 | `npx @duyet/sharehtml pull <id>` | Download a document locally |
@@ -38,16 +39,20 @@ The CLI wraps a REST API that you can call directly with curl or any HTTP client
 
 ```bash
 # Upload (no auth needed)
-curl -X POST https://html.duyet.net/api/documents \
+curl -X POST https://html.duyet.net/api/v1/publish \
+  -H "X-ShareHTML-Client: my-app" \
   -F "file=@report.html" \
   -F "title=My Report"
 
 # Upload using API key (for authenticated instances)
-curl -X POST https://html.duyet.net/api/documents \
+curl -X POST https://html.duyet.net/api/v1/publish \
+  -H "X-ShareHTML-Client: my-app" \
   -H "Authorization: Bearer shk_..." \
   -F "file=@report.html" \
   -F "title=My Report"
 ```
+
+> **Backward compatibility:** The endpoint `/api/documents` still works for backward compatibility.
 
 Full API reference: [https://html.duyet.net/docs#api](https://html.duyet.net/docs#api)
 

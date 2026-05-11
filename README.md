@@ -21,7 +21,8 @@ npx -y @duyet/sharehtml@latest deploy my-report.html
 ```
 Or use curl directly:
 ```bash
-curl -X POST https://html.duyet.net/api/documents \
+curl -X POST https://html.duyet.net/api/v1/publish \
+  -H "X-ShareHTML-Client: my-app" \
   -F "file=@my-report.html" \
   -F "title=My Report"
 # Returns: { "id": "abcde", "url": "https://html.duyet.net/d/abcde" }
@@ -139,7 +140,7 @@ Browser ◄┘──► Durable Objects
 | `npx @duyet/sharehtml deploy <file>` | Deploy an HTML, Markdown, or code file |
 | `echo '<html>' \| npx @duyet/sharehtml publish` | Deploy HTML content via stdin pipe |
 | `npx @duyet/sharehtml publish '<html>' --content` | Deploy HTML content directly as argument |
-| `cat report.html \| curl -X POST https://html.duyet.net/api/documents -F "file=@-;filename=report.html"` | Upload via curl stdin pipe |
+| `cat report.html \| curl -X POST https://html.duyet.net/api/v1/publish -H "X-ShareHTML-Client: my-app" -F "file=@-;filename=report.html"` | Upload via curl stdin pipe |
 | `npx @duyet/sharehtml list` | List your documents |
 | `npx @duyet/sharehtml open <id>` | Open a document in the browser |
 | `npx @duyet/sharehtml pull <id>` | Download a document locally |
@@ -158,7 +159,8 @@ You can also use sharehtml directly via HTTP requests. Full API documentation: [
 
 **Upload without authentication:**
 ```bash
-curl -X POST https://html.duyet.net/api/documents \
+curl -X POST https://html.duyet.net/api/v1/publish \
+  -H "X-ShareHTML-Client: my-app" \
   -F "file=@report.html" \
   -F "title=My Report"
 # Returns: { "id": "...", "url": "https://html.duyet.net/d/..." }
@@ -174,7 +176,8 @@ curl -X POST https://html.duyet.net/api/keys \
 # Returns: { "key": "shk_..." }
 
 # 2. Upload with auth header:
-curl -X POST https://html.duyet.net/api/documents \
+curl -X POST https://html.duyet.net/api/v1/publish \
+  -H "X-ShareHTML-Client: my-app" \
   -H "Authorization: Bearer shk_..." \
   -F "file=@report.html" \
   -F "title=My Report"
@@ -185,13 +188,15 @@ curl -X POST https://html.duyet.net/api/documents \
 
 | Endpoint | Method | Description |
 |----------|--------|-------------|
-| `/api/documents` | POST | Upload document |
+| `/api/v1/publish` | POST | Upload document (canonical) |
 | `/api/documents` | GET | List your documents |
 | `/api/documents/:id` | GET | Get document metadata |
 | `/api/documents/:id` | PUT | Update document |
 | `/api/documents/:id` | DELETE | Delete document |
 | `/api/documents/:id/share` | PUT | Set sharing mode |
 | `/api/keys` | POST | Create API key |
+
+> **Backward compatibility:** The endpoint `/api/documents` still works for backward compatibility.
 
 See [full API docs](https://html.duyet.net/docs#api) for all endpoints, authentication methods, and examples.
 

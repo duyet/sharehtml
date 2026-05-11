@@ -49,11 +49,14 @@ echo '<h1>Generated Report</h1><p>Created at runtime</p>' | npx -y @duyet/shareh
 ### Deploy via curl API
 When npx is unavailable or you need direct HTTP control:
 ```bash
-curl -X POST https://html.duyet.net/api/documents \
+curl -X POST https://html.duyet.net/api/v1/publish \
+  -H "X-ShareHTML-Client: my-app" \
   -F "file=@report.html" \
   -F "title=My Report"
 # Returns: {"id":"abc123","url":"https://html.duyet.net/d/abc123",...}
 ```
+
+> **Backward compatibility:** The endpoint `/api/documents` still works for backward compatibility.
 
 ## Common Use Cases
 
