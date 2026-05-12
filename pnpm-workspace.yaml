@@ -2,6 +2,8 @@ packages:
   - apps/*
   - packages/*
 
+minimumReleaseAge: 2880
+
 ignoredBuiltDependencies:
   - esbuild
   - sharp
