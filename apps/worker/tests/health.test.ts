@@ -15,3 +15,16 @@ describe("GET /health", () => {
     expect(response.status).toBe(200);
   });
 });
+
+describe("GET /docs.md", () => {
+  it("returns markdown upload instructions", async () => {
+    const response = await exports.default.fetch("https://example.com/docs.md");
+    expect(response.status).toBe(200);
+    expect(response.headers.get("content-type")).toContain("text/markdown");
+
+    const body = await response.text();
+    expect(body).toContain("curl -X POST https://html.duyet.net/api/documents");
+    expect(body).toContain('-F "file=@report.html"');
+    expect(body).toContain("Reference: https://html.duyet.net/docs.md");
+  });
+});

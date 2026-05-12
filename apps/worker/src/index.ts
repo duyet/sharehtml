@@ -4,7 +4,7 @@ import { isAuthEnabled, type AppBindings } from "./types.js";
 import { getAuthMiddleware } from "./utils/auth.js";
 import { api, v1 } from "./routes/api.js";
 import { viewer } from "./routes/viewer.js";
-import { docs } from "./routes/docs.js";
+import { docs, docsMarkdownResponse } from "./routes/docs.js";
 import webhooks from "./routes/webhooks.js";
 import { createCapabilityToken } from "./utils/capability.js";
 import { cspHeader } from "./utils/csp.js";
@@ -40,6 +40,7 @@ app.get("/health", (c) => c.json({ status: "ok" }));
 
 // Public routes (no auth)
 app.route("/docs", docs);
+app.get("/docs.md", docsMarkdownResponse);
 app.route("/webhooks", webhooks);
 
 app.use("/*", async (c, next) => {

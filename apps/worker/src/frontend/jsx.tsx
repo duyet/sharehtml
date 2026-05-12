@@ -17,7 +17,7 @@ export function SetupBlock({ workerUrl }: { workerUrl: string }): JSX.Element {
         </div>
         <div class="method-card">
           <div class="method-label">HTTP — curl API</div>
-          <pre>curl -X POST {workerUrl}/api/documents -F "file=@report.html"</pre>
+          <pre>{raw(`curl -X POST ${workerUrl}/api/documents \\\n  -F "file=@report.html" \\\n  -F "title=Q3 Report"`)}</pre>
         </div>
       </div>
 
@@ -32,8 +32,9 @@ export function SetupBlock({ workerUrl }: { workerUrl: string }): JSX.Element {
         Or copy &amp; paste this prompt to your AI Agent (Cursor, Windsurf, Claude, etc.):
       </p>
       <pre>
-        Deploy this to the web using sharehtml:
-        {"`"}npx -y @duyet/sharehtml@latest deploy path/to/file.html{"`"}
+        Deploy this to the web using sharehtml. Use the upload API, no auth required:
+        {"`"}curl -X POST https://html.duyet.net/api/documents -F "file=@path/to/file.html" -F "title=Document Title"{"`"}
+        Reference: https://html.duyet.net/docs.md
       </pre>
     </div>
   );
