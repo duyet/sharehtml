@@ -1,6 +1,6 @@
 {
   "name": "@duyet/sharehtml",
-  "version": "0.0.8",
+  "version": "0.0.9",
   "description": "CLI for deploying local files or URLs to sharehtml for collaborative commenting",
   "license": "Apache-2.0",
   "type": "module",
