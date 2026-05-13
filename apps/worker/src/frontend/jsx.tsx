@@ -24,18 +24,12 @@ export function SetupBlock({ workerUrl }: { workerUrl: string }): JSX.Element {
       <p class="setup-skills-label">
         Add <b>sharehtml skills</b> to your AI Agent (Claude Code, etc.):
       </p>
-      <pre>
-        npx -y skills@latest add duyet/sharehtml
-      </pre>
+      <pre class="pre-wrap">npx -y skills@latest add duyet/sharehtml</pre>
 
       <p class="setup-skills-label">
         Or copy &amp; paste this prompt to your AI Agent (Cursor, Windsurf, Claude, etc.):
       </p>
-      <pre>
-        Deploy this to the web using sharehtml. Use the upload API, no auth required:
-        {"`"}curl -X POST https://html.duyet.net/api/documents -F "file=@path/to/file.html" -F "title=Document Title"{"`"}
-        Reference: https://html.duyet.net/docs.md
-      </pre>
+      <pre class="pre-wrap">{"Deploy this to the web using sharehtml. Use the upload API, no auth required:\n"}{"`"}curl -X POST https://html.duyet.net/api/documents -F "file=@path/to/file.html" -F "title=Document Title"{"`"}{"\nReference: https://html.duyet.net/docs.md"}</pre>
     </div>
   );
 }
