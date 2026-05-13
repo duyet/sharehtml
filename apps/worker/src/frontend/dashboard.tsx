@@ -1,10 +1,10 @@
 /** @jsxRuntime automatic */
 /** @jsxImportSource hono/jsx */
 import { raw } from "hono/utils/html";
+import type { AuthMode, DocumentRow } from "../types.js";
 import type { AssetUrls } from "../utils/assets.js";
 import { formatDocumentSize, formatRelativeTime } from "../utils/home-view.js";
-import type { AuthMode, DocumentRow, ShareMode } from "../types.js";
-import { toHtml, safeJsonForScript, ClerkScripts, SetupBlock } from "./jsx.js";
+import { ClerkScripts, safeJsonForScript, toHtml } from "./jsx.js";
 
 interface DashboardParams {
   assets: AssetUrls;
@@ -30,7 +30,6 @@ function shareModeBadge(mode: number): { label: string; cls: string } {
 export function DashboardView({
   assets,
   email,
-  workerUrl,
   documents,
   page,
   pageSize,
@@ -57,7 +56,9 @@ export function DashboardView({
             data-cf-beacon={`{"token": "${cfBeaconToken}"}`}
           ></script>
         )}
-        {authMode === "clerk" && clerkPublishableKey && <ClerkScripts publishableKey={clerkPublishableKey} />}
+        {authMode === "clerk" && clerkPublishableKey && (
+          <ClerkScripts publishableKey={clerkPublishableKey} />
+        )}
       </head>
       <body>
         <header class="topbar">
@@ -65,16 +66,23 @@ export function DashboardView({
             sharehtml
           </a>
           <nav class="topbar-right">
-            <a class="topbar-link" href="/docs">Docs</a>
-            {isClerk
-              ? <div class="clerk-topbar" id="clerk-topbar" data-state="loading"></div>
-              : <span class="topbar-email">{email}</span>}
+            <a class="topbar-link" href="/docs">
+              Docs
+            </a>
+            {isClerk ? (
+              <div class="clerk-topbar" id="clerk-topbar" data-state="loading"></div>
+            ) : (
+              <span class="topbar-email">{email}</span>
+            )}
           </nav>
         </header>
 
         <main class="dashboard-content">
           <div class="dashboard-header">
-            <h1 class="dashboard-title">My Documents</h1>
+            <div>
+              <div class="dashboard-eyebrow">Dashboard</div>
+              <h1 class="dashboard-title">My Documents</h1>
+            </div>
             <div class="dashboard-header-actions">
               <span class="dashboard-count" id="doc-count">
                 {totalCount} document{totalCount !== 1 ? "s" : ""}
@@ -97,7 +105,9 @@ export function DashboardView({
                   </div>
                   <div class="doc-grid-info">
                     <div class="doc-grid-top">
-                      <a class="doc-grid-card-title" href={`/d/${doc.id}`}>{doc.title}</a>
+                      <a class="doc-grid-card-title" href={`/d/${doc.id}`}>
+                        {doc.title}
+                      </a>
                       <span class="doc-grid-filename">{doc.filename}</span>
                     </div>
                     <div class="doc-grid-meta">
@@ -121,9 +131,63 @@ export function DashboardView({
 
           {documents.length === 0 && (
             <div class="dashboard-empty">
-              <p>No documents yet.</p>
-              <div class="section-label">Quick Start</div>
-              <SetupBlock workerUrl={workerUrl} />
+              <div class="dashboard-empty-icon">
+                <svg
+                  width="48"
+                  height="48"
+                  viewBox="0 0 48 48"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <rect
+                    x="8"
+                    y="6"
+                    width="32"
+                    height="36"
+                    rx="4"
+                    stroke="var(--g300)"
+                    stroke-width="2"
+                    fill="none"
+                  />
+                  <line
+                    x1="14"
+                    y1="16"
+                    x2="34"
+                    y2="16"
+                    stroke="var(--g300)"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                  />
+                  <line
+                    x1="14"
+                    y1="24"
+                    x2="28"
+                    y2="24"
+                    stroke="var(--g300)"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                  />
+                  <line
+                    x1="14"
+                    y1="32"
+                    x2="22"
+                    y2="32"
+                    stroke="var(--g300)"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                  />
+                </svg>
+              </div>
+              <p class="dashboard-empty-title">No documents yet</p>
+              <p class="dashboard-empty-desc">
+                Deploy your first document using the CLI, curl API, or sharehtml skills for your AI
+                agent.
+              </p>
+              <div class="dashboard-empty-actions">
+                <a href="/docs" class="btn-primary">
+                  Read the Docs
+                </a>
+              </div>
             </div>
           )}
 
@@ -134,7 +198,9 @@ export function DashboardView({
             <div class="api-keys-panel" id="api-keys-panel">
               <div class="api-keys-empty" id="api-keys-empty">
                 <p>API keys allow programmatic access to deploy documents.</p>
-                <button class="btn-primary" id="create-api-key-btn">Create API Key</button>
+                <button class="btn-primary btn-sm" id="create-api-key-btn">
+                  Create API Key
+                </button>
               </div>
               <div class="api-keys-list" id="api-keys-list"></div>
             </div>
@@ -148,8 +214,12 @@ export function DashboardView({
               This action cannot be undone.
             </p>
             <div class="modal-actions">
-              <button class="modal-submit" id="delete-confirm-btn">Delete</button>
-              <button class="modal-cancel" id="delete-cancel-btn">Cancel</button>
+              <button class="modal-submit" id="delete-confirm-btn">
+                Delete
+              </button>
+              <button class="modal-cancel" id="delete-cancel-btn">
+                Cancel
+              </button>
             </div>
           </div>
         </div>
@@ -160,9 +230,13 @@ export function DashboardView({
             <p class="modal-description">Copy this key now. It will not be shown again.</p>
             <div class="api-key-display">
               <code id="api-key-value"></code>
-              <button class="modal-submit" id="api-key-copy-btn">Copy</button>
+              <button class="modal-submit" id="api-key-copy-btn">
+                Copy
+              </button>
             </div>
-            <button class="modal-cancel" id="api-key-close-btn">Close</button>
+            <button class="modal-cancel" id="api-key-close-btn">
+              Close
+            </button>
           </div>
         </div>
 
