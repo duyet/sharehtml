@@ -1,6 +1,11 @@
 import { Hono, type Context } from "hono";
 import { isAuthEnabled, isRecord, isShareMode, isSourceKind, parseDocumentSnapshot, shareModeFromInt, shareModeToInt, type AppBindings, type DocumentSnapshot, type ShareMode, type SourceKind } from "../types.js";
 import { nanoid, generateSlug } from "../utils/ids.js";
+
+function generateDeleteToken(): string {
+  const bytes = crypto.getRandomValues(new Uint8Array(32));
+  return Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("");
+}
 import { loadDocWithAccessCheck } from "../utils/document-access.js";
 import { getRegistry } from "../utils/registry.js";
 import { extractDocumentTextFromHtml } from "../utils/document-text.js";
@@ -442,6 +447,7 @@ async function handlePublish(c: Context<AppBindings>, statusCode: 200 | 201 = 20
   const renderedFilename = file.name || "document.html";
   const sourceFilename = source?.name || renderedFilename;
   const resolvedTitle = getDocumentTitle(sourceFilename, title, sourceKind);
+  const deleteToken = generateDeleteToken();
 
   const writes: Array<Promise<unknown>> = [
     c.env.DOCUMENTS_BUCKET.put(getRenderedDocumentKey(id, renderedFilename), file.stream(), {
@@ -460,6 +466,7 @@ async function handlePublish(c: Context<AppBindings>, statusCode: 200 | 201 = 20
       source_filename: source && sourceKind ? sourceFilename : null,
       source_kind: sourceKind,
       source_language: sourceLanguage,
+      delete_token: deleteToken,
     }),
   ];
 
@@ -480,6 +487,9 @@ async function handlePublish(c: Context<AppBindings>, statusCode: 200 | 201 = 20
   return c.json({
     id,
     url: docUrl,
+    commentsUrl: `${url.origin}/api/documents/${id}/comments`,
+    deleteToken,
+    deleteUrl: `${url.origin}/api/documents/${id}/token/${deleteToken}`,
     title: resolvedTitle,
     filename: sourceFilename,
     size: file.size,
@@ -791,6 +801,9 @@ api.put("/documents/:id", async (c) => {
   return c.json({
     id,
     url: docUrl,
+    commentsUrl: `${url.origin}/api/documents/${id}/comments`,
+    deleteToken: meta.delete_token ?? null,
+    deleteUrl: meta.delete_token ? `${url.origin}/api/documents/${id}/token/${meta.delete_token}` : null,
     title: resolvedTitle,
     filename: nextSourceFilename || sourceFilename,
     size: file.size,
@@ -1019,6 +1032,44 @@ api.delete("/documents/:id", async (c) => {
   }
 
   // Delete from R2 and registry in parallel
+  const renderedFilename = meta.rendered_filename || meta.filename;
+  const renderedKey = meta.rendered_filename
+    ? getRenderedDocumentKey(id, renderedFilename)
+    : getLegacyDocumentKey(id, renderedFilename);
+  const sourceKey = meta.source_filename
+    ? getSourceDocumentKey(id, meta.source_filename)
+    : null;
+  const deletes: Array<Promise<unknown>> = [
+    c.env.DOCUMENTS_BUCKET.delete(renderedKey),
+    registry.deleteDocument(id),
+  ];
+  if (sourceKey) {
+    deletes.push(c.env.DOCUMENTS_BUCKET.delete(sourceKey));
+  }
+  await Promise.all(deletes);
+
+  return c.json({ ok: true });
+});
+
+// Delete document by token (no auth required)
+api.delete("/documents/:id/token/:token", async (c) => {
+  const rateLimited = requireRateLimit(c);
+  if (rateLimited) return rateLimited;
+
+  const id = c.req.param("id");
+  const token = c.req.param("token");
+
+  if (!token || token.length < 10) {
+    return c.json({ error: "invalid delete token" }, 400);
+  }
+
+  const registry = getRegistry(c.env);
+  const meta = await registry.getDocumentByDeleteToken(id, token);
+
+  if (!meta) {
+    return c.json({ error: "not found or invalid token" }, 404);
+  }
+
   const renderedFilename = meta.rendered_filename || meta.filename;
   const renderedKey = meta.rendered_filename
     ? getRenderedDocumentKey(id, renderedFilename)

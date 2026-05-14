@@ -41,6 +41,9 @@ viewer.get("/d/:id", async (c) => {
     return new Response(obj.body, {
       headers: {
         "Content-Type": "text/html; charset=utf-8",
+        "X-Content-Type-Options": "nosniff",
+        "Content-Security-Policy":
+          "default-src 'none'; style-src 'unsafe-inline'; img-src data:; font-src data:; media-src data:",
         "Cache-Control": "public, max-age=0, must-revalidate",
       },
     });

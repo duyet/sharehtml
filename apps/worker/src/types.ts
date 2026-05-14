@@ -44,6 +44,7 @@ export type DocumentRow = {
   source_kind: string | null;
   source_language: string | null;
   view_count?: number;
+  delete_token?: string | null;
 };
 
 export type RecentViewRow = {

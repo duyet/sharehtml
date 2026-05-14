@@ -85,6 +85,7 @@ export class RegistryDO extends DurableObject<Env> {
     `);
     this.ensureUpdatedAtIndex();
     this.ensureDocumentTagsTable();
+    this.ensureDeleteTokenColumn();
   }
 
   private ensureUpdatedAtIndex() {
@@ -150,6 +151,13 @@ export class RegistryDO extends DurableObject<Env> {
     if (indices.length === 0) {
       this.sql.exec("CREATE INDEX document_tags_tag_idx ON document_tags(tag)");
     }
+  }
+
+  private ensureDeleteTokenColumn() {
+    const columns = this.sql.exec<{ name: string }>("PRAGMA table_info(documents)").toArray();
+    const hasDeleteToken = columns.some((column) => column.name === "delete_token");
+    if (hasDeleteToken) return;
+    this.sql.exec("ALTER TABLE documents ADD COLUMN delete_token TEXT");
   }
 
   private normalizeTag(tag: string): string {
@@ -273,9 +281,10 @@ export class RegistryDO extends DurableObject<Env> {
     source_kind?: string | null;
     source_language?: string | null;
     tags?: string[];
+    delete_token?: string | null;
   }) {
     this.sql.exec(
-      "INSERT INTO documents (id, title, filename, size, owner_email, is_shared, rendered_filename, source_filename, source_kind, source_language) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+      "INSERT INTO documents (id, title, filename, size, owner_email, is_shared, rendered_filename, source_filename, source_kind, source_language, delete_token) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
       doc.id,
       doc.title,
       doc.filename,
@@ -286,6 +295,7 @@ export class RegistryDO extends DurableObject<Env> {
       doc.source_filename ?? null,
       doc.source_kind ?? null,
       doc.source_language ?? null,
+      doc.delete_token ?? null,
     );
     if (doc.tags && doc.tags.length > 0) {
       await this.setDocumentTags(doc.id, doc.tags);
@@ -294,6 +304,13 @@ export class RegistryDO extends DurableObject<Env> {
 
   async getDocument(id: string): Promise<DocumentRow | null> {
     const rows = this.sql.exec<DocumentRow>("SELECT * FROM documents WHERE id = ?", id).toArray();
+    return rows.length > 0 ? rows[0] : null;
+  }
+
+  async getDocumentByDeleteToken(id: string, token: string): Promise<DocumentRow | null> {
+    const rows = this.sql
+      .exec<DocumentRow>("SELECT * FROM documents WHERE id = ? AND delete_token = ?", id, token)
+      .toArray();
     return rows.length > 0 ? rows[0] : null;
   }
 

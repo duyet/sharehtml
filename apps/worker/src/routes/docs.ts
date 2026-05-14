@@ -52,12 +52,13 @@ Reference: https://html.duyet.net/docs.md
 
 ## API notes
 
-- \`POST /api/documents\` uploads a document without authentication.
+- \`POST /api/documents\` uploads a document without authentication. Returns \`deleteToken\` and \`deleteUrl\`.
 - \`POST /api/v1/publish\` is also available for publishing.
 - \`GET /api/documents\` lists documents and requires authentication.
 - \`GET /api/documents/:id\` returns document metadata.
 - \`PUT /api/documents/:id\` updates a document and requires authentication.
 - \`DELETE /api/documents/:id\` deletes a document and requires authentication.
+- \`DELETE /api/documents/:id/token/:token\` deletes a document using the delete token from upload (no auth required).
 `;
 
 export function docsMarkdownResponse(c: Context<AppBindings>) {

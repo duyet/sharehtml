@@ -19,6 +19,9 @@ const CLI_VERSION = "0.0.8";
 interface DeployResult {
   id: string;
   url: string;
+  commentsUrl: string;
+  deleteToken: string;
+  deleteUrl: string;
   title: string;
   filename: string;
   size: number;
