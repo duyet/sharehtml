@@ -83,3 +83,11 @@ Every PR must pass:
 5. **E2E** - Manual verification of changes
 
 Only then merge.
+
+## Maintenance Memory
+
+- Update `memory/maintenance-core.md` and `memory/MEMORY.md` for recurring code-smell and dead-code findings.
+- Do not create dated `docs/reviews/code-smell-dead-code-*.md` reports.
+- Keep deploy workflows on Node 22 and pnpm 10; current Wrangler requires Node 22.
+- Run `pnpm --filter @duyet/sharehtml run typecheck` after CLI dependency or API-client changes; root `pnpm typecheck` covers the worker only.
+- Use `WRANGLER_LOG_PATH=/tmp/wrangler-logs` when local Wrangler checks cannot write logs under `~/Library/Preferences`.
