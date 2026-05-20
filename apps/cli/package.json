@@ -4,6 +4,9 @@
   "description": "CLI for deploying local files or URLs to sharehtml for collaborative commenting",
   "license": "Apache-2.0",
   "type": "module",
+  "engines": {
+    "node": ">=20.0.0"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/duyet/sharehtml.git",

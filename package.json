@@ -1,6 +1,9 @@
 {
   "name": "sharehtml-monorepo",
   "private": true,
+  "engines": {
+    "node": ">=22.12.0"
+  },
   "scripts": {
     "dev": "pnpm --filter @sharehtml/worker dev",
     "dev:worker": "pnpm --filter @sharehtml/worker dev",
