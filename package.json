@@ -14,5 +14,12 @@
   },
   "devDependencies": {
     "typescript": "^5.7.0"
+  },
+  "pnpm": {
+    "overrides": {
+      "fast-uri": "^3.1.2",
+      "picomatch": "^4.0.4",
+      "ws": "^8.20.1"
+    }
   }
 }
