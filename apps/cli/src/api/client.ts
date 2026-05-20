@@ -12,6 +12,7 @@ import {
   renderCodeToHtml,
   renderedFilenameToHtml,
   renderMarkdownToHtml,
+  type SourceKind,
 } from "../utils/document-render.js";
 
 const CLI_VERSION = "0.0.8";
@@ -58,6 +59,10 @@ function getClient(): { workerUrl: string } {
   return getConfig();
 }
 
+function bufferToBlobPart(buffer: Buffer): Uint8Array<ArrayBuffer> {
+  return new Uint8Array(buffer);
+}
+
 export async function prepareDocumentUpload(
   filePath: string,
   title?: string,
@@ -78,7 +83,7 @@ export async function prepareDocumentUpload(
     : sourceKind === "markdown"
     ? "text/markdown"
     : "text/plain";
-  const sourceBlob = new Blob([fileBuffer], { type: sourceMimeType });
+  const sourceBlob = new Blob([bufferToBlobPart(fileBuffer)], { type: sourceMimeType });
 
   let renderedFilename = sourceFilename;
   let renderedBlob: Blob;
@@ -95,7 +100,7 @@ export async function prepareDocumentUpload(
     renderedBlob = new Blob([html], { type: "text/html" });
     renderedFilename = renderedFilenameToHtml(sourceFilename);
   } else {
-    renderedBlob = new Blob([fileBuffer], { type: "text/html" });
+    renderedBlob = new Blob([bufferToBlobPart(fileBuffer)], { type: "text/html" });
   }
 
   return {
@@ -132,7 +137,7 @@ export async function prepareContentUpload(
     : sourceKind === "markdown"
     ? "text/markdown"
     : "text/plain";
-  const sourceBlob = new Blob([fileBuffer], { type: sourceMimeType });
+  const sourceBlob = new Blob([bufferToBlobPart(fileBuffer)], { type: sourceMimeType });
 
   let renderedFilename = filename;
   let renderedBlob: Blob;
@@ -149,7 +154,7 @@ export async function prepareContentUpload(
     renderedBlob = new Blob([html], { type: "text/html" });
     renderedFilename = renderedFilenameToHtml(filename);
   } else {
-    renderedBlob = new Blob([fileBuffer], { type: "text/html" });
+    renderedBlob = new Blob([bufferToBlobPart(fileBuffer)], { type: "text/html" });
   }
 
   return {
