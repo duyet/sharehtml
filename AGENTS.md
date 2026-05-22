@@ -51,7 +51,7 @@ After any PR creation (`/cp`, `/cpr`, or `gh pr create`), immediately start baby
 ## Workflow Notes
 
 - Keep deploy workflows on Node 22 and pnpm 10; current Wrangler requires Node 22.
-- Keep `NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}` on the publish workflow's `npm publish` step; disabling setup-node cache does not replace registry auth.
+- Keep `NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}` on the publish workflow's `npm publish` step; do not add setup-node cache inputs to release builds unless caching is intentionally required.
 - Run `pnpm --filter @duyet/sharehtml run typecheck` after CLI dependency or API-client changes; root `pnpm typecheck` covers the worker only.
 - If `gh run view --log-failed` cannot write to the default cache, rerun with `XDG_CACHE_HOME=/tmp/gh-cache`.
 - If local Wrangler checks cannot write logs under `~/Library/Preferences`, rerun with `WRANGLER_LOG_PATH=/tmp/wrangler-logs`.
