@@ -14,6 +14,12 @@ type: project
 - Log command: use `XDG_CACHE_HOME=/tmp/gh-cache gh run view <run-id> --log-failed` if the default GitHub CLI cache path is blocked.
 - Local check command: use `WRANGLER_LOG_PATH=/tmp/wrangler-logs` for `pnpm test` or `pnpm build` if Wrangler cannot write logs under `~/Library/Preferences`.
 
+## 2026-05-21: Publish Workflow Registry Auth
+
+- Evidence: remote main commit `940dbae` changed `.github/workflows/publish.yml` to disable setup-node package-manager caching and removed `NODE_AUTH_TOKEN` from the `npm publish --access public --provenance` step.
+- Risk: publish runs can build successfully but fail at the registry publish step because npm no longer receives `${{ secrets.NPM_TOKEN }}`.
+- Fix pattern: keep `package-manager-cache: false` under `actions/setup-node`, but keep `NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}` scoped to the publish step.
+
 ## Recurring Review Rules
 
 - Put recurring code-smell and dead-code lessons here, then list them in `memory/MEMORY.md`.
