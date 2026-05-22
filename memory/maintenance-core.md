@@ -16,9 +16,9 @@ type: project
 
 ## 2026-05-21: Publish Workflow Registry Auth
 
-- Evidence: remote main commit `940dbae` changed `.github/workflows/publish.yml` to disable setup-node package-manager caching and removed `NODE_AUTH_TOKEN` from the `npm publish --access public --provenance` step.
+- Evidence: remote main commit `940dbae` changed `.github/workflows/publish.yml` to add invalid `package-manager-cache: false` setup-node input and removed `NODE_AUTH_TOKEN` from the `npm publish --access public --provenance` step.
 - Risk: publish runs can build successfully but fail at the registry publish step because npm no longer receives `${{ secrets.NPM_TOKEN }}`.
-- Fix pattern: keep `package-manager-cache: false` under `actions/setup-node`, but keep `NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}` scoped to the publish step.
+- Fix pattern: do not add setup-node cache inputs to release builds unless caching is intended; keep `NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}` scoped to the publish step.
 
 ## Recurring Review Rules
 
