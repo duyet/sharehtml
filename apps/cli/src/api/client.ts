@@ -59,10 +59,8 @@ function getClient(): { workerUrl: string } {
   return getConfig();
 }
 
-function bufferToBlobPart(buffer: Buffer): ArrayBuffer {
-  const arrayBuffer = new ArrayBuffer(buffer.byteLength);
-  new Uint8Array(arrayBuffer).set(buffer);
-  return arrayBuffer;
+function bufferToBlobPart(buffer: Buffer): Uint8Array {
+  return new Uint8Array(buffer.buffer, buffer.byteOffset, buffer.byteLength);
 }
 
 export async function prepareDocumentUpload(
@@ -85,7 +83,8 @@ export async function prepareDocumentUpload(
     : sourceKind === "markdown"
     ? "text/markdown"
     : "text/plain";
-  const sourceBlob = new Blob([bufferToBlobPart(fileBuffer)], { type: sourceMimeType });
+  const sourceBlobPart = bufferToBlobPart(fileBuffer);
+  const sourceBlob = new Blob([sourceBlobPart], { type: sourceMimeType });
 
   let renderedFilename = sourceFilename;
   let renderedBlob: Blob;
@@ -102,7 +101,7 @@ export async function prepareDocumentUpload(
     renderedBlob = new Blob([html], { type: "text/html" });
     renderedFilename = renderedFilenameToHtml(sourceFilename);
   } else {
-    renderedBlob = new Blob([bufferToBlobPart(fileBuffer)], { type: "text/html" });
+    renderedBlob = new Blob([sourceBlobPart], { type: "text/html" });
   }
 
   return {
@@ -139,7 +138,8 @@ export async function prepareContentUpload(
     : sourceKind === "markdown"
     ? "text/markdown"
     : "text/plain";
-  const sourceBlob = new Blob([bufferToBlobPart(fileBuffer)], { type: sourceMimeType });
+  const sourceBlobPart = bufferToBlobPart(fileBuffer);
+  const sourceBlob = new Blob([sourceBlobPart], { type: sourceMimeType });
 
   let renderedFilename = filename;
   let renderedBlob: Blob;
@@ -156,7 +156,7 @@ export async function prepareContentUpload(
     renderedBlob = new Blob([html], { type: "text/html" });
     renderedFilename = renderedFilenameToHtml(filename);
   } else {
-    renderedBlob = new Blob([bufferToBlobPart(fileBuffer)], { type: "text/html" });
+    renderedBlob = new Blob([sourceBlobPart], { type: "text/html" });
   }
 
   return {
