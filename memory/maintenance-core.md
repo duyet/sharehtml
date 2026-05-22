@@ -18,8 +18,14 @@ type: project
 
 - Evidence: remote main commit `940dbae` changed `.github/workflows/publish.yml` to add invalid `package-manager-cache: false` setup-node input and removed `NODE_AUTH_TOKEN` from the `npm publish --access public --provenance` step.
 - Risk: publish runs can build successfully but fail at the registry publish step because npm no longer receives `${{ secrets.NPM_TOKEN }}`.
-- Fix pattern: do not add setup-node cache inputs to release builds unless caching is intended; keep `NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}` scoped to the publish step.
+- Fix pattern: do not add setup-node cache inputs to release builds unless caching is intentionally required; keep `NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}` scoped to the publish step.
 
+## 2026-05-23: CLI upload Blob conversion optimization
+
+- Evidence: `apps/cli/src/api/client.ts` (`prepareDocumentUpload`, `prepareContentUpload`) created an `ArrayBuffer` from `Buffer` for each payload conversion and also created a second conversion for non-text uploads.
+- Finding: plain-file upload paths allocated duplicate intermediate buffers unnecessarily (two full copies of payload) before building `sourceBlob` and `renderedBlob`.
+- Fix pattern: convert once per upload to a byte view (`Uint8Array`) and reuse it for both blobs when rendering path does not alter bytes.
+- Check command: `pnpm --filter @duyet/sharehtml run typecheck` and CLI upload tests (if available) after CLI changes.
 ## Recurring Review Rules
 
 - Put recurring code-smell and dead-code lessons here, then list them in `memory/MEMORY.md`.
