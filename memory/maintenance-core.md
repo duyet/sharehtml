@@ -24,7 +24,8 @@ type: project
 
 - Evidence: `apps/cli/src/api/client.ts` (`prepareDocumentUpload`, `prepareContentUpload`) created an `ArrayBuffer` from `Buffer` for each payload conversion and also created a second conversion for non-text uploads.
 - Finding: plain-file upload paths allocated duplicate intermediate buffers unnecessarily (two full copies of payload) before building `sourceBlob` and `renderedBlob`.
-- Fix pattern: convert once per upload to a byte view (`Uint8Array`) and reuse it for both blobs when rendering path does not alter bytes.
+- Follow-up: the CLI `tsc` gate rejects `Uint8Array<ArrayBufferLike>` as `BlobPart`, so the safe optimization here is one sliced `ArrayBuffer` per upload reused across both blobs.
+- Fix pattern: reuse one typed `ArrayBuffer` payload per upload when rendering path does not alter bytes, then verify with the CLI typecheck before merging.
 - Check command: `pnpm --filter @duyet/sharehtml run typecheck` and CLI upload tests (if available) after CLI changes.
 ## Recurring Review Rules
 

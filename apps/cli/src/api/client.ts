@@ -59,8 +59,8 @@ function getClient(): { workerUrl: string } {
   return getConfig();
 }
 
-function bufferToBlobPart(buffer: Buffer): Uint8Array {
-  return new Uint8Array(buffer.buffer, buffer.byteOffset, buffer.byteLength);
+function bufferToBlobPart(buffer: Buffer): ArrayBuffer {
+  return buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.byteLength) as ArrayBuffer;
 }
 
 export async function prepareDocumentUpload(
