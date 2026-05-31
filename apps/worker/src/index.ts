@@ -209,9 +209,10 @@ app.get("/", async (c) => {
 
     const assets = await getAssetUrls(c.env.ASSETS);
     const registry = getRegistry(c.env);
-    const [documentsPage, recentViews] = await Promise.all([
+    const [documentsPage, recentViews, analytics] = await Promise.all([
       registry.listDocumentsPage(email, { query, limit: pageSize, page }),
       registry.getRecentViews(email, 3),
+      registry.getHomeAnalytics(),
     ]);
 
     const homeCapabilityToken = await createCapabilityToken(c.env, {
@@ -226,6 +227,7 @@ app.get("/", async (c) => {
       workerUrl,
       documents: documentsPage.documents,
       recentViews,
+      analytics,
       page,
       pageSize,
       totalCount: documentsPage.totalCount,
