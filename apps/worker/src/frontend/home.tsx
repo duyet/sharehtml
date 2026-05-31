@@ -116,45 +116,47 @@ function AnalyticsSection({ analytics }: AnalyticsSectionProps): JSX.Element {
   return (
     <div class="section">
       <div class="section-label">Analytics</div>
-      <div class="stats-band">
-        <div class="stat-cell">
-          <div class="stat-value">{analytics.totalDocs}</div>
-          <div class="stat-label">Total uploads</div>
+      <div class="analytics-card">
+        <div class="stats-band">
+          <div class="stat-cell">
+            <div class="stat-value">{analytics.totalDocs}</div>
+            <div class="stat-label">Total uploads</div>
+          </div>
+          <div class="stat-cell">
+            <div class="stat-value">{analytics.todayUploads}</div>
+            <div class="stat-label">Uploaded today</div>
+          </div>
+          <div class="stat-cell">
+            <div class="stat-value">{analytics.totalViews}</div>
+            <div class="stat-label">Page views</div>
+          </div>
+          <div class="stat-cell">
+            <div class="stat-value">{analytics.totalUsers}</div>
+            <div class="stat-label">Users</div>
+          </div>
+          <div class="stat-cell">
+            <div class="stat-value">{formatBytes(analytics.totalStorage)}</div>
+            <div class="stat-label">Storage used</div>
+          </div>
+          <div class="stat-cell">
+            <div class="stat-value">{analytics.todayViews}</div>
+            <div class="stat-label">Views today</div>
+          </div>
         </div>
-        <div class="stat-cell">
-          <div class="stat-value">{analytics.todayUploads}</div>
-          <div class="stat-label">Uploaded today</div>
-        </div>
-        <div class="stat-cell">
-          <div class="stat-value">{analytics.totalViews}</div>
-          <div class="stat-label">Page views</div>
-        </div>
-        <div class="stat-cell">
-          <div class="stat-value">{analytics.totalUsers}</div>
-          <div class="stat-label">Users</div>
-        </div>
-        <div class="stat-cell">
-          <div class="stat-value">{formatBytes(analytics.totalStorage)}</div>
-          <div class="stat-label">Storage used</div>
-        </div>
-        <div class="stat-cell">
-          <div class="stat-value">{analytics.todayViews}</div>
-          <div class="stat-label">Views today</div>
-        </div>
-      </div>
-      <div class="chart">
-        <div class="chart-bars">
-          {series.map((d) => (
-            <div
-              class="chart-bar"
-              style={`height:${Math.round((d.count / maxCount) * 100)}%`}
-              title={`${d.date}: ${d.count}`}
-            ></div>
-          ))}
-        </div>
-        <div class="chart-axis">
-          <span>{firstDate}</span>
-          <span>{lastDate}</span>
+        <div class="chart">
+          <div class="chart-bars">
+            {series.map((d) => (
+              <div
+                class="chart-bar"
+                style={`height:${Math.round((d.count / maxCount) * 100)}%`}
+                title={`${d.date}: ${d.count}`}
+              ></div>
+            ))}
+          </div>
+          <div class="chart-axis">
+            <span>{firstDate}</span>
+            <span>{lastDate}</span>
+          </div>
         </div>
       </div>
     </div>
