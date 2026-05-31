@@ -2,8 +2,8 @@
 /** @jsxImportSource hono/jsx */
 import { raw } from "hono/utils/html";
 import type { AssetUrls } from "../utils/assets.js";
-import { formatDocumentSize, formatRelativeTime, buildHomePath } from "../utils/home-view.js";
-import { isAuthEnabled, type AuthMode, type DocumentRow, type RecentViewRow } from "../types.js";
+import { formatDocumentSize, formatBytes, formatRelativeTime, buildHomePath } from "../utils/home-view.js";
+import { isAuthEnabled, type AuthMode, type DocumentRow, type RecentViewRow, type HomeAnalytics } from "../types.js";
 import { toHtml, safeJsonForScript, ClerkScripts, SetupBlock } from "./jsx.js";
 
 interface HomeParams {
@@ -12,6 +12,7 @@ interface HomeParams {
   workerUrl: string;
   documents: DocumentRow[];
   recentViews: RecentViewRow[];
+  analytics: HomeAnalytics;
   page: number;
   pageSize: number;
   totalCount: number;
@@ -90,14 +91,87 @@ function Pagination({ page, pageSize, totalCount, query }: PaginationProps): JSX
   );
 }
 
+// Fill missing days so the chart shows a continuous 30-day UTC axis ending today.
+// SQL returns only days with >=1 upload; gap-filling happens here per design.
+function buildUploadSeries(uploadsPerDay: HomeAnalytics["uploadsPerDay"]): Array<{ date: string; count: number }> {
+  const counts = new Map(uploadsPerDay.map((d) => [d.date, d.count]));
+  const series: Array<{ date: string; count: number }> = [];
+  for (let i = 29; i >= 0; i--) {
+    const date = new Date(Date.now() - i * 86400000).toISOString().slice(0, 10);
+    series.push({ date, count: counts.get(date) || 0 });
+  }
+  return series;
+}
+
+interface AnalyticsSectionProps {
+  analytics: HomeAnalytics;
+}
+
+function AnalyticsSection({ analytics }: AnalyticsSectionProps): JSX.Element {
+  const series = buildUploadSeries(analytics.uploadsPerDay);
+  const maxCount = Math.max(1, ...series.map((d) => d.count));
+  const firstDate = series[0].date;
+  const lastDate = series[series.length - 1].date;
+
+  return (
+    <div class="section">
+      <div class="section-label">Analytics</div>
+      <div class="stats-band">
+        <div class="stat-cell">
+          <div class="stat-value">{analytics.totalDocs}</div>
+          <div class="stat-label">Total uploads</div>
+        </div>
+        <div class="stat-cell">
+          <div class="stat-value">{analytics.todayUploads}</div>
+          <div class="stat-label">Uploaded today</div>
+        </div>
+        <div class="stat-cell">
+          <div class="stat-value">{analytics.totalViews}</div>
+          <div class="stat-label">Page views</div>
+        </div>
+        <div class="stat-cell">
+          <div class="stat-value">{analytics.totalUsers}</div>
+          <div class="stat-label">Users</div>
+        </div>
+        <div class="stat-cell">
+          <div class="stat-value">{formatBytes(analytics.totalStorage)}</div>
+          <div class="stat-label">Storage used</div>
+        </div>
+        <div class="stat-cell">
+          <div class="stat-value">{analytics.todayViews}</div>
+          <div class="stat-label">Views today</div>
+        </div>
+      </div>
+      <div class="chart">
+        <div class="chart-bars">
+          {series.map((d) => (
+            <div
+              class="chart-bar"
+              style={`height:${Math.round((d.count / maxCount) * 100)}%`}
+              title={`${d.date}: ${d.count}`}
+            ></div>
+          ))}
+        </div>
+        <div class="chart-axis">
+          <span>{firstDate}</span>
+          <span>{lastDate}</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function HomeView({
   assets,
   email,
   workerUrl,
   documents,
   recentViews,
+  analytics,
   page,
   pageSize,
+  totalCount,
+  query,
   requiresLogin,
   homeCapabilityToken,
   authMode,
@@ -159,6 +233,8 @@ export function HomeView({
             <div class="section-label">Quick Start</div>
             <SetupBlock workerUrl={workerUrl} />
           </div>
+
+          <AnalyticsSection analytics={analytics} />
 
           {recentViews.length > 0 && (
             <div class="section">

@@ -265,6 +265,52 @@ describe("Document API", () => {
   });
 });
 
+describe("Home page analytics", () => {
+  function countOccurrences(haystack: string, needle: string): number {
+    let count = 0;
+    let index = haystack.indexOf(needle);
+    while (index !== -1) {
+      count += 1;
+      index = haystack.indexOf(needle, index + needle.length);
+    }
+    return count;
+  }
+
+  it("renders the analytics section with KPI counts that reflect uploads", async () => {
+    const before = await readUtf8(await exports.default.fetch("https://example.com/"));
+    expect(before).toContain('class="stats-band"');
+    expect(before).toContain("Total uploads");
+    expect(before).toContain("Uploaded today");
+    expect(before).toContain("Page views");
+    // 30-day continuous axis is gap-filled on the frontend regardless of data.
+    expect(countOccurrences(before, 'class="chart-bar"')).toBe(30);
+
+    const uploadRes = await upload("analytics-doc.html", html, "Analytics Doc");
+    expect(uploadRes.status).toBe(200);
+
+    const after = await readUtf8(await exports.default.fetch("https://example.com/"));
+    expect(after).toContain('class="stats-band"');
+    // Chart axis stays a continuous 30-day window after an upload.
+    expect(countOccurrences(after, 'class="chart-bar"')).toBe(30);
+
+    // The KPI values are rendered inside .stat-value; total/today must grow after upload.
+    // Use broad regex to capture all stat-value contents (includes formatted strings like "0 B").
+    const statValuesBefore = [...before.matchAll(/class="stat-value">([^<]+)</g)].map((m) => m[1]);
+    const statValuesAfter = [...after.matchAll(/class="stat-value">([^<]+)</g)].map((m) => m[1]);
+    expect(statValuesBefore).toHaveLength(6);
+    expect(statValuesAfter).toHaveLength(6);
+
+    // KPI order: Total uploads, Uploaded today, Page views, Users, Storage used, Views today.
+    expect(Number(statValuesAfter[0])).toBe(Number(statValuesBefore[0]) + 1);
+    expect(Number(statValuesAfter[1])).toBe(Number(statValuesBefore[1]) + 1);
+
+    // Today's upload is reflected in at least one chart bar with a nonzero height.
+    const today = new Date().toISOString().slice(0, 10);
+    expect(after).toContain(`title="${today}: `);
+    expect(after).not.toContain(`title="${today}: 0"`);
+  });
+});
+
 describe("v1/publish endpoint", () => {
   it("returns 201 with same shape as POST /api/documents", async () => {
     const res = await publishV1("v1-test.html", html, "V1 Test");

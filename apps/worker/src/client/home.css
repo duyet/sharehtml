@@ -437,6 +437,70 @@ h1, h2, h3, .display-serif {
   font-size: 12px;
 }
 
+/* ── Analytics ────────────────────────────────────── */
+.stats-band {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+  margin-bottom: 20px;
+}
+
+.stat-cell {
+  background: var(--paper);
+  border: 1.5px solid var(--g300);
+  border-radius: 12px;
+  padding: 22px 24px;
+}
+
+.stat-value {
+  font-family: var(--font-serif);
+  font-size: 34px;
+  font-weight: 500;
+  line-height: 1;
+  color: var(--slate);
+  letter-spacing: -0.018em;
+}
+
+.stat-label {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--g500);
+  margin-top: 10px;
+}
+
+.chart {
+  background: var(--paper);
+  border: 1.5px solid var(--g300);
+  border-radius: 12px;
+  padding: 20px 24px 14px;
+}
+
+.chart-bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+  height: 120px;
+}
+
+.chart-bar {
+  flex: 1;
+  min-height: 2px;
+  background: var(--clay);
+  border-radius: 2px 2px 0 0;
+  opacity: 0.85;
+}
+
+.chart-axis {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 10px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--g500);
+}
+
 /* ── Responsive ──────────────────────────────────── */
 @media (max-width: 768px) {
   .content {

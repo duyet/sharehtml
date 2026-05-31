@@ -149,3 +149,13 @@ export type GlobalStats = {
   totalViews: number;
   totalStorage: number;
 };
+
+export type HomeAnalytics = {
+  totalDocs: number;
+  todayUploads: number;
+  totalViews: number;
+  totalUsers: number;
+  totalStorage: number;
+  todayViews: number;
+  uploadsPerDay: Array<{ date: string; count: number }>;
+};
