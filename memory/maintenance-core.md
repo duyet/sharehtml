@@ -27,6 +27,12 @@ type: project
 - Follow-up: the CLI `tsc` gate rejects `Uint8Array<ArrayBufferLike>` as `BlobPart`, so the safe optimization here is one sliced `ArrayBuffer` per upload reused across both blobs.
 - Fix pattern: reuse one typed `ArrayBuffer` payload per upload when rendering path does not alter bytes, then verify with the CLI typecheck before merging.
 - Check command: `pnpm --filter @duyet/sharehtml run typecheck` and CLI upload tests (if available) after CLI changes.
+
+## 2026-06-01: Homepage analytics metric semantics
+
+- Evidence: `apps/worker/src/durable-objects/registry.ts` computes `todayViews` with `SELECT COUNT(*) FROM views WHERE date(last_viewed_at) = date('now')`, while view events increment `documents.view_count` separately via `UPDATE documents SET view_count = COALESCE(view_count, 0) + 1`.
+- Finding: the homepage metric counts unique `views` rows touched today (effectively active viewer-document pairs or viewed docs), not total view events for today.
+- Fix pattern: do not label that metric as raw "Views today" unless an event-log-based counter exists; prefer wording like `Docs viewed today`.
 ## Recurring Review Rules
 
 - Put recurring code-smell and dead-code lessons here, then list them in `memory/MEMORY.md`.
