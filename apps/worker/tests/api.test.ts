@@ -300,7 +300,7 @@ describe("Home page analytics", () => {
     expect(statValuesBefore).toHaveLength(6);
     expect(statValuesAfter).toHaveLength(6);
 
-    // KPI order: Total uploads, Uploaded today, Page views, Users, Storage used, Views today.
+    // KPI order: Total uploads, Uploaded today, Page views, Users, Storage used, Docs viewed today.
     expect(Number(statValuesAfter[0])).toBe(Number(statValuesBefore[0]) + 1);
     expect(Number(statValuesAfter[1])).toBe(Number(statValuesBefore[1]) + 1);
 

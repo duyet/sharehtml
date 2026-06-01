@@ -140,7 +140,7 @@ function AnalyticsSection({ analytics }: AnalyticsSectionProps): JSX.Element {
           </div>
           <div class="stat-cell">
             <div class="stat-value">{analytics.todayViews}</div>
-            <div class="stat-label">Views today</div>
+            <div class="stat-label">Docs viewed today</div>
           </div>
         </div>
         <div class="chart">
