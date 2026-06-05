@@ -87,10 +87,11 @@ Only then merge.
 ## Maintenance Memory
 
 - Update `memory/maintenance-core.md` and `memory/MEMORY.md` for recurring code-smell and dead-code findings.
+- Keep unauthenticated Clerk homepage analytics limited to public KPIs; do not expose total users or storage on `/`.
 - Do not create dated `docs/reviews/code-smell-dead-code-*.md` reports.
 - Keep deploy workflows on Node 22 and pnpm 10; current Wrangler requires Node 22.
 - Keep `NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}` on the publish workflow's `npm publish` step; do not add setup-node cache inputs to release builds unless caching is intentionally required.
 - Run `pnpm --filter @duyet/sharehtml run typecheck` after CLI dependency or API-client changes; root `pnpm typecheck` covers the worker only.
 - Homepage analytics `todayViews` comes from `views.last_viewed_at` rows, so label it as `Docs viewed today` rather than raw `Views today` unless an event-log counter is added.
 - Use `XDG_CACHE_HOME=/tmp/gh-cache` when `gh run view --log-failed` cannot write to the default cache.
-- Use `WRANGLER_LOG_PATH=/tmp/wrangler-logs` when local Wrangler checks cannot write logs under `~/Library/Preferences`.
+- Use `WRANGLER_LOG_PATH=/tmp/wrangler-logs` when local Wrangler-backed checks like `pnpm test` cannot write logs under `~/Library/Preferences`.

@@ -154,8 +154,8 @@ export type HomeAnalytics = {
   totalDocs: number;
   todayUploads: number;
   totalViews: number;
-  totalUsers: number;
-  totalStorage: number;
+  totalUsers: number | null;
+  totalStorage: number | null;
   todayViews: number;
   uploadsPerDay: Array<{ date: string; count: number }>;
 };

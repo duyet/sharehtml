@@ -46,6 +46,7 @@ After any PR creation (`/cp`, `/cpr`, or `gh pr create`), immediately start baby
 - **Deployment**: Cloudflare Workers with Wrangler
 - **Storage**: R2 for HTML, Durable Objects for metadata
 - **Clerk webhooks**: `/webhooks/clerk` endpoint syncs users on `user.created` and `user.signedIn` events
+- **Homepage analytics privacy**: in `AUTH_MODE=clerk`, unauthenticated `/` visitors can see public usage KPIs only; keep user-count and storage KPIs authenticated-only
 - **Maintenance memory**: update `memory/maintenance-core.md` and `memory/MEMORY.md` instead of creating dated code-smell reports
 
 ## Workflow Notes
@@ -55,7 +56,7 @@ After any PR creation (`/cp`, `/cpr`, or `gh pr create`), immediately start baby
 - Run `pnpm --filter @duyet/sharehtml run typecheck` after CLI dependency or API-client changes; root `pnpm typecheck` covers the worker only.
 - Homepage analytics `todayViews` comes from `views.last_viewed_at` rows, so label it as `Docs viewed today` rather than raw `Views today` unless an event-log counter is added.
 - If `gh run view --log-failed` cannot write to the default cache, rerun with `XDG_CACHE_HOME=/tmp/gh-cache`.
-- If local Wrangler checks cannot write logs under `~/Library/Preferences`, rerun with `WRANGLER_LOG_PATH=/tmp/wrangler-logs`.
+- If local Wrangler-backed checks cannot write logs under `~/Library/Preferences`, rerun commands like `pnpm test` with `WRANGLER_LOG_PATH=/tmp/wrangler-logs`.
 
 ## Quality Standards
 

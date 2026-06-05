@@ -108,6 +108,16 @@ interface AnalyticsSectionProps {
 }
 
 function AnalyticsSection({ analytics }: AnalyticsSectionProps): JSX.Element {
+  const metrics = [
+    { value: analytics.totalDocs, label: "Total uploads" },
+    { value: analytics.todayUploads, label: "Uploaded today" },
+    { value: analytics.totalViews, label: "Page views" },
+    ...(analytics.totalUsers === null ? [] : [{ value: analytics.totalUsers, label: "Users" }]),
+    ...(analytics.totalStorage === null
+      ? []
+      : [{ value: formatBytes(analytics.totalStorage), label: "Storage used" }]),
+    { value: analytics.todayViews, label: "Docs viewed today" },
+  ];
   const series = buildUploadSeries(analytics.uploadsPerDay);
   const maxCount = Math.max(1, ...series.map((d) => d.count));
   const firstDate = series[0].date;
@@ -117,31 +127,13 @@ function AnalyticsSection({ analytics }: AnalyticsSectionProps): JSX.Element {
     <div class="section">
       <div class="section-label">Analytics</div>
       <div class="analytics-card">
-        <div class="stats-band">
-          <div class="stat-cell">
-            <div class="stat-value">{analytics.totalDocs}</div>
-            <div class="stat-label">Total uploads</div>
-          </div>
-          <div class="stat-cell">
-            <div class="stat-value">{analytics.todayUploads}</div>
-            <div class="stat-label">Uploaded today</div>
-          </div>
-          <div class="stat-cell">
-            <div class="stat-value">{analytics.totalViews}</div>
-            <div class="stat-label">Page views</div>
-          </div>
-          <div class="stat-cell">
-            <div class="stat-value">{analytics.totalUsers}</div>
-            <div class="stat-label">Users</div>
-          </div>
-          <div class="stat-cell">
-            <div class="stat-value">{formatBytes(analytics.totalStorage)}</div>
-            <div class="stat-label">Storage used</div>
-          </div>
-          <div class="stat-cell">
-            <div class="stat-value">{analytics.todayViews}</div>
-            <div class="stat-label">Docs viewed today</div>
-          </div>
+        <div class="stats-band" style={`grid-template-columns:repeat(${metrics.length},1fr)`}>
+          {metrics.map((metric) => (
+            <div class="stat-cell">
+              <div class="stat-value">{metric.value}</div>
+              <div class="stat-label">{metric.label}</div>
+            </div>
+          ))}
         </div>
         <div class="chart">
           <div class="chart-bars">

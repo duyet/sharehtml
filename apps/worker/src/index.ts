@@ -199,7 +199,9 @@ app.get("/tag/:tag", async (c) => {
 
 app.get("/", async (c) => {
   try {
-    const email = normalizeEmail(c.get("authUser").email);
+    const authUser = c.get("authUser");
+    const isAuthenticated = authUser.id !== "unauthenticated";
+    const email = normalizeEmail(authUser.email);
     const url = new URL(c.req.url);
     const query = (url.searchParams.get("q") || "").trim();
     const requestedPage = Number.parseInt(url.searchParams.get("page") || "1", 10);
@@ -212,7 +214,7 @@ app.get("/", async (c) => {
     const [documentsPage, recentViews, analytics] = await Promise.all([
       registry.listDocumentsPage(email, { query, limit: pageSize, page }),
       registry.getRecentViews(email, 3),
-      registry.getHomeAnalytics(),
+      registry.getHomeAnalytics(isAuthenticated),
     ]);
 
     const homeCapabilityToken = await createCapabilityToken(c.env, {

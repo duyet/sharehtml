@@ -591,15 +591,19 @@ export class RegistryDO extends DurableObject<Env> {
     };
   }
 
-  async getHomeAnalytics(): Promise<HomeAnalytics> {
+  async getHomeAnalytics(includePrivateMetrics = true): Promise<HomeAnalytics> {
     const [docsResult] = this.sql.exec<{ count: number }>("SELECT COUNT(*) as count FROM documents").toArray();
     const [todayResult] = this.sql
       .exec<{ count: number }>("SELECT COUNT(*) as count FROM documents WHERE date(created_at) = date('now')")
       .toArray();
     const [viewsResult] = this.sql.exec<{ total: number }>("SELECT COALESCE(SUM(view_count), 0) as total FROM documents").toArray();
-    const [usersResult] = this.sql.exec<{ count: number }>("SELECT COUNT(*) as count FROM users").toArray();
-    const [storageResult] = this.sql.exec<{ total: number }>("SELECT COALESCE(SUM(size), 0) as total FROM documents").toArray();
     const [todayViewsResult] = this.sql.exec<{ count: number }>("SELECT COUNT(*) as count FROM views WHERE date(last_viewed_at) = date('now')").toArray();
+    const [usersResult] = includePrivateMetrics
+      ? this.sql.exec<{ count: number }>("SELECT COUNT(*) as count FROM users").toArray()
+      : [];
+    const [storageResult] = includePrivateMetrics
+      ? this.sql.exec<{ total: number }>("SELECT COALESCE(SUM(size), 0) as total FROM documents").toArray()
+      : [];
     const uploadsPerDay = this.sql
       .exec<{ date: string; count: number }>(
         "SELECT date(created_at) as date, COUNT(*) as count FROM documents WHERE created_at >= datetime('now', '-29 days') GROUP BY date(created_at) ORDER BY date ASC"
@@ -611,8 +615,8 @@ export class RegistryDO extends DurableObject<Env> {
       totalDocs: docsResult?.count || 0,
       todayUploads: todayResult?.count || 0,
       totalViews: viewsResult?.total || 0,
-      totalUsers: usersResult?.count || 0,
-      totalStorage: storageResult?.total || 0,
+      totalUsers: includePrivateMetrics ? usersResult?.count || 0 : null,
+      totalStorage: includePrivateMetrics ? storageResult?.total || 0 : null,
       todayViews: todayViewsResult?.count || 0,
       uploadsPerDay,
     };

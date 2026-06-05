@@ -33,6 +33,13 @@ type: project
 - Evidence: `apps/worker/src/durable-objects/registry.ts` computes `todayViews` with `SELECT COUNT(*) FROM views WHERE date(last_viewed_at) = date('now')`, while view events increment `documents.view_count` separately via `UPDATE documents SET view_count = COALESCE(view_count, 0) + 1`.
 - Finding: the homepage metric counts unique `views` rows touched today (effectively active viewer-document pairs or viewed docs), not total view events for today.
 - Fix pattern: do not label that metric as raw "Views today" unless an event-log-based counter exists; prefer wording like `Docs viewed today`.
+
+## 2026-06-05: Public Clerk homepage analytics leak
+
+- Evidence: `apps/worker/src/index.ts` renders `/` for Clerk visitors even when `authUser.id === "unauthenticated"`, and the 2026-05-31 analytics feature called `registry.getHomeAnalytics()` unconditionally.
+- Risk: unauthenticated visitors could see global `users` and `storage` KPIs even though those values describe private tenant usage.
+- Fix pattern: pass the authenticated state into `getHomeAnalytics()`, omit private metrics at the data boundary, and keep the homepage rendering limited to public KPIs for unauthenticated Clerk traffic.
+- Regression test: `WRANGLER_LOG_PATH=/tmp/wrangler-logs pnpm test`
 ## Recurring Review Rules
 
 - Put recurring code-smell and dead-code lessons here, then list them in `memory/MEMORY.md`.
