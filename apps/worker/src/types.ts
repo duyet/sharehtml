@@ -17,17 +17,23 @@ export function isShareMode(value: unknown): value is ShareMode {
 
 export function shareModeFromInt(n: number): ShareMode {
   switch (n) {
-    case 1: return "link";
-    case 2: return "emails";
-    default: return "private";
+    case 1:
+      return "link";
+    case 2:
+      return "emails";
+    default:
+      return "private";
   }
 }
 
 export function shareModeToInt(mode: ShareMode): number {
   switch (mode) {
-    case "link": return 1;
-    case "emails": return 2;
-    default: return 0;
+    case "link":
+      return 1;
+    case "emails":
+      return 2;
+    default:
+      return 0;
   }
 }
 
@@ -158,4 +164,7 @@ export type HomeAnalytics = {
   totalStorage: number | null;
   todayViews: number;
   uploadsPerDay: Array<{ date: string; count: number }>;
+  viewsPerDay: Array<{ date: string; count: number }>;
+  sharedDocs: number;
+  avgViewsPerDoc: number;
 };

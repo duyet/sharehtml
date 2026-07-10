@@ -15,36 +15,42 @@ const assets: AssetUrls = {
 
 describe("HomeView analytics privacy", () => {
   it("hides private analytics metrics from unauthenticated Clerk visitors", () => {
-    const html = String(HomeView({
-      assets,
-      email: "unauthenticated@clerk",
-      workerUrl: "https://example.com",
-      documents: [],
-      recentViews: [],
-      analytics: {
-        totalDocs: 12,
-        todayUploads: 3,
-        totalViews: 44,
-        totalUsers: null,
-        totalStorage: null,
-        todayViews: 9,
-        uploadsPerDay: [{ date: "2026-06-05", count: 3 }],
-      },
-      page: 1,
-      pageSize: 10,
-      totalCount: 0,
-      query: "",
-      requiresLogin: false,
-      homeCapabilityToken: "token",
-      authMode: "clerk",
-      clerkPublishableKey: "pk_test_Y2xlcmsuZXhhbXBsZS5jb20k",
-    }));
+    const html = String(
+      HomeView({
+        assets,
+        email: "unauthenticated@clerk",
+        workerUrl: "https://example.com",
+        documents: [],
+        recentViews: [],
+        analytics: {
+          totalDocs: 12,
+          todayUploads: 3,
+          totalViews: 44,
+          totalUsers: null,
+          totalStorage: null,
+          todayViews: 9,
+          uploadsPerDay: [{ date: "2026-06-05", count: 3 }],
+          viewsPerDay: [{ date: "2026-06-05", count: 2 }],
+          sharedDocs: 5,
+          avgViewsPerDoc: 3.7,
+        },
+        page: 1,
+        pageSize: 10,
+        totalCount: 0,
+        query: "",
+        requiresLogin: false,
+        homeCapabilityToken: "token",
+        authMode: "clerk",
+        clerkPublishableKey: "pk_test_Y2xlcmsuZXhhbXBsZS5jb20k",
+      }),
+    );
 
     expect(html).toContain("Total uploads");
     expect(html).toContain("Page views");
     expect(html).toContain("Docs viewed today");
     expect(html).not.toContain("Storage used");
     expect(html).not.toContain('class="stat-label">Users<');
-    expect([...html.matchAll(/class="stat-label">/g)]).toHaveLength(4);
+    // Unauthenticated Clerk visitors see public KPIs only (6 metrics, no Users/Storage).
+    expect([...html.matchAll(/class="stat-label">/g)]).toHaveLength(6);
   });
 });

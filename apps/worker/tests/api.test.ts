@@ -48,7 +48,12 @@ function upload(filename: string, content: string, title?: string) {
   });
 }
 
-function publishV1(filename: string, content: string, title?: string, extraHeaders?: Record<string, string>) {
+function publishV1(
+  filename: string,
+  content: string,
+  title?: string,
+  extraHeaders?: Record<string, string>,
+) {
   return exports.default.fetch("https://example.com/api/v1/publish", {
     method: "POST",
     body: buildUploadForm(filename, content, title),
@@ -88,8 +93,7 @@ describe("Document API", () => {
     const listRes = await exports.default.fetch("https://example.com/api/documents");
     expect(listRes.status).toBe(200);
     const list = getRecord(await listRes.json());
-    const documents = getArrayField(list, "documents")
-      .map((entry) => getRecord(entry));
+    const documents = getArrayField(list, "documents").map((entry) => getRecord(entry));
     expect(documents.some((entry) => getStringField(entry, "id") === docId)).toBe(true);
 
     const metaRes = await exports.default.fetch(`https://example.com/api/documents/${docId}`);
@@ -193,13 +197,17 @@ describe("Document API", () => {
     const docId = getStringField(doc, "id");
     expect(getStringField(doc, "filename")).toBe("hello.md");
 
-    const sourceRes = await exports.default.fetch(`https://example.com/api/documents/${docId}/source`);
+    const sourceRes = await exports.default.fetch(
+      `https://example.com/api/documents/${docId}/source`,
+    );
     expect(sourceRes.status).toBe(200);
     expect(sourceRes.headers.get("Content-Type")).toBe("application/octet-stream");
     expect(await readUtf8(sourceRes)).toBe(md);
     expect(sourceRes.headers.get("X-ShareHTML-Source-Kind")).toBe("markdown");
 
-    const renderedRes = await exports.default.fetch(`https://example.com/api/documents/${docId}/rendered`);
+    const renderedRes = await exports.default.fetch(
+      `https://example.com/api/documents/${docId}/rendered`,
+    );
     expect(renderedRes.status).toBe(200);
     expect(renderedRes.headers.get("Content-Type")).toBe("application/octet-stream");
     expect(await readUtf8(renderedRes)).toBe(rendered);
@@ -215,12 +223,16 @@ describe("Document API", () => {
     const doc = getRecord(await res.json());
     const docId = getStringField(doc, "id");
 
-    const sourceRes = await exports.default.fetch(`https://example.com/api/documents/${docId}/source`);
+    const sourceRes = await exports.default.fetch(
+      `https://example.com/api/documents/${docId}/source`,
+    );
     expect(sourceRes.status).toBe(404);
     const body = getRecord(await sourceRes.json());
     expect(getStringField(body, "error")).toBe("source unavailable");
 
-    const renderedRes = await exports.default.fetch(`https://example.com/api/documents/${docId}/rendered`);
+    const renderedRes = await exports.default.fetch(
+      `https://example.com/api/documents/${docId}/rendered`,
+    );
     expect(renderedRes.status).toBe(200);
     expect(renderedRes.headers.get("Content-Type")).toBe("application/octet-stream");
     expect(await readUtf8(renderedRes)).toBe(html);
@@ -240,15 +252,18 @@ describe("Document API", () => {
       body: form,
     });
 
-    const sourceRes = await exports.default.fetch(`https://example.com/api/documents/${docId}/source`);
+    const sourceRes = await exports.default.fetch(
+      `https://example.com/api/documents/${docId}/source`,
+    );
     expect(sourceRes.headers.get("Content-Type")).toBe("application/octet-stream");
     expect(await readUtf8(sourceRes)).toBe("const v2 = 2;");
 
-    const renderedRes = await exports.default.fetch(`https://example.com/api/documents/${docId}/rendered`);
+    const renderedRes = await exports.default.fetch(
+      `https://example.com/api/documents/${docId}/rendered`,
+    );
     expect(renderedRes.headers.get("Content-Type")).toBe("application/octet-stream");
     expect(await readUtf8(renderedRes)).toBe("<h1>v2</h1>");
   });
-
 
   it("returns comments for a document", async () => {
     const uploadRes = await upload("comments-test.html", html, "Comments Test");
@@ -283,31 +298,33 @@ describe("Home page analytics", () => {
     expect(before).toContain("Uploaded today");
     expect(before).toContain("Page views");
     // 30-day continuous axis is gap-filled on the frontend regardless of data.
-    expect(countOccurrences(before, 'class="chart-bar"')).toBe(30);
+    expect(countOccurrences(before, 'class="chart-bar"')).toBe(60);
 
     const uploadRes = await upload("analytics-doc.html", html, "Analytics Doc");
     expect(uploadRes.status).toBe(200);
 
     const after = await readUtf8(await exports.default.fetch("https://example.com/"));
     expect(after).toContain('class="stats-band"');
-    // Chart axis stays a continuous 30-day window after an upload.
-    expect(countOccurrences(after, 'class="chart-bar"')).toBe(30);
+    // Chart axis shows two 30-day windows (uploads + views) after an upload.
+    expect(countOccurrences(after, 'class="chart-bar"')).toBe(60);
 
     // The KPI values are rendered inside .stat-value; total/today must grow after upload.
     // Use broad regex to capture all stat-value contents (includes formatted strings like "0 B").
     const statValuesBefore = [...before.matchAll(/class="stat-value">([^<]+)</g)].map((m) => m[1]);
     const statValuesAfter = [...after.matchAll(/class="stat-value">([^<]+)</g)].map((m) => m[1]);
-    expect(statValuesBefore).toHaveLength(6);
-    expect(statValuesAfter).toHaveLength(6);
+    expect(statValuesBefore).toHaveLength(8);
+    expect(statValuesAfter).toHaveLength(8);
 
-    // KPI order: Total uploads, Uploaded today, Page views, Users, Storage used, Docs viewed today.
+    // KPI order: Total uploads, Uploaded today, Page views, Users, Storage used,
+    // Docs viewed today, Shared docs, Avg views/doc.
     expect(Number(statValuesAfter[0])).toBe(Number(statValuesBefore[0]) + 1);
     expect(Number(statValuesAfter[1])).toBe(Number(statValuesBefore[1]) + 1);
 
-    // Today's upload is reflected in at least one chart bar with a nonzero height.
+    // Today's upload is reflected in at least one upload-chart bar with nonzero height.
     const today = new Date().toISOString().slice(0, 10);
-    expect(after).toContain(`title="${today}: `);
-    expect(after).not.toContain(`title="${today}: 0"`);
+    const uploadChart = after.split("Views — last 30 days")[0];
+    expect(uploadChart).toContain(`title="${today}: `);
+    expect(uploadChart).not.toContain(`title="${today}: 0"`);
   });
 });
 

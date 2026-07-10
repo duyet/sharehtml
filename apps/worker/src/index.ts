@@ -1,19 +1,19 @@
 import { Hono } from "hono";
 import { HTTPException } from "hono/http-exception";
-import { isAuthEnabled, type AppBindings } from "./types.js";
-import { getAuthMiddleware } from "./utils/auth.js";
+import { DashboardView } from "./frontend/dashboard.js";
+import { HomeView } from "./frontend/home.js";
+import { TagView } from "./frontend/tag.js";
 import { api, v1 } from "./routes/api.js";
-import { viewer } from "./routes/viewer.js";
 import { docs, docsMarkdownResponse } from "./routes/docs.js";
+import { viewer } from "./routes/viewer.js";
 import webhooks from "./routes/webhooks.js";
+import type { AppBindings } from "./types.js";
+import { getAssetUrls } from "./utils/assets.js";
+import { getAuthMiddleware } from "./utils/auth.js";
 import { createCapabilityToken } from "./utils/capability.js";
 import { cspHeader } from "./utils/csp.js";
-import { getAssetUrls } from "./utils/assets.js";
 import { normalizeEmail } from "./utils/email.js";
 import { getRegistry } from "./utils/registry.js";
-import { DashboardView } from "./frontend/dashboard.js";
-import { TagView } from "./frontend/tag.js";
-import { HomeView } from "./frontend/home.js";
 
 export { DocumentDO } from "./durable-objects/document.js";
 export { RegistryDO } from "./durable-objects/registry.js";
@@ -57,7 +57,7 @@ app.get("/llms.txt", async (c) => {
   const docs = await registry.listPublicDocuments();
   const url = new URL(c.req.url);
   const origin = `${url.protocol}//${url.host}`;
-  
+
   const lines = [
     "# sharehtml documents",
     "",
@@ -65,7 +65,7 @@ app.get("/llms.txt", async (c) => {
     "",
     ...docs.map((d) => `- [${d.title}](${origin}/d/${d.id}) (${d.size} bytes)`),
   ];
-  
+
   return c.text(lines.join("\n"));
 });
 
@@ -119,7 +119,11 @@ app.get("/dashboard", async (c) => {
 
   const registry = getRegistry(c.env);
 
-  const documentsPage = await registry.listDocumentsPage(email, { query: "", limit: pageSize, page });
+  const documentsPage = await registry.listDocumentsPage(email, {
+    query: "",
+    limit: pageSize,
+    page,
+  });
 
   const workerUrl = `${url.protocol}//${url.host}`;
   const assets = await getAssetUrls(c.env.ASSETS);
@@ -211,9 +215,18 @@ app.get("/", async (c) => {
 
     const assets = await getAssetUrls(c.env.ASSETS);
     const registry = getRegistry(c.env);
+
+    // Authenticated users see their own Recent + Recently Added documents.
+    // Unauthenticated Clerk visitors see a public shared feed on the landing page
+    // so the homepage is never empty/broken for first-time visitors.
     const [documentsPage, recentViews, analytics] = await Promise.all([
-      registry.listDocumentsPage(email, { query, limit: pageSize, page }),
-      registry.getRecentViews(email, 3),
+      isAuthenticated
+        ? registry.listDocumentsPage(email, { query, limit: pageSize, page })
+        : {
+            documents: await registry.listPublicDocuments(),
+            totalCount: 0,
+          },
+      isAuthenticated ? registry.getRecentViews(email, 6) : Promise.resolve([]),
       registry.getHomeAnalytics(isAuthenticated),
     ]);
 
@@ -222,34 +235,35 @@ app.get("/", async (c) => {
       email,
       documentId: null,
     });
-  return c.html(
-    HomeView({
-      assets,
-      email,
-      workerUrl,
-      documents: documentsPage.documents,
-      recentViews,
-      analytics,
-      page,
-      pageSize,
-      totalCount: documentsPage.totalCount,
-      query,
-      requiresLogin: false,  // Home page is always public
-      homeCapabilityToken,
-      authMode: c.env.AUTH_MODE,
-      clerkPublishableKey: c.env.CLERK_PUBLISHABLE_KEY,
-      cfBeaconToken: c.env.CF_BEACON_TOKEN,
-    }),
-    {
-      headers: {
-        "Cache-Control": "public, max-age=60, s-maxage=300",
-        "CDN-Cacheable": "public",
-        "Content-Security-Policy": cspHeader({
-          clerkPublishableKey: c.env.CLERK_PUBLISHABLE_KEY,
-        }),
+    return c.html(
+      HomeView({
+        assets,
+        email,
+        workerUrl,
+        documents: documentsPage.documents,
+        recentViews,
+        analytics,
+        page,
+        pageSize,
+        totalCount: documentsPage.totalCount,
+        query,
+        requiresLogin: false, // Home page is always public
+        homeCapabilityToken,
+        authMode: c.env.AUTH_MODE,
+        isAuthenticated,
+        clerkPublishableKey: c.env.CLERK_PUBLISHABLE_KEY,
+        cfBeaconToken: c.env.CF_BEACON_TOKEN,
+      }),
+      {
+        headers: {
+          "Cache-Control": "public, max-age=60, s-maxage=300",
+          "CDN-Cacheable": "public",
+          "Content-Security-Policy": cspHeader({
+            clerkPublishableKey: c.env.CLERK_PUBLISHABLE_KEY,
+          }),
+        },
       },
-    },
-  );
+    );
   } catch (err) {
     console.error("Home page error:", err);
     return c.json({ error: "Home page failed to load" }, 500);

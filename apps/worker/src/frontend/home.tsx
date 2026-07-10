@@ -1,10 +1,21 @@
 /** @jsxRuntime automatic */
 /** @jsxImportSource hono/jsx */
 import { raw } from "hono/utils/html";
+import {
+  type AuthMode,
+  type DocumentRow,
+  type HomeAnalytics,
+  isAuthEnabled,
+  type RecentViewRow,
+} from "../types.js";
 import type { AssetUrls } from "../utils/assets.js";
-import { formatDocumentSize, formatBytes, formatRelativeTime, buildHomePath } from "../utils/home-view.js";
-import { isAuthEnabled, type AuthMode, type DocumentRow, type RecentViewRow, type HomeAnalytics } from "../types.js";
-import { toHtml, safeJsonForScript, ClerkScripts, SetupBlock } from "./jsx.js";
+import {
+  buildHomePath,
+  formatBytes,
+  formatDocumentSize,
+  formatRelativeTime,
+} from "../utils/home-view.js";
+import { ClerkScripts, SetupBlock, safeJsonForScript, toHtml } from "./jsx.js";
 
 interface HomeParams {
   assets: AssetUrls;
@@ -20,6 +31,7 @@ interface HomeParams {
   requiresLogin: boolean;
   homeCapabilityToken: string;
   authMode: AuthMode;
+  isAuthenticated: boolean;
   clerkPublishableKey?: string;
 }
 
@@ -92,9 +104,16 @@ function Pagination({ page, pageSize, totalCount, query }: PaginationProps): JSX
 }
 
 // Fill missing days so the chart shows a continuous 30-day UTC axis ending today.
-// SQL returns only days with >=1 upload; gap-filling happens here per design.
-function buildUploadSeries(uploadsPerDay: HomeAnalytics["uploadsPerDay"]): Array<{ date: string; count: number }> {
-  const counts = new Map(uploadsPerDay.map((d) => [d.date, d.count]));
+
+interface AnalyticsSectionProps {
+  analytics: HomeAnalytics;
+}
+
+// Fill missing days so a chart series shows a continuous 30-day UTC axis ending today.
+function buildSeries(
+  perDay: Array<{ date: string; count: number }>,
+): Array<{ date: string; count: number }> {
+  const counts = new Map(perDay.map((d) => [d.date, d.count]));
   const series: Array<{ date: string; count: number }> = [];
   for (let i = 29; i >= 0; i--) {
     const date = new Date(Date.now() - i * 86400000).toISOString().slice(0, 10);
@@ -103,8 +122,33 @@ function buildUploadSeries(uploadsPerDay: HomeAnalytics["uploadsPerDay"]): Array
   return series;
 }
 
-interface AnalyticsSectionProps {
-  analytics: HomeAnalytics;
+function Chart({
+  series,
+  firstDate,
+  lastDate,
+}: {
+  series: Array<{ date: string; count: number }>;
+  firstDate: string;
+  lastDate: string;
+}): JSX.Element {
+  const maxCount = Math.max(1, ...series.map((d) => d.count));
+  return (
+    <div class="chart">
+      <div class="chart-bars">
+        {series.map((d) => (
+          <div
+            class="chart-bar"
+            style={`height:${Math.round((d.count / maxCount) * 100)}%`}
+            title={`${d.date}: ${d.count}`}
+          ></div>
+        ))}
+      </div>
+      <div class="chart-axis">
+        <span>{firstDate}</span>
+        <span>{lastDate}</span>
+      </div>
+    </div>
+  );
 }
 
 function AnalyticsSection({ analytics }: AnalyticsSectionProps): JSX.Element {
@@ -117,11 +161,11 @@ function AnalyticsSection({ analytics }: AnalyticsSectionProps): JSX.Element {
       ? []
       : [{ value: formatBytes(analytics.totalStorage), label: "Storage used" }]),
     { value: analytics.todayViews, label: "Docs viewed today" },
+    { value: analytics.sharedDocs, label: "Shared docs" },
+    { value: analytics.avgViewsPerDoc, label: "Avg views/doc" },
   ];
-  const series = buildUploadSeries(analytics.uploadsPerDay);
-  const maxCount = Math.max(1, ...series.map((d) => d.count));
-  const firstDate = series[0].date;
-  const lastDate = series[series.length - 1].date;
+  const uploadSeries = buildSeries(analytics.uploadsPerDay);
+  const viewSeries = buildSeries(analytics.viewsPerDay);
 
   return (
     <div class="section">
@@ -135,19 +179,22 @@ function AnalyticsSection({ analytics }: AnalyticsSectionProps): JSX.Element {
             </div>
           ))}
         </div>
-        <div class="chart">
-          <div class="chart-bars">
-            {series.map((d) => (
-              <div
-                class="chart-bar"
-                style={`height:${Math.round((d.count / maxCount) * 100)}%`}
-                title={`${d.date}: ${d.count}`}
-              ></div>
-            ))}
+        <div class="chart-group">
+          <div class="chart-block">
+            <div class="chart-caption">Uploads — last 30 days</div>
+            <Chart
+              series={uploadSeries}
+              firstDate={uploadSeries[0].date}
+              lastDate={uploadSeries[uploadSeries.length - 1].date}
+            />
           </div>
-          <div class="chart-axis">
-            <span>{firstDate}</span>
-            <span>{lastDate}</span>
+          <div class="chart-block">
+            <div class="chart-caption">Views — last 30 days</div>
+            <Chart
+              series={viewSeries}
+              firstDate={viewSeries[0].date}
+              lastDate={viewSeries[viewSeries.length - 1].date}
+            />
           </div>
         </div>
       </div>
@@ -169,6 +216,7 @@ export function HomeView({
   requiresLogin,
   homeCapabilityToken,
   authMode,
+  isAuthenticated,
   clerkPublishableKey,
   cfBeaconToken,
 }: HomeParams & { cfBeaconToken?: string }): string {
@@ -188,7 +236,9 @@ export function HomeView({
             data-cf-beacon={`{"token": "${cfBeaconToken}"}`}
           ></script>
         )}
-        {authMode === "clerk" && clerkPublishableKey && <ClerkScripts publishableKey={clerkPublishableKey} />}
+        {authMode === "clerk" && clerkPublishableKey && (
+          <ClerkScripts publishableKey={clerkPublishableKey} />
+        )}
       </head>
       <body>
         <header class="topbar">
@@ -196,30 +246,38 @@ export function HomeView({
             sharehtml
           </a>
           <div class="topbar-right">
-            <a class="topbar-link" href="/docs">Docs</a>
+            <a class="topbar-link" href="/docs">
+              Docs
+            </a>
             {isClerk && clerkPublishableKey ? (
               <div class="clerk-topbar" id="clerk-topbar" data-state="loading"></div>
             ) : isAuthEnabled(authMode) ? (
-              <a class="topbar-link" href="/login">Sign in</a>
+              <a class="topbar-link" href="/login">
+                Sign in
+              </a>
             ) : (
               <span class="topbar-email">{email}</span>
             )}
           </div>
-</header>
+        </header>
 
-          <div class="content">
+        <div class="content">
           <div class="hero">
             <div class="eyebrow">AI Agent Publishing Platform</div>
             <h1>
               Deploy files <em>instantly</em> with sharehtml
             </h1>
             <div class="tldr">
-              <b>TL;DR</b> — Three ways to publish: CLI file path, stdin pipe, or curl API.
-              No signup needed. Documents persist indefinitely. Built for AI agents and developers.
+              <b>TL;DR</b> — Three ways to publish: CLI file path, stdin pipe, or curl API. No
+              signup needed. Documents persist indefinitely. Built for AI agents and developers.
             </div>
             <div class="hero-actions">
-              <a href="/docs" class="btn-primary">Read the Docs</a>
-              <a href="https://github.com/duyet/sharehtml" class="btn-secondary">View on GitHub</a>
+              <a href="/docs" class="btn-primary">
+                Read the Docs
+              </a>
+              <a href="https://github.com/duyet/sharehtml" class="btn-secondary">
+                View on GitHub
+              </a>
             </div>
           </div>
 
@@ -234,18 +292,26 @@ export function HomeView({
             <div class="section">
               <div class="section-label">Recently Viewed</div>
               <div class="recent-grid">
-                {recentViews.map((d) => <RecentDocCard doc={d} />)}
+                {recentViews.map((d) => (
+                  <RecentDocCard doc={d} />
+                ))}
               </div>
             </div>
           )}
 
           {documents.length > 0 && (
             <div class="section">
-              <div class="section-label">Recently Added</div>
-              <div class="doc-list">
-                {documents.map((d) => <DocCard doc={d} subtitle={formatDocumentSize(d.size)} />)}
+              <div class="section-label">
+                {isAuthenticated ? "Recently Added" : "Shared Public Documents"}
               </div>
-              <Pagination page={page} pageSize={pageSize} totalCount={totalCount} query={query} />
+              <div class="doc-list">
+                {documents.map((d) => (
+                  <DocCard doc={d} subtitle={formatDocumentSize(d.size)} />
+                ))}
+              </div>
+              {isAuthenticated && (
+                <Pagination page={page} pageSize={pageSize} totalCount={totalCount} query={query} />
+              )}
             </div>
           )}
         </div>

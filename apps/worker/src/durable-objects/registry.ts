@@ -1,5 +1,13 @@
 import { DurableObject } from "cloudflare:workers";
-import type { ApiKeyRow, DocumentRow, RecentViewRow, UserRow, UserStats, GlobalStats, HomeAnalytics } from "../types.js";
+import type {
+  ApiKeyRow,
+  DocumentRow,
+  GlobalStats,
+  HomeAnalytics,
+  RecentViewRow,
+  UserRow,
+  UserStats,
+} from "../types.js";
 import { normalizeEmail } from "../utils/email.js";
 
 const USER_COLORS = [
@@ -89,9 +97,15 @@ export class RegistryDO extends DurableObject<Env> {
   }
 
   private ensureUpdatedAtIndex() {
-    const indices = this.sql.exec<{ name: string }>("SELECT name FROM sqlite_master WHERE type='index' AND name='idx_documents_owner_updated'").toArray();
+    const indices = this.sql
+      .exec<{ name: string }>(
+        "SELECT name FROM sqlite_master WHERE type='index' AND name='idx_documents_owner_updated'",
+      )
+      .toArray();
     if (indices.length === 0) {
-      this.sql.exec("CREATE INDEX idx_documents_owner_updated ON documents (owner_email, created_at DESC)");
+      this.sql.exec(
+        "CREATE INDEX idx_documents_owner_updated ON documents (owner_email, created_at DESC)",
+      );
     }
   }
 
@@ -147,7 +161,11 @@ export class RegistryDO extends DurableObject<Env> {
     `);
 
     // Create index on tag for efficient tag-based lookups
-    const indices = this.sql.exec<{ name: string }>("SELECT name FROM sqlite_master WHERE type='index' AND name='document_tags_tag_idx'").toArray();
+    const indices = this.sql
+      .exec<{ name: string }>(
+        "SELECT name FROM sqlite_master WHERE type='index' AND name='document_tags_tag_idx'",
+      )
+      .toArray();
     if (indices.length === 0) {
       this.sql.exec("CREATE INDEX document_tags_tag_idx ON document_tags(tag)");
     }
@@ -171,22 +189,32 @@ export class RegistryDO extends DurableObject<Env> {
   async getUser(email: string): Promise<UserRow | null> {
     const normalizedEmail = normalizeEmail(email);
     const rows = this.sql
-      .exec<UserRow>("SELECT email, display_name, color, clerk_user_id, image_url, username, external_id FROM users WHERE lower(email) = ? AND deleted_at IS NULL", normalizedEmail)
+      .exec<UserRow>(
+        "SELECT email, display_name, color, clerk_user_id, image_url, username, external_id FROM users WHERE lower(email) = ? AND deleted_at IS NULL",
+        normalizedEmail,
+      )
       .toArray();
     if (rows.length === 0) return null;
     return rows[0];
   }
 
-  async setUser(email: string, displayName: string, clerkData?: {
-    clerkUserId?: string;
-    imageUrl?: string;
-    username?: string;
-    externalId?: string;
-  }): Promise<UserRow> {
+  async setUser(
+    email: string,
+    displayName: string,
+    clerkData?: {
+      clerkUserId?: string;
+      imageUrl?: string;
+      username?: string;
+      externalId?: string;
+    },
+  ): Promise<UserRow> {
     const normalizedEmail = normalizeEmail(email);
     // Check if user exists (including deleted)
     const rows = this.sql
-      .exec<UserRow & { deleted_at: string | null }>("SELECT email, display_name, color, clerk_user_id, image_url, username, external_id, deleted_at FROM users WHERE lower(email) = ?", normalizedEmail)
+      .exec<UserRow & { deleted_at: string | null }>(
+        "SELECT email, display_name, color, clerk_user_id, image_url, username, external_id, deleted_at FROM users WHERE lower(email) = ?",
+        normalizedEmail,
+      )
       .toArray();
 
     const now = new Date().toISOString();
@@ -203,7 +231,7 @@ export class RegistryDO extends DurableObject<Env> {
           clerkData?.username ?? existing.username,
           clerkData?.externalId ?? existing.external_id,
           now,
-          existing.email
+          existing.email,
         );
         return {
           email: existing.email,
@@ -224,7 +252,7 @@ export class RegistryDO extends DurableObject<Env> {
         clerkData?.username ?? existing.username,
         clerkData?.externalId ?? existing.external_id,
         now,
-        existing.email
+        existing.email,
       );
       return {
         ...existing,
@@ -247,7 +275,7 @@ export class RegistryDO extends DurableObject<Env> {
       clerkData?.imageUrl ?? null,
       clerkData?.username ?? null,
       clerkData?.externalId ?? null,
-      now
+      now,
     );
     return {
       email: normalizedEmail,
@@ -261,7 +289,6 @@ export class RegistryDO extends DurableObject<Env> {
   }
 
   async deleteUser(email: string): Promise<boolean> {
-    const normalizedEmail = normalizeEmail(email);
     const existing = await this.getUser(email);
     if (!existing) return false;
     // Soft delete: mark as deleted instead of removing
@@ -324,7 +351,9 @@ export class RegistryDO extends DurableObject<Env> {
         )
         .toArray();
     }
-    return this.sql.exec<DocumentRow>("SELECT * FROM documents ORDER BY created_at DESC LIMIT 500").toArray();
+    return this.sql
+      .exec<DocumentRow>("SELECT * FROM documents ORDER BY created_at DESC LIMIT 500")
+      .toArray();
   }
 
   async listDocumentsPage(
@@ -404,16 +433,19 @@ export class RegistryDO extends DurableObject<Env> {
     return rows.length > 0 ? rows[0] : null;
   }
 
-  async updateDocument(id: string, updates: {
-    title: string;
-    filename: string;
-    size: number;
-    rendered_filename?: string | null;
-    source_filename?: string | null;
-    source_kind?: string | null;
-    source_language?: string | null;
-    tags?: string[];
-  }) {
+  async updateDocument(
+    id: string,
+    updates: {
+      title: string;
+      filename: string;
+      size: number;
+      rendered_filename?: string | null;
+      source_filename?: string | null;
+      source_kind?: string | null;
+      source_language?: string | null;
+      tags?: string[];
+    },
+  ) {
     this.sql.exec(
       `UPDATE documents
        SET title = ?, filename = ?, size = ?, rendered_filename = ?, source_filename = ?, source_kind = ?, source_language = ?
@@ -454,7 +486,10 @@ export class RegistryDO extends DurableObject<Env> {
 
   async getSharedEmails(docId: string): Promise<string[]> {
     return this.sql
-      .exec<{ email: string }>("SELECT email FROM shared_emails WHERE doc_id = ? ORDER BY added_at ASC", docId)
+      .exec<{ email: string }>(
+        "SELECT email FROM shared_emails WHERE doc_id = ? ORDER BY added_at ASC",
+        docId,
+      )
       .toArray()
       .map((row) => row.email);
   }
@@ -466,7 +501,10 @@ export class RegistryDO extends DurableObject<Env> {
       docId,
     );
     // Increment view count on the document
-    this.sql.exec("UPDATE documents SET view_count = COALESCE(view_count, 0) + 1 WHERE id = ?", docId);
+    this.sql.exec(
+      "UPDATE documents SET view_count = COALESCE(view_count, 0) + 1 WHERE id = ?",
+      docId,
+    );
   }
 
   async getRecentViews(userEmail: string, limit = 20): Promise<RecentViewRow[]> {
@@ -528,7 +566,11 @@ export class RegistryDO extends DurableObject<Env> {
     const normalizedEmail = normalizeEmail(userEmail);
     // Check existence first since sql.database.changes is not available in test env
     const existing = this.sql
-      .exec<{ id: string }>("SELECT id FROM api_keys WHERE id = ? AND lower(user_email) = ?", id, normalizedEmail)
+      .exec<{ id: string }>(
+        "SELECT id FROM api_keys WHERE id = ? AND lower(user_email) = ?",
+        id,
+        normalizedEmail,
+      )
       .toArray();
     if (existing.length === 0) return false;
     this.sql.exec(
@@ -554,18 +596,24 @@ export class RegistryDO extends DurableObject<Env> {
 
   async getUserStats(userEmail: string): Promise<UserStats> {
     const normalizedEmail = normalizeEmail(userEmail);
-    const [docCountResult] = this.sql.exec<{ count: number }>(
-      "SELECT COUNT(*) as count FROM documents WHERE owner_email = ?",
-      normalizedEmail
-    ).toArray();
-    const [storageUsedResult] = this.sql.exec<{ total: number }>(
-      "SELECT COALESCE(SUM(size), 0) as total FROM documents WHERE owner_email = ?",
-      normalizedEmail
-    ).toArray();
-    const [totalViewsResult] = this.sql.exec<{ total: number }>(
-      "SELECT COALESCE(SUM(view_count), 0) as total FROM documents WHERE owner_email = ?",
-      normalizedEmail
-    ).toArray();
+    const [docCountResult] = this.sql
+      .exec<{ count: number }>(
+        "SELECT COUNT(*) as count FROM documents WHERE owner_email = ?",
+        normalizedEmail,
+      )
+      .toArray();
+    const [storageUsedResult] = this.sql
+      .exec<{ total: number }>(
+        "SELECT COALESCE(SUM(size), 0) as total FROM documents WHERE owner_email = ?",
+        normalizedEmail,
+      )
+      .toArray();
+    const [totalViewsResult] = this.sql
+      .exec<{ total: number }>(
+        "SELECT COALESCE(SUM(view_count), 0) as total FROM documents WHERE owner_email = ?",
+        normalizedEmail,
+      )
+      .toArray();
     const user = await this.getUser(normalizedEmail);
     const createdAt = user?.created_at || "";
 
@@ -578,10 +626,18 @@ export class RegistryDO extends DurableObject<Env> {
   }
 
   async getGlobalStats(): Promise<GlobalStats> {
-    const [usersResult] = this.sql.exec<{ count: number }>("SELECT COUNT(*) as count FROM users").toArray();
-    const [docsResult] = this.sql.exec<{ count: number }>("SELECT COUNT(*) as count FROM documents").toArray();
-    const [viewsResult] = this.sql.exec<{ total: number }>("SELECT COALESCE(SUM(view_count), 0) as total FROM documents").toArray();
-    const [storageResult] = this.sql.exec<{ total: number }>("SELECT COALESCE(SUM(size), 0) as total FROM documents").toArray();
+    const [usersResult] = this.sql
+      .exec<{ count: number }>("SELECT COUNT(*) as count FROM users")
+      .toArray();
+    const [docsResult] = this.sql
+      .exec<{ count: number }>("SELECT COUNT(*) as count FROM documents")
+      .toArray();
+    const [viewsResult] = this.sql
+      .exec<{ total: number }>("SELECT COALESCE(SUM(view_count), 0) as total FROM documents")
+      .toArray();
+    const [storageResult] = this.sql
+      .exec<{ total: number }>("SELECT COALESCE(SUM(size), 0) as total FROM documents")
+      .toArray();
 
     return {
       totalUsers: usersResult?.count || 0,
@@ -592,33 +648,59 @@ export class RegistryDO extends DurableObject<Env> {
   }
 
   async getHomeAnalytics(includePrivateMetrics = true): Promise<HomeAnalytics> {
-    const [docsResult] = this.sql.exec<{ count: number }>("SELECT COUNT(*) as count FROM documents").toArray();
-    const [todayResult] = this.sql
-      .exec<{ count: number }>("SELECT COUNT(*) as count FROM documents WHERE date(created_at) = date('now')")
+    const [docsResult] = this.sql
+      .exec<{ count: number }>("SELECT COUNT(*) as count FROM documents")
       .toArray();
-    const [viewsResult] = this.sql.exec<{ total: number }>("SELECT COALESCE(SUM(view_count), 0) as total FROM documents").toArray();
-    const [todayViewsResult] = this.sql.exec<{ count: number }>("SELECT COUNT(*) as count FROM views WHERE date(last_viewed_at) = date('now')").toArray();
+    const [todayResult] = this.sql
+      .exec<{ count: number }>(
+        "SELECT COUNT(*) as count FROM documents WHERE date(created_at) = date('now')",
+      )
+      .toArray();
+    const [viewsResult] = this.sql
+      .exec<{ total: number }>("SELECT COALESCE(SUM(view_count), 0) as total FROM documents")
+      .toArray();
+    const [todayViewsResult] = this.sql
+      .exec<{ count: number }>(
+        "SELECT COUNT(*) as count FROM views WHERE date(last_viewed_at) = date('now')",
+      )
+      .toArray();
     const [usersResult] = includePrivateMetrics
       ? this.sql.exec<{ count: number }>("SELECT COUNT(*) as count FROM users").toArray()
       : [];
     const [storageResult] = includePrivateMetrics
-      ? this.sql.exec<{ total: number }>("SELECT COALESCE(SUM(size), 0) as total FROM documents").toArray()
+      ? this.sql
+          .exec<{ total: number }>("SELECT COALESCE(SUM(size), 0) as total FROM documents")
+          .toArray()
       : [];
     const uploadsPerDay = this.sql
       .exec<{ date: string; count: number }>(
-        "SELECT date(created_at) as date, COUNT(*) as count FROM documents WHERE created_at >= datetime('now', '-29 days') GROUP BY date(created_at) ORDER BY date ASC"
+        "SELECT date(created_at) as date, COUNT(*) as count FROM documents WHERE created_at >= datetime('now', '-29 days') GROUP BY date(created_at) ORDER BY date ASC",
       )
       .toArray()
       .map((row) => ({ date: row.date, count: Number(row.count) || 0 }));
+    const viewsPerDay = this.sql
+      .exec<{ date: string; count: number }>(
+        "SELECT date(last_viewed_at) as date, COUNT(*) as count FROM views WHERE last_viewed_at >= datetime('now', '-29 days') GROUP BY date(last_viewed_at) ORDER BY date ASC",
+      )
+      .toArray()
+      .map((row) => ({ date: row.date, count: Number(row.count) || 0 }));
+    const [sharedDocsResult] = this.sql
+      .exec<{ count: number }>("SELECT COUNT(*) as count FROM documents WHERE is_shared = 1")
+      .toArray();
+    const totalDocs = docsResult?.count || 0;
+    const totalViews = viewsResult?.total || 0;
 
     return {
-      totalDocs: docsResult?.count || 0,
+      totalDocs,
       todayUploads: todayResult?.count || 0,
-      totalViews: viewsResult?.total || 0,
+      totalViews,
       totalUsers: includePrivateMetrics ? usersResult?.count || 0 : null,
       totalStorage: includePrivateMetrics ? storageResult?.total || 0 : null,
       todayViews: todayViewsResult?.count || 0,
       uploadsPerDay,
+      viewsPerDay,
+      sharedDocs: sharedDocsResult?.count || 0,
+      avgViewsPerDoc: totalDocs > 0 ? Math.round((totalViews / totalDocs) * 10) / 10 : 0,
     };
   }
 
@@ -639,7 +721,10 @@ export class RegistryDO extends DurableObject<Env> {
 
   async getDocumentTags(docId: string): Promise<string[]> {
     return this.sql
-      .exec<{ tag: string }>("SELECT tag FROM document_tags WHERE doc_id = ? ORDER BY added_at ASC", docId)
+      .exec<{ tag: string }>(
+        "SELECT tag FROM document_tags WHERE doc_id = ? ORDER BY added_at ASC",
+        docId,
+      )
       .toArray()
       .map((row) => row.tag);
   }
@@ -647,7 +732,11 @@ export class RegistryDO extends DurableObject<Env> {
   async addDocumentTag(docId: string, tag: string): Promise<void> {
     const normalized = this.normalizeTag(tag);
     if (!normalized) return;
-    this.sql.exec("INSERT OR IGNORE INTO document_tags (doc_id, tag) VALUES (?, ?)", docId, normalized);
+    this.sql.exec(
+      "INSERT OR IGNORE INTO document_tags (doc_id, tag) VALUES (?, ?)",
+      docId,
+      normalized,
+    );
   }
 
   async removeDocumentTag(docId: string, tag: string): Promise<void> {
@@ -655,7 +744,11 @@ export class RegistryDO extends DurableObject<Env> {
     this.sql.exec("DELETE FROM document_tags WHERE doc_id = ? AND tag = ?", docId, normalized);
   }
 
-  async listDocumentsByTag(ownerEmail: string, tag: string, limit: number = 50): Promise<DocumentRow[]> {
+  async listDocumentsByTag(
+    ownerEmail: string,
+    tag: string,
+    limit: number = 50,
+  ): Promise<DocumentRow[]> {
     const normalizedEmail = normalizeEmail(ownerEmail);
     const normalizedTag = this.normalizeTag(tag);
     return this.sql
@@ -686,5 +779,4 @@ export class RegistryDO extends DurableObject<Env> {
       )
       .toArray();
   }
-
 }
