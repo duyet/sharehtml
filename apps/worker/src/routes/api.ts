@@ -1,16 +1,26 @@
-import { Hono, type Context } from "hono";
-import { isAuthEnabled, isRecord, isShareMode, isSourceKind, parseDocumentSnapshot, shareModeFromInt, shareModeToInt, type AppBindings, type DocumentSnapshot, type ShareMode, type SourceKind } from "../types.js";
-import { nanoid, generateSlug } from "../utils/ids.js";
+import { type Context, Hono } from "hono";
+import {
+  type AppBindings,
+  type DocumentSnapshot,
+  isAuthEnabled,
+  isRecord,
+  isShareMode,
+  isSourceKind,
+  parseDocumentSnapshot,
+  type ShareMode,
+  type SourceKind,
+  shareModeFromInt,
+  shareModeToInt,
+} from "../types.js";
+import { generateSlug, nanoid } from "../utils/ids.js";
 
 function generateDeleteToken(): string {
   const bytes = crypto.getRandomValues(new Uint8Array(32));
   return Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("");
 }
-import { loadDocWithAccessCheck } from "../utils/document-access.js";
-import { getRegistry } from "../utils/registry.js";
-import { extractDocumentTextFromHtml } from "../utils/document-text.js";
+
 import { hashApiKey } from "../utils/auth.js";
-import { checkRateLimit, rateLimitKey, type RateLimitConfig } from "../utils/rate-limit.js";
+import { loadDocWithAccessCheck } from "../utils/document-access.js";
 import {
   getLegacyDocumentKey,
   getRenderedDocumentKey,
@@ -18,9 +28,16 @@ import {
   getSourceDocumentKey,
   getSourceObject,
 } from "../utils/document-storage.js";
+import { extractDocumentTextFromHtml } from "../utils/document-text.js";
 import { createAttachmentHeaders } from "../utils/download.js";
 import { emailsMatch, normalizeEmail } from "../utils/email.js";
-import { requireHomeBrowserCapability, requireViewerBrowserCapability } from "../utils/request-security.js";
+import { renderMarkdownToHtml } from "../utils/markdown.js";
+import { checkRateLimit, type RateLimitConfig, rateLimitKey } from "../utils/rate-limit.js";
+import { getRegistry } from "../utils/registry.js";
+import {
+  requireHomeBrowserCapability,
+  requireViewerBrowserCapability,
+} from "../utils/request-security.js";
 
 const api = new Hono<AppBindings>();
 
@@ -57,15 +74,20 @@ api.post("/clerk/sign_in", async (c) => {
       if (contentType.includes("application/json")) {
         return c.json({ error: "Email and password required" }, 400);
       }
-      return c.html("<!DOCTYPE html><html><body><p style='color:red'>Email and password required</p><a href='/login'>Back</a></body></html>", 400);
+      return c.html(
+        "<!DOCTYPE html><html><body><p style='color:red'>Email and password required</p><a href='/login'>Back</a></body></html>",
+        400,
+      );
     }
 
     // TODO: Integrate with Clerk Backend API
     // For now, create a simple session token
-    const token = btoa(JSON.stringify({
-      email,
-      exp: Date.now() + 7 * 24 * 60 * 60 * 1000, // 7 days
-    }));
+    const token = btoa(
+      JSON.stringify({
+        email,
+        exp: Date.now() + 7 * 24 * 60 * 60 * 1000, // 7 days
+      }),
+    );
 
     // Check if this is a form POST (HTML form submission)
     if (!contentType.includes("application/json")) {
@@ -116,7 +138,10 @@ api.get("/dashboard", async (c) => {
   const pageQuery = Number.parseInt(c.req.query("page") || "1", 10);
   const pageSizeQuery = Number.parseInt(c.req.query("pageSize") || "10", 10);
   const page = Number.isFinite(pageQuery) && pageQuery > 0 ? pageQuery : 1;
-  const pageSize = Number.isFinite(pageSizeQuery) && pageSizeQuery > 0 && pageSizeQuery <= 100 ? pageSizeQuery : 10;
+  const pageSize =
+    Number.isFinite(pageSizeQuery) && pageSizeQuery > 0 && pageSizeQuery <= 100
+      ? pageSizeQuery
+      : 10;
 
   const result = await registry.listDocumentsPage(ownerEmail, { limit: pageSize, page });
 
@@ -206,12 +231,15 @@ api.post("/keys", async (c) => {
     name,
   });
 
-  return c.json({
-    id,
-    key: rawKey,
-    name,
-    created_at: new Date().toISOString(),
-  }, 201);
+  return c.json(
+    {
+      id,
+      key: rawKey,
+      name,
+      created_at: new Date().toISOString(),
+    },
+    201,
+  );
 });
 
 // List API keys
@@ -268,7 +296,11 @@ function inferSourceKind(filename: string): SourceKind {
   return "html";
 }
 
-function getDocumentTitle(filename: string, title: string | null, sourceKind?: SourceKind | null): string {
+function getDocumentTitle(
+  filename: string,
+  title: string | null,
+  sourceKind?: SourceKind | null,
+): string {
   if (title) {
     return title;
   }
@@ -315,11 +347,12 @@ function parseSourceFields(formData: FormData): {
   return { source, sourceKind, sourceLanguage };
 }
 
-type ShareRequest =
-  | { mode: ShareMode; emails?: string[] }
-  | { mode: "link" | "private" };
+type ShareRequest = { mode: ShareMode; emails?: string[] } | { mode: "link" | "private" };
 
-function parseShareRequestBody(body: unknown): { value: ShareRequest | null; error: string | null } {
+function parseShareRequestBody(body: unknown): {
+  value: ShareRequest | null;
+  error: string | null;
+} {
   if (!isRecord(body)) {
     return { value: null, error: "invalid request body" };
   }
@@ -436,7 +469,8 @@ async function handlePublish(c: Context<AppBindings>, statusCode: 200 | 201 = 20
   let attempts = 0;
 
   while (true) {
-    id = customSlug && attempts === 0 ? generateSlug(customSlug) : generateSlug(file.name, nanoid(5));
+    id =
+      customSlug && attempts === 0 ? generateSlug(customSlug) : generateSlug(file.name, nanoid(5));
     const exists = await registry.getDocument(id);
     if (!exists) break;
     if (attempts++ > 10) {
@@ -449,8 +483,20 @@ async function handlePublish(c: Context<AppBindings>, statusCode: 200 | 201 = 20
   const resolvedTitle = getDocumentTitle(sourceFilename, title, sourceKind);
   const deleteToken = generateDeleteToken();
 
+  // When a markdown upload arrives without a pre-rendered `source` (e.g. raw
+  // `curl -F file=@doc.md` or an API client sending markdown as `file`), the
+  // `file` body IS raw markdown. Render it to HTML before storing as the
+  // rendered document, otherwise the viewer shows unstyled text.
+  const needsServerRender = sourceKind === "markdown" && !source;
+  let renderedStream: ReadableStream = file.stream();
+  if (needsServerRender) {
+    const md = await file.text();
+    const html = renderMarkdownToHtml(md, resolvedTitle);
+    renderedStream = new Blob([html], { type: "text/html" }).stream();
+  }
+
   const writes: Array<Promise<unknown>> = [
-    c.env.DOCUMENTS_BUCKET.put(getRenderedDocumentKey(id, renderedFilename), file.stream(), {
+    c.env.DOCUMENTS_BUCKET.put(getRenderedDocumentKey(id, renderedFilename), renderedStream, {
       httpMetadata: { contentType: "text/html" },
       customMetadata: { title: resolvedTitle, ownerEmail },
     }),
@@ -484,18 +530,21 @@ async function handlePublish(c: Context<AppBindings>, statusCode: 200 | 201 = 20
   const url = new URL(c.req.url);
   const docUrl = `${url.origin}/d/${id}`;
 
-  return c.json({
-    id,
-    url: docUrl,
-    commentsUrl: `${url.origin}/api/documents/${id}/comments`,
-    deleteToken,
-    deleteUrl: `${url.origin}/api/documents/${id}/token/${deleteToken}`,
-    title: resolvedTitle,
-    filename: sourceFilename,
-    size: file.size,
-    // Anonymous uploads always shared; authenticated uploads respect AUTH_MODE
-    isShared: !authenticated ? true : !isAuthEnabled(c.env.AUTH_MODE),
-  }, statusCode);
+  return c.json(
+    {
+      id,
+      url: docUrl,
+      commentsUrl: `${url.origin}/api/documents/${id}/comments`,
+      deleteToken,
+      deleteUrl: `${url.origin}/api/documents/${id}/token/${deleteToken}`,
+      title: resolvedTitle,
+      filename: sourceFilename,
+      size: file.size,
+      // Anonymous uploads always shared; authenticated uploads respect AUTH_MODE
+      isShared: !authenticated ? true : !isAuthEnabled(c.env.AUTH_MODE),
+    },
+    statusCode,
+  );
 }
 
 api.post("/documents", (c) => handlePublish(c, 200));
@@ -549,8 +598,8 @@ api.get("/documents", async (c) => {
   const query = (c.req.query("q") || "").trim();
   const limitQuery = Number.parseInt(c.req.query("limit") || "", 10);
   const pageQuery = Number.parseInt(c.req.query("page") || "", 10);
-  const hasPaginationParams = Boolean(c.req.query("q")) || Boolean(c.req.query("limit")) ||
-    Boolean(c.req.query("page"));
+  const hasPaginationParams =
+    Boolean(c.req.query("q")) || Boolean(c.req.query("limit")) || Boolean(c.req.query("page"));
 
   if (!hasPaginationParams) {
     const documents = await registry.listDocuments(owner);
@@ -580,15 +629,15 @@ api.get("/documents/:id/raw", async (c) => {
   }
 
   const sourceObject = await getSourceObject(c.env.DOCUMENTS_BUCKET, id, doc);
-  const renderedObject = sourceObject ? null : await getRenderedObject(c.env.DOCUMENTS_BUCKET, id, doc);
+  const renderedObject = sourceObject
+    ? null
+    : await getRenderedObject(c.env.DOCUMENTS_BUCKET, id, doc);
   const object = sourceObject || renderedObject;
   if (!object) {
     return c.json({ error: "file not found in storage" }, 404);
   }
 
-  const downloadFilename = sourceObject && doc.source_filename
-    ? doc.source_filename
-    : doc.filename;
+  const downloadFilename = sourceObject && doc.source_filename ? doc.source_filename : doc.filename;
   const contentType = sourceObject
     ? getSourceMimeType(narrowSourceKind(doc.source_kind))
     : "text/html; charset=utf-8";
@@ -701,6 +750,13 @@ api.put("/documents/:id", async (c) => {
   const existingSourceKind = isSourceKind(meta.source_kind) ? meta.source_kind : null;
   const resolvedTitle = getDocumentTitle(sourceFilename, title, sourceKind || existingSourceKind);
 
+  // Markdown uploads that arrive without a pre-rendered `source` carry raw
+  // markdown in `file`. Render it server-side so the stored document is HTML.
+  let nextHtmlRendered = nextHtml;
+  if (sourceKind === "markdown" && !source) {
+    nextHtmlRendered = renderMarkdownToHtml(nextHtml, resolvedTitle);
+  }
+
   const currentObject = await getRenderedObject(c.env.DOCUMENTS_BUCKET, id, meta);
   const currentHtml = currentObject ? await currentObject.text() : null;
   const documentDoId = c.env.DOCUMENT_DO.idFromName(id);
@@ -709,19 +765,11 @@ api.put("/documents/:id", async (c) => {
   const oldRenderedKey = meta.rendered_filename
     ? getRenderedDocumentKey(id, oldRenderedFilename)
     : getLegacyDocumentKey(id, oldRenderedFilename);
-  const oldSourceKey = meta.source_filename
-    ? getSourceDocumentKey(id, meta.source_filename)
-    : null;
+  const oldSourceKey = meta.source_filename ? getSourceDocumentKey(id, meta.source_filename) : null;
   const finalRenderedKey = getRenderedDocumentKey(id, renderedFilename);
-  const nextSourceFilename = source && sourceKind
-    ? sourceFilename
-    : meta.source_filename || null;
-  const nextSourceKind = source && sourceKind
-    ? sourceKind
-    : meta.source_kind || null;
-  const nextSourceLanguage = source && sourceKind
-    ? sourceLanguage
-    : meta.source_language || null;
+  const nextSourceFilename = source && sourceKind ? sourceFilename : meta.source_filename || null;
+  const nextSourceKind = source && sourceKind ? sourceKind : meta.source_kind || null;
+  const nextSourceLanguage = source && sourceKind ? sourceLanguage : meta.source_language || null;
   const finalSourceKey = nextSourceFilename ? getSourceDocumentKey(id, nextSourceFilename) : null;
   const tempKey = `${id}/.__pending__.${Date.now()}.${renderedFilename}`;
 
@@ -731,26 +779,26 @@ api.put("/documents/:id", async (c) => {
   if (currentHtml !== null) {
     [oldText, newText, snapshot] = await Promise.all([
       extractDocumentTextFromHtml(currentHtml),
-      extractDocumentTextFromHtml(nextHtml),
+      extractDocumentTextFromHtml(nextHtmlRendered),
       getDocumentSnapshot(documentDo),
     ]);
   }
 
   let didMigrateAnchors = false;
 
-  await c.env.DOCUMENTS_BUCKET.put(tempKey, nextHtml, {
+  await c.env.DOCUMENTS_BUCKET.put(tempKey, nextHtmlRendered, {
     httpMetadata: { contentType: "text/html" },
     customMetadata: { title: resolvedTitle, ownerEmail: meta.owner_email },
   });
 
   try {
     if (oldText !== null && newText !== null) {
-      await migrateDocumentAnchors(documentDo, nextHtml, oldText, newText);
+      await migrateDocumentAnchors(documentDo, nextHtmlRendered, oldText, newText);
       didMigrateAnchors = true;
     }
 
     const r2Writes: Array<Promise<unknown>> = [
-      c.env.DOCUMENTS_BUCKET.put(finalRenderedKey, nextHtml, {
+      c.env.DOCUMENTS_BUCKET.put(finalRenderedKey, nextHtmlRendered, {
         httpMetadata: { contentType: "text/html" },
         customMetadata: { title: resolvedTitle, ownerEmail: meta.owner_email },
       }),
@@ -803,7 +851,9 @@ api.put("/documents/:id", async (c) => {
     url: docUrl,
     commentsUrl: `${url.origin}/api/documents/${id}/comments`,
     deleteToken: meta.delete_token ?? null,
-    deleteUrl: meta.delete_token ? `${url.origin}/api/documents/${id}/token/${meta.delete_token}` : null,
+    deleteUrl: meta.delete_token
+      ? `${url.origin}/api/documents/${id}/token/${meta.delete_token}`
+      : null,
     title: resolvedTitle,
     filename: nextSourceFilename || sourceFilename,
     size: file.size,
@@ -863,7 +913,10 @@ api.put("/documents/:id/share", async (c) => {
   const ownerEmail = normalizeEmail(meta.owner_email);
   await registry.setDocumentShareMode(id, shareModeToInt(mode));
   if (emails) {
-    await registry.setSharedEmails(id, emails.filter((e) => e.toLowerCase() !== ownerEmail));
+    await registry.setSharedEmails(
+      id,
+      emails.filter((e) => e.toLowerCase() !== ownerEmail),
+    );
   }
 
   const responseEmails = mode === "emails" ? await registry.getSharedEmails(id) : [];
@@ -917,7 +970,9 @@ api.put("/documents/:id/tags", async (c) => {
     return c.json({ error: "tags must be an array" }, 400);
   }
 
-  const tags = body.tags.filter((t: unknown) => typeof t === "string" && t.trim()).map((t: string) => t.trim());
+  const tags = body.tags
+    .filter((t: unknown) => typeof t === "string" && t.trim())
+    .map((t: string) => t.trim());
   await registry.setDocumentTags(id, tags);
 
   return c.json({ ok: true, tags });
@@ -1036,9 +1091,7 @@ api.delete("/documents/:id", async (c) => {
   const renderedKey = meta.rendered_filename
     ? getRenderedDocumentKey(id, renderedFilename)
     : getLegacyDocumentKey(id, renderedFilename);
-  const sourceKey = meta.source_filename
-    ? getSourceDocumentKey(id, meta.source_filename)
-    : null;
+  const sourceKey = meta.source_filename ? getSourceDocumentKey(id, meta.source_filename) : null;
   const deletes: Array<Promise<unknown>> = [
     c.env.DOCUMENTS_BUCKET.delete(renderedKey),
     registry.deleteDocument(id),
@@ -1074,9 +1127,7 @@ api.delete("/documents/:id/token/:token", async (c) => {
   const renderedKey = meta.rendered_filename
     ? getRenderedDocumentKey(id, renderedFilename)
     : getLegacyDocumentKey(id, renderedFilename);
-  const sourceKey = meta.source_filename
-    ? getSourceDocumentKey(id, meta.source_filename)
-    : null;
+  const sourceKey = meta.source_filename ? getSourceDocumentKey(id, meta.source_filename) : null;
   const deletes: Array<Promise<unknown>> = [
     c.env.DOCUMENTS_BUCKET.delete(renderedKey),
     registry.deleteDocument(id),

@@ -218,6 +218,42 @@ describe("Document API", () => {
     expect(await readUtf8(rawRes)).toBe(md);
   });
 
+  it("renders raw markdown upload to HTML server-side", async () => {
+    // Upload markdown as the `file` body with no pre-rendered `source`.
+    const md = "# Title\n\nSome **bold** text and a list:\n\n- one\n- two\n";
+    const form = new FormData();
+    form.append("file", new File([md], "notes.md", { type: "text/markdown" }));
+    form.append("sourceKind", "markdown");
+    form.append("title", "Notes");
+    const res = await exports.default.fetch("https://example.com/api/documents", {
+      method: "POST",
+      body: form,
+    });
+    expect(res.status).toBe(200);
+    const doc = getRecord(await res.json());
+    const docId = getStringField(doc, "id");
+    expect(getStringField(doc, "filename")).toBe("notes.md");
+    expect(getStringField(doc, "title")).toBe("Notes");
+
+    const renderedRes = await exports.default.fetch(
+      `https://example.com/api/documents/${docId}/rendered`,
+    );
+    const rendered = await readUtf8(renderedRes);
+    // Server-rendered HTML must contain the parsed markdown elements.
+    expect(rendered).toContain("<h1");
+    expect(rendered).toContain("Title");
+    expect(rendered).toContain("<strong>bold</strong>");
+    expect(rendered).toMatch(/<li>one<\/li>/);
+
+    // Raw markdown uploaded as `file` has no separate source blob.
+    const sourceRes = await exports.default.fetch(
+      `https://example.com/api/documents/${docId}/source`,
+    );
+    expect(sourceRes.status).toBe(404);
+    const sourceBody = getRecord(await sourceRes.json());
+    expect(getStringField(sourceBody, "error")).toBe("source unavailable");
+  });
+
   it("returns source unavailable for legacy uploads", async () => {
     const res = await upload("legacy.html", html, "Legacy");
     const doc = getRecord(await res.json());
