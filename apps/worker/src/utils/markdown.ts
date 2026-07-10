@@ -35,6 +35,19 @@ function getHighlightCss(): string {
 `;
 }
 
+/**
+ * Best-effort check for whether a stored "rendered" blob is already HTML.
+ *
+ * Old markdown documents (uploaded before server-side rendering existed) were
+ * stored with the raw markdown text as their rendered blob. Those need to be
+ * re-rendered on read. A real sharehtml document is always a full
+ * `<!DOCTYPE html>` (or at least an `<html` root); raw markdown is not.
+ */
+export function looksLikeHtml(content: string): boolean {
+  const head = content.slice(0, 512).trimStart();
+  return head.startsWith("<!DOCTYPE") || head.startsWith("<html") || head.startsWith("<?xml");
+}
+
 function escapeHtml(s: string): string {
   return s
     .replace(/&/g, "&amp;")

@@ -1,14 +1,16 @@
 import { Hono } from "hono";
-import { isAuthEnabled, shareModeFromInt, type AppBindings, isSourceKind } from "../types.js";
 import { ShellView } from "../frontend/shell.js";
+import { type AppBindings, isSourceKind } from "../types.js";
 import { getAssetUrls } from "../utils/assets.js";
 import { createCapabilityToken } from "../utils/capability.js";
 import { cspHeader } from "../utils/csp.js";
 import { loadDocWithAccessCheck } from "../utils/document-access.js";
-import { createAttachmentHeaders } from "../utils/download.js";
-import { emailsMatch, normalizeEmail } from "../utils/email.js";
-import { requireViewerBrowserCapability } from "../utils/request-security.js";
 import { getRenderedObject, getSourceObject } from "../utils/document-storage.js";
+import { createAttachmentHeaders } from "../utils/download.js";
+import { normalizeEmail } from "../utils/email.js";
+import { looksLikeHtml, renderMarkdownToHtml } from "../utils/markdown.js";
+import { requireViewerBrowserCapability } from "../utils/request-security.js";
+import { sanitizeDocumentStream } from "../utils/sanitize-html.js";
 
 function getSourceMimeType(kind: string): string {
   if (kind === "markdown") return "text/markdown; charset=utf-8";
@@ -38,7 +40,15 @@ viewer.get("/d/:id", async (c) => {
     const obj = await getRenderedObject(c.env.DOCUMENTS_BUCKET, id, doc);
     if (!obj) return c.text("Content not found", 404);
 
-    return new Response(obj.body, {
+    // Old markdown documents were stored with raw markdown as their rendered
+    // blob. Re-render on read so they upgrade without a migration.
+    const stored = await obj.text();
+    const body =
+      doc.source_kind === "markdown" && !looksLikeHtml(stored)
+        ? renderMarkdownToHtml(stored, doc.title)
+        : stored;
+
+    return new Response(body, {
       headers: {
         "Content-Type": "text/html; charset=utf-8",
         "X-Content-Type-Options": "nosniff",
@@ -64,8 +74,6 @@ viewer.get("/d/:id", async (c) => {
       ownerEmail: doc.owner_email,
       email,
       authMode: c.env.AUTH_MODE,
-      shareMode: shareModeFromInt(doc.is_shared),
-      canManageSharing: isAuthEnabled(c.env.AUTH_MODE) && emailsMatch(doc.owner_email, email),
       assets,
       viewerCapabilityToken,
       clerkPublishableKey: c.env.CLERK_PUBLISHABLE_KEY,
@@ -123,7 +131,7 @@ viewer.get("/d/:id/content", async (c) => {
 
   const renderedFilename = doc.rendered_filename || doc.filename;
 
-  return new Response(obj.body, {
+  return new Response(sanitizeDocumentStream(obj.body), {
     headers: createAttachmentHeaders(renderedFilename, {
       "X-ShareHTML-Download-Content-Type": "text/html; charset=utf-8",
     }),
@@ -150,9 +158,7 @@ viewer.get("/d/:id/ws", async (c) => {
 
   const docId = c.env.DOCUMENT_DO.idFromName(id);
   const docDo = c.env.DOCUMENT_DO.get(docId);
-  return docDo.fetch(
-    new Request(`http://do/${id}/ws`, { headers }),
-  );
+  return docDo.fetch(new Request(`http://do/${id}/ws`, { headers }));
 });
 
 // Source document download

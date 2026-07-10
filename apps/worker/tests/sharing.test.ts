@@ -1,5 +1,4 @@
-import { env } from "cloudflare:workers";
-import { exports } from "cloudflare:workers";
+import { env, exports } from "cloudflare:workers";
 
 function registry() {
   return env.REGISTRY_DO.get(env.REGISTRY_DO.idFromName("global"));
@@ -99,7 +98,9 @@ describe("Access control honors share modes", () => {
     const reg2 = await createDoc("email-content-denied", "other@example.com", 2);
     await reg2.setSharedEmails("email-content-denied", ["nope@example.com"]);
 
-    const deniedContent = await exports.default.fetch("https://example.com/d/email-content-denied/content");
+    const deniedContent = await exports.default.fetch(
+      "https://example.com/d/email-content-denied/content",
+    );
     expect(deniedContent.status).toBe(404);
   });
 
@@ -121,5 +122,61 @@ describe("Access control honors share modes", () => {
       },
     });
     expect(allowedRes.status).toBe(101);
+  });
+});
+
+describe("Served documents are script-free", () => {
+  it("strips <script> tags and inline handlers from /content", async () => {
+    await createDoc("evil-doc", "dev@localhost", 1);
+    await env.DOCUMENTS_BUCKET.put(
+      "evil-doc/test.html",
+      `<h1>hi</h1><script>alert('xss')</script><img src=x onerror="alert(1)"><a href="javascript:alert(2)">click</a>`,
+      { httpMetadata: { contentType: "text/html" } },
+    );
+
+    const res = await exports.default.fetch("https://example.com/d/evil-doc/content");
+    expect(res.status).toBe(200);
+    const body = await res.text();
+    expect(body).not.toContain("<script");
+    expect(body).not.toContain("onerror=");
+    expect(body).toContain("click");
+  });
+
+  it("viewer re-renders legacy markdown stored as raw text", async () => {
+    // Simulate an old upload: markdown kept as the "rendered" blob,
+    // as happened before server-side rendering existed.
+    const reg = await createDoc("legacy-md", "dev@localhost", 1);
+    await reg.updateDocument("legacy-md", {
+      title: "Legacy MD",
+      filename: "legacy-md.md",
+      size: 40,
+      rendered_filename: "legacy-md.md",
+      source_filename: null,
+      source_kind: "markdown",
+      source_language: null,
+    });
+    await env.DOCUMENTS_BUCKET.put(
+      "legacy-md/rendered/legacy-md.md",
+      "# Legacy\n\nSome **bold** text\n",
+      { httpMetadata: { contentType: "text/html" } },
+    );
+
+    const res = await exports.default.fetch("https://example.com/d/legacy-md.html");
+    expect(res.status).toBe(200);
+    const body = await res.text();
+    // Raw markdown must be upgraded to styled HTML on read.
+    expect(body).toContain("<h1>Legacy</h1>");
+    expect(body).toContain("<strong>bold</strong>");
+    expect(body).not.toContain("# Legacy");
+  });
+  it("viewer shell does not render the share button or modal", async () => {
+    await createDoc("no-share", "dev@localhost", 1);
+    const res = await exports.default.fetch("https://example.com/d/no-share");
+    expect(res.status).toBe(200);
+    const html = await res.text();
+    expect(html).not.toContain('id="share-btn"');
+    expect(html).not.toContain('id="share-modal"');
+    expect(html).not.toContain("share this document");
+    expect(html).toContain('sandbox=""');
   });
 });
