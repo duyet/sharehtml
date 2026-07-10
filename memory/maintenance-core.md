@@ -46,3 +46,9 @@ type: project
 - Do not add dated `docs/reviews/code-smell-dead-code-*.md` reports.
 - Only call code dead when repo-wide reference search finds zero non-test references.
 - Run `pnpm --filter @duyet/sharehtml run typecheck` after dependency changes; the root `pnpm typecheck` currently covers the worker package only.
+
+## 2026-07-10: Vitest file-parallelism pool timeouts (flaky CI-local)
+
+- Evidence: `pnpm test` (default) intermittently fails 4 unrelated tests with `Test timed out in 5000ms` on health/sharing/api-keys/api — while the same suite passes cleanly with `pnpm exec vitest run --no-file-parallelism` (79/79).
+- Root cause: the `@cloudflare/vitest-pool-workers` pool contends under file-level parallelism on this machine, causing worker bootstrap timeouts rather than real assertion failures.
+- Fix pattern: run the worker test suite with `--no-file-parallelism` for a stable local gate; do not trust default-parallel timeouts as regressions.
