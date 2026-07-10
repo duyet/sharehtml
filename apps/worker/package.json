@@ -22,9 +22,11 @@
   "dependencies": {
     "@clerk/backend": "^3.4.9",
     "@sharehtml/shared": "workspace:*",
+    "highlight.js": "^11.11.1",
     "hono": "^4.12.19",
     "jose": "^6.2.0",
-    "marked": "^15.0.12"
+    "marked": "^15.0.12",
+    "marked-highlight": "^2.2.3"
   },
   "devDependencies": {
     "@cloudflare/vite-plugin": "^1.37.1",

@@ -1,6 +1,39 @@
+import hljs from "highlight.js";
 import { marked } from "marked";
+import { markedHighlight } from "marked-highlight";
 
+marked.use(
+  markedHighlight({
+    langPrefix: "hljs language-",
+    highlight(code, lang) {
+      return highlightCode(code, lang);
+    },
+  }),
+);
 marked.setOptions({ gfm: true, breaks: false });
+
+function highlightCode(code: string, lang?: string): string {
+  if (lang && hljs.getLanguage(lang)) {
+    return hljs.highlight(code, { language: lang }).value;
+  }
+  return hljs.highlightAuto(code).value;
+}
+
+function getHighlightCss(): string {
+  return `
+.hljs-keyword, .hljs-selector-tag, .hljs-built_in { color: #6b4d7d; }
+.hljs-string, .hljs-attr { color: #4e6b3a; }
+.hljs-comment, .hljs-quote { color: #918d88; font-style: italic; }
+.hljs-number, .hljs-literal, .hljs-variable.constant_ { color: #7a5530; }
+.hljs-type, .hljs-title, .hljs-title.class_, .hljs-title.function_ { color: #2e5580; }
+.hljs-params { color: #555; }
+.hljs-meta, .hljs-tag { color: #76695a; }
+.hljs-attribute, .hljs-symbol { color: #4e6b3a; }
+.hljs-selector-class, .hljs-selector-id { color: #6b4d7d; }
+.hljs-addition { background: #eef6ee; }
+.hljs-deletion { background: #f6eeee; }
+`;
+}
 
 function escapeHtml(s: string): string {
   return s
@@ -13,10 +46,11 @@ function escapeHtml(s: string): string {
 /**
  * Render a Markdown string into a self-contained HTML document.
  *
- * The CLI pre-renders Markdown to HTML before upload, but uploads that arrive
+ * Cloned from the CLI's `renderMarkdownToHtml` so server-side and
+ * pre-rendered output are byte-for-byte consistent. Uploads that arrive
  * without a pre-rendered `source` (e.g. raw `curl -F file=@doc.md`, or any
- * API client that sends the markdown body as the `file` field) must be rendered
- * server-side so the viewer shows styled HTML instead of raw text.
+ * API client that sends the markdown body as the `file` field) are rendered
+ * here, matching what the CLI would have produced.
  */
 export function renderMarkdownToHtml(markdown: string, title: string): string {
   const body = marked.parse(markdown, { async: false }) as string;
@@ -29,44 +63,38 @@ export function renderMarkdownToHtml(markdown: string, title: string): string {
 <title>${escapeHtml(title)}</title>
 <style>
 body {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica,
-    Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
-  font-size: 16px;
-  line-height: 1.65;
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace;
+  font-size: 13px;
+  line-height: 1.6;
   max-width: 860px;
   margin: 0 auto;
-  padding: 40px 24px 96px;
-  color: #1b1b1a;
+  padding: 32px 24px;
+  color: #000;
   background: #fff;
-  word-wrap: break-word;
 }
-h1, h2, h3, h4 { line-height: 1.25; margin: 1.6em 0 0.6em; font-weight: 600; }
-h1 { font-size: 30px; }
-h2 { font-size: 24px; border-bottom: 1px solid #ececec; padding-bottom: 0.3em; }
-h3 { font-size: 20px; }
-p { margin: 0.9em 0; }
-a { color: #c2410c; text-decoration: none; }
-a:hover { text-decoration: underline; }
-code {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-  font-size: 0.88em;
-  background: #f5f5f4;
-  padding: 0.15em 0.4em;
-  border-radius: 4px;
-}
-pre { background: #f5f5f4; padding: 16px 18px; border-radius: 8px; overflow-x: auto; }
-pre code { background: none; padding: 0; font-size: 13.5px; }
-blockquote {
-  margin: 1em 0; padding: 0.2em 1em; border-left: 3px solid #d4d4d4; color: #555;
-}
-table { border-collapse: collapse; width: 100%; margin: 1em 0; font-size: 14px; }
-th, td { border: 1px solid #e2e2e2; padding: 8px 10px; text-align: left; }
-th { background: #fafafa; font-weight: 600; }
-img { max-width: 100%; border-radius: 6px; }
-hr { border: none; border-top: 1px solid #ececec; margin: 2em 0; }
-ul, ol { padding-left: 1.6em; }
-li { margin: 0.3em 0; }
+h1 { font-size: 16px; font-weight: bold; margin: 24px 0 12px; }
+h2 { font-size: 14px; font-weight: bold; margin: 20px 0 10px; }
+h3 { font-size: 13px; font-weight: bold; margin: 16px 0 8px; }
+table { border-collapse: collapse; width: 100%; font-size: 12px; margin: 16px 0; }
+th { font-weight: bold; border-bottom: 2px solid #000; padding: 6px 8px; text-align: left; }
+td { border-bottom: 1px solid #ddd; padding: 6px 8px; }
+pre { background: #f5f5f5; border: 1px solid #ddd; padding: 12px; overflow-x: auto; margin: 16px 0; }
+pre code { background: none; border: none; padding: 0; }
+code { background: #f5f5f5; padding: 2px 4px; font-size: 12px; }
+${getHighlightCss()}
+blockquote { border-left: 2px solid #999; margin: 16px 0; padding: 4px 16px; color: #444; }
+hr { border: none; border-top: 1px solid #000; margin: 24px 0; }
+img { max-width: 100%; }
+a { color: #000; text-decoration: underline; }
+ul, ol { padding-left: 24px; }
+li { margin: 4px 0; }
 input[type="checkbox"] { margin-right: 6px; }
+@media (max-width: 600px) {
+  body { padding: 16px 12px; font-size: 12px; }
+  h1 { font-size: 15px; }
+  h2 { font-size: 13px; }
+  table { font-size: 11px; }
+}
 </style>
 </head>
 <body>
