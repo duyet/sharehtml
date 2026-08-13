@@ -2,7 +2,7 @@
 /** @jsxImportSource hono/jsx */
 import { raw } from "hono/utils/html";
 import type { AssetUrls } from "../utils/assets.js";
-import type { AuthMode, ShareMode } from "../types.js";
+import type { AuthMode } from "../types.js";
 import { isAuthEnabled } from "../types.js";
 import { toHtml, escapeScriptContent, safeJsonForScript, ClerkScripts } from "./jsx.js";
 
@@ -12,25 +12,9 @@ interface ShellParams {
   ownerEmail: string;
   email: string;
   authMode: AuthMode;
-  shareMode: ShareMode;
-  canManageSharing: boolean;
   assets: AssetUrls;
   viewerCapabilityToken: string;
   clerkPublishableKey?: string;
-}
-
-function getShareDescription(authMode: AuthMode, shareMode: ShareMode): string {
-  if (authMode === "none") {
-    return "anyone with the link can view and comment";
-  }
-  switch (shareMode) {
-    case "link":
-      return "anyone with the link can view and comment";
-    case "emails":
-      return "add people to share this document";
-    case "private":
-      return "only you can open this document";
-  }
 }
 
 export function ShellView(
@@ -40,8 +24,6 @@ export function ShellView(
     ownerEmail,
     email,
     authMode,
-    shareMode,
-    canManageSharing,
     assets,
     viewerCapabilityToken,
     clerkPublishableKey,
@@ -105,11 +87,6 @@ export function ShellView(
               <button class="topbar-link" id="export-json" aria-label="Export as JSON">json</button>
             </div>
             <div class="presence-dots" id="presence-dots"></div>
-            <button class="share-btn" id="share-btn" title="Share link" aria-label="Share document">
-              {raw(
-                `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>`,
-              )}
-            </button>
             {authMode === "clerk" && clerkPublishableKey && (
               <div id="clerk-user-btn"></div>
             )}
@@ -127,7 +104,7 @@ export function ShellView(
           <div class="iframe-container">
             <iframe
               id="doc-iframe"
-              sandbox="allow-scripts"
+              sandbox=""
               allow="fullscreen"
               allowFullScreen
             ></iframe>
@@ -145,59 +122,13 @@ export function ShellView(
           </div>
         </div>
 
-        <div class="modal-backdrop hidden" id="share-modal">
-          <div class="modal-content">
-            <div class="modal-title">share this document</div>
-            <div class="share-link-row">
-              <input class="share-link-input" id="share-link-input" type="text" readonly />
-              <button class="modal-submit share-copy-btn" id="share-copy-btn">
-                copy
-              </button>
-            </div>
-            <div class="share-mode-row">
-              <label class="share-mode-label">who can access</label>
-              <select
-                class="share-mode-select"
-                id="share-mode-select"
-                disabled={!canManageSharing}
-              >
-                <option value="private" selected={shareMode === "private"}>only me</option>
-                <option value="emails" selected={shareMode === "emails"}>specific people</option>
-                <option value="link" selected={shareMode === "link"}>anyone with the link</option>
-              </select>
-            </div>
-            <div class="share-mode-description" id="share-mode-description">
-              {getShareDescription(authMode, shareMode)}
-            </div>
-            <div class="share-emails-section" id="share-emails-section" style={shareMode !== "emails" ? "display:none" : ""}>
-              <div class="share-email-row">
-                <input
-                  class="share-email-input"
-                  id="share-email-input"
-                  type="email"
-                  placeholder="email address"
-                  autocomplete="off"
-                  disabled={!canManageSharing}
-                />
-                <button class="modal-submit share-email-add" id="share-email-add" disabled={!canManageSharing}>
-                  add
-                </button>
-              </div>
-              <div class="share-email-list" id="share-email-list"></div>
-            </div>
-          </div>
-        </div>
-
         <script>
           {raw(
             `window.__COMMENT_CONFIG__ = ${safeJsonForScript({
               docId,
               email,
               authMode,
-              shareMode,
-              canManageSharing,
               contentPath: `/d/${docId}/content`,
-              collabJsPath: assets.collabJs,
               viewerCapabilityToken,
               clerkPublishableKey: authMode === "clerk" ? clerkPublishableKey : undefined,
             })}`,

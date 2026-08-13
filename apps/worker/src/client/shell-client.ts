@@ -9,8 +9,6 @@ import {
 } from "../utils/security-constants.js";
 
 type AuthMode = "access" | "clerk" | "none";
-type ShareMode = "private" | "link" | "emails";
-type ShareResponse = { mode: ShareMode; emails: string[] };
 
 interface SelectionViewportRect {
   top: number;
@@ -24,10 +22,7 @@ interface CommentConfig {
   docId: string;
   email: string;
   authMode: AuthMode;
-  shareMode: ShareMode;
-  canManageSharing: boolean;
   contentPath: string;
-  collabJsPath: string;
   viewerCapabilityToken: string;
   clerkPublishableKey?: string;
 }
@@ -54,20 +49,14 @@ function parseCommentConfig(value: unknown): CommentConfig | null {
   if (typeof value.docId !== "string") return null;
   if (typeof value.email !== "string") return null;
   if (value.authMode !== "access" && value.authMode !== "clerk" && value.authMode !== "none") return null;
-  if (value.shareMode !== "private" && value.shareMode !== "link" && value.shareMode !== "emails") return null;
-  if (typeof value.canManageSharing !== "boolean") return null;
   if (typeof value.contentPath !== "string") return null;
-  if (typeof value.collabJsPath !== "string") return null;
   if (typeof value.viewerCapabilityToken !== "string") return null;
 
   return {
     docId: value.docId,
     email: value.email,
     authMode: value.authMode,
-    shareMode: value.shareMode,
-    canManageSharing: value.canManageSharing,
     contentPath: value.contentPath,
-    collabJsPath: value.collabJsPath,
     viewerCapabilityToken: value.viewerCapabilityToken,
     clerkPublishableKey: typeof value.clerkPublishableKey === "string" ? value.clerkPublishableKey : undefined,
   };
@@ -94,9 +83,7 @@ const DOC_ID = config.docId;
 const USER_EMAIL = config.email;
 const AUTH_MODE = config.authMode;
 const CLERK_PUBLISHABLE_KEY = config.clerkPublishableKey;
-const CAN_MANAGE_SHARING = config.canManageSharing;
 const CONTENT_PATH = config.contentPath;
-const COLLAB_JS_PATH = config.collabJsPath;
 let VIEWER_CAPABILITY_TOKEN = config.viewerCapabilityToken;
 
 // State
@@ -129,11 +116,6 @@ let iframeDriven = false;
 let suppressScrollSync = false;
 let sidebarSpacer: HTMLElement | null = null;
 let hasAnimatedHighlights = false;
-let shareMode: ShareMode = AUTH_MODE === "access" || AUTH_MODE === "clerk" ? config.shareMode : "link";
-let sharedEmails: string[] = [];
-let emailsLoaded = false;
-let shareMessageOverride: string | null = null;
-let isSavingShareState = false;
 const ANNOTATION_ALIGNMENT_BIAS_PX = 24;
 const SELECTION_TOOLBAR_EMOJIS = [
   "\u{1F44D}",
@@ -161,16 +143,6 @@ const sidebarToggle = getRequiredElementById("sidebar-toggle", HTMLButtonElement
 const presenceDots = getRequiredElementById("presence-dots", HTMLDivElement);
 const commentCount = getRequiredElementById("comment-count", HTMLSpanElement);
 const filterResolved = getRequiredElementById("filter-resolved", HTMLButtonElement);
-const shareBtn = getRequiredElementById("share-btn", HTMLButtonElement);
-const shareModal = getRequiredElementById("share-modal", HTMLDivElement);
-const shareLinkInput = getRequiredElementById("share-link-input", HTMLInputElement);
-const shareCopyBtn = getRequiredElementById("share-copy-btn", HTMLButtonElement);
-const shareModeSelect = getRequiredElementById("share-mode-select", HTMLSelectElement);
-const shareModeDescription = getRequiredElementById("share-mode-description", HTMLDivElement);
-const shareEmailsSection = getRequiredElementById("share-emails-section", HTMLDivElement);
-const shareEmailInput = getRequiredElementById("share-email-input", HTMLInputElement);
-const shareEmailAdd = getRequiredElementById("share-email-add", HTMLButtonElement);
-const shareEmailList = getRequiredElementById("share-email-list", HTMLDivElement);
 const sidebarBackdrop = getRequiredElementById("sidebar-backdrop", HTMLDivElement);
 const SANDBOXED_IFRAME_ORIGIN = "null";
 
@@ -667,23 +639,6 @@ function renderSelectionToolbar() {
   positionSelectionToolbar();
 }
 
-function injectTag(html: string, tag: string, beforeCloseTag: string): string {
-  const lastIndex = html.lastIndexOf(beforeCloseTag);
-  if (lastIndex !== -1) {
-    return html.slice(0, lastIndex) + tag + html.slice(lastIndex);
-  }
-  return html + tag;
-}
-
-function escapeInlineScript(script: string): string {
-  return script.replace(/<\/script/gi, "<\\/script");
-}
-
-function injectDocumentRuntime(html: string, collabScriptText: string): string {
-  const collabScript = `<script type="module">${escapeInlineScript(collabScriptText)}</script>`;
-  return injectTag(html, collabScript, "</body>");
-}
-
 function renderIframeError(message: string) {
   iframe.srcdoc = `<!doctype html><html lang="en"><body><pre>${escapeHtml(message)}</pre></body></html>`;
 }
@@ -715,22 +670,16 @@ setInterval(refreshCapabilityToken, CAPABILITY_REFRESH_INTERVAL_MS);
 
 async function loadDocumentIntoIframe() {
   try {
-    const [contentResponse, collabResponse] = await Promise.all([
-      viewerFetch(CONTENT_PATH),
-      fetch(COLLAB_JS_PATH),
-    ]);
+    const contentResponse = await viewerFetch(CONTENT_PATH);
     if (!contentResponse.ok) {
       throw new Error(`document fetch failed with status ${contentResponse.status}`);
     }
-    if (!collabResponse.ok) {
-      throw new Error(`collab fetch failed with status ${collabResponse.status}`);
-    }
 
-    const [html, collabScriptText] = await Promise.all([
-      contentResponse.text(),
-      collabResponse.text(),
-    ]);
-    iframe.srcdoc = injectDocumentRuntime(html, collabScriptText);
+    const html = await contentResponse.text();
+    // The viewer iframe is sandboxed without allow-scripts, so the document
+    // cannot execute JavaScript. We no longer inject the collaboration runtime
+    // into the frame; existing comments are still listed in the sidebar.
+    iframe.srcdoc = html;
   } catch {
     renderIframeError("Unable to load document content.");
   }
@@ -760,150 +709,12 @@ function openDocumentLink(rawHref: unknown) {
   window.open(url.toString(), "_blank", "noopener,noreferrer");
 }
 
-function getShareDescription(): string {
-  if (shareMessageOverride) return shareMessageOverride;
-  if (AUTH_MODE === "none") return "anyone with the link can view and comment";
-  switch (shareMode) {
-    case "link":
-      return "anyone with the link can view and comment";
-    case "emails":
-      if (sharedEmails.length === 0) return "add people to share this document";
-      return `shared with ${sharedEmails.length} ${sharedEmails.length === 1 ? "person" : "people"}`;
-    case "private":
-      return "only you can open this document";
-  }
-}
-
-function renderShareModal() {
-  shareLinkInput.value = location.href;
-  shareModeSelect.value = shareMode;
-  shareModeSelect.disabled = isSavingShareState || !CAN_MANAGE_SHARING;
-  shareModeDescription.textContent = getShareDescription();
-  shareCopyBtn.textContent = "copy";
-  shareCopyBtn.disabled = isSavingShareState;
-  shareEmailsSection.style.display = shareMode === "emails" ? "" : "none";
-  shareEmailInput.disabled = isSavingShareState || !CAN_MANAGE_SHARING;
-  shareEmailAdd.classList.toggle("disabled", isSavingShareState || !CAN_MANAGE_SHARING);
-  renderEmailList();
-}
-
 function escapeHtml(s: string): string {
   return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 }
 
 function escapeAttr(s: string): string {
   return escapeHtml(s).replace(/'/g, "&#39;");
-}
-
-function renderEmailList() {
-  if (!emailsLoaded && shareMode === "emails") {
-    shareEmailList.innerHTML = '<div class="share-email-loading">loading…</div>';
-    return;
-  }
-  shareEmailList.innerHTML = sharedEmails
-    .map(
-      (email) =>
-        `<div class="share-email-item"><span>${escapeHtml(email)}</span>${CAN_MANAGE_SHARING ? `<button class="share-email-remove" data-email="${escapeAttr(email)}">×</button>` : ""}</div>`,
-    )
-    .join("");
-}
-
-function isShareMode(v: unknown): v is ShareMode {
-  return v === "private" || v === "link" || v === "emails";
-}
-
-function parseShareResponse(data: unknown): ShareResponse | null {
-  if (!isRecord(data) || !isShareMode(data.mode)) return null;
-  const emails = Array.isArray(data.emails)
-    ? data.emails.filter((email): email is string => typeof email === "string")
-    : [];
-  return { mode: data.mode, emails };
-}
-
-async function loadShareState() {
-  if (emailsLoaded) return;
-  try {
-    const response = await viewerFetch(`/api/documents/${DOC_ID}/share`);
-    if (!response.ok) throw new Error("fetch failed");
-    const data = parseShareResponse(await response.json());
-    if (!data) throw new Error("invalid response");
-    shareMode = data.mode;
-    sharedEmails = data.emails;
-    emailsLoaded = true;
-  } catch {
-    emailsLoaded = true;
-    sharedEmails = [];
-  }
-  renderShareModal();
-}
-
-async function updateShareMode(nextMode: ShareMode, nextEmails?: string[]): Promise<boolean> {
-  if (!CAN_MANAGE_SHARING || AUTH_MODE === "none") {
-    renderShareModal();
-    return true;
-  }
-
-  isSavingShareState = true;
-  shareMessageOverride = "saving…";
-  renderShareModal();
-
-  try {
-    const body: Record<string, unknown> = { mode: nextMode };
-    if (nextMode === "emails") {
-      body.emails = nextEmails ?? sharedEmails;
-    }
-
-    const response = await viewerFetch(`/api/documents/${DOC_ID}/share`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-    });
-
-    if (!response.ok) {
-      shareMessageOverride = "could not update sharing. try again.";
-      return false;
-    }
-
-    const result = parseShareResponse(await response.json());
-    if (!result) {
-      shareMessageOverride = "unexpected response. try again.";
-      return false;
-    }
-
-    shareMode = result.mode;
-    sharedEmails = result.emails;
-    emailsLoaded = true;
-    shareMessageOverride = null;
-    return true;
-  } catch {
-    shareMessageOverride = "could not update sharing. try again.";
-    return false;
-  } finally {
-    isSavingShareState = false;
-    renderShareModal();
-  }
-}
-
-async function addEmail(email: string): Promise<boolean> {
-  const normalized = email.toLowerCase().trim();
-  if (!normalized || !normalized.includes("@")) return false;
-  if (normalized === USER_EMAIL.toLowerCase()) {
-    shareMessageOverride = "you already have access as the owner";
-    renderShareModal();
-    return false;
-  }
-  if (sharedEmails.includes(normalized)) return true;
-  if (sharedEmails.length >= 100) {
-    shareMessageOverride = "maximum 100 people";
-    renderShareModal();
-    return false;
-  }
-  return updateShareMode("emails", [...sharedEmails, normalized]);
-}
-
-async function removeEmail(email: string): Promise<boolean> {
-  const remaining = sharedEmails.filter((e) => e !== email);
-  return updateShareMode("emails", remaining);
 }
 
 // Init
@@ -942,57 +753,6 @@ function setupEventListeners() {
   });
 
   sidebarBackdrop.addEventListener("click", closeSidebar);
-
-  // Share button
-  shareBtn.addEventListener("click", () => {
-    clearSelectionUi({ clearIframe: true, clearPresence: true });
-    shareMessageOverride = null;
-    renderShareModal();
-    shareModal.style.display = "flex";
-    shareLinkInput.select();
-    loadShareState();
-  });
-  shareCopyBtn.addEventListener("click", () => {
-    navigator.clipboard.writeText(shareLinkInput.value).then(() => {
-      shareCopyBtn.textContent = "copied!";
-      setTimeout(() => {
-        shareCopyBtn.textContent = "copy";
-      }, 1500);
-    });
-  });
-  shareModeSelect.addEventListener("change", async () => {
-    const nextMode = shareModeSelect.value;
-    if (!isShareMode(nextMode)) return;
-    const saved = await updateShareMode(nextMode);
-    if (!saved) {
-      shareModeSelect.value = shareMode;
-    }
-  });
-  shareEmailAdd.addEventListener("click", async () => {
-    const email = shareEmailInput.value.trim();
-    if (await addEmail(email)) {
-      shareEmailInput.value = "";
-    }
-  });
-  shareEmailInput.addEventListener("keydown", async (e) => {
-    if (e.key !== "Enter") return;
-    e.preventDefault();
-    const email = shareEmailInput.value.trim();
-    if (await addEmail(email)) {
-      shareEmailInput.value = "";
-    }
-  });
-  shareEmailList.addEventListener("click", (e) => {
-    const target = e.target;
-    if (!(target instanceof HTMLElement)) return;
-    const btn = target.closest(".share-email-remove");
-    if (!(btn instanceof HTMLElement)) return;
-    const email = btn.dataset.email;
-    if (email) removeEmail(email);
-  });
-  shareModal.addEventListener("click", (e) => {
-    if (e.target === shareModal) shareModal.style.display = "none";
-  });
 
   // Filter resolved
   filterResolved.addEventListener("click", () => {
