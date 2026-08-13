@@ -12,6 +12,7 @@ import { getAssetUrls } from "./utils/assets.js";
 import { getAuthMiddleware } from "./utils/auth.js";
 import { createCapabilityToken } from "./utils/capability.js";
 import { cspHeader } from "./utils/csp.js";
+import { isStorageUnavailableError } from "./utils/document-storage.js";
 import { normalizeEmail } from "./utils/email.js";
 import { getRegistry } from "./utils/registry.js";
 
@@ -24,6 +25,21 @@ app.onError((err, c) => {
   if (err instanceof HTTPException) {
     return c.json({ error: err.message }, err.status);
   }
+  // R2 outages (bucket disabled, subscription lapsed) surface as opaque
+  // binding errors. Report them as 503 so the cause is visible in the
+  // response instead of only in the logs.
+  if (isStorageUnavailableError(err)) {
+    console.error({
+      level: "error",
+      event: "storage_unavailable",
+      timestamp: new Date().toISOString(),
+      method: c.req.method,
+      url: c.req.url,
+      error: err.message,
+    });
+    return c.json({ error: "Document storage is unavailable" }, 503);
+  }
+
   console.error({
     level: "error",
     event: "unhandled_error",

@@ -1,5 +1,15 @@
 import type { DocumentRow } from "../types.js";
 
+/**
+ * True when an error came from the R2 binding being unusable rather than from
+ * the request itself — for example the bucket being disabled at the account
+ * level, which R2 reports as error code 10042.
+ */
+export function isStorageUnavailableError(err: unknown): boolean {
+  if (!(err instanceof Error)) return false;
+  return err.message.includes("(10042)") || err.message.includes("enable R2");
+}
+
 export function getLegacyDocumentKey(id: string, filename: string): string {
   return `${id}/${filename}`;
 }
