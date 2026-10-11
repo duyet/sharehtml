@@ -5,10 +5,10 @@ export function isAuthEnabled(authMode: AuthMode): boolean {
 }
 
 export type ShareMode = "private" | "link" | "emails";
-export type SourceKind = "html" | "markdown" | "code";
+export type SourceKind = "html" | "markdown" | "code" | "data";
 
 export function isSourceKind(value: unknown): value is SourceKind {
-  return value === "html" || value === "markdown" || value === "code";
+  return value === "html" || value === "markdown" || value === "code" || value === "data";
 }
 
 export function isShareMode(value: unknown): value is ShareMode {

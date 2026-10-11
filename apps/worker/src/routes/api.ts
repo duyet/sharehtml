@@ -31,6 +31,7 @@ import {
 import { extractDocumentTextFromHtml } from "../utils/document-text.js";
 import { createAttachmentHeaders } from "../utils/download.js";
 import { emailsMatch, normalizeEmail } from "../utils/email.js";
+import { detectDataFormat, getDataFormat, isDataFilename, renderDataToHtml } from "../utils/data-render.js";
 import { renderMarkdownToHtml } from "../utils/markdown.js";
 import { checkRateLimit, type RateLimitConfig, rateLimitKey } from "../utils/rate-limit.js";
 import { getRegistry } from "../utils/registry.js";
@@ -289,6 +290,10 @@ function inferSourceKind(filename: string): SourceKind {
     return "markdown";
   }
 
+  if (isDataFilename(filename)) {
+    return "data";
+  }
+
   if (/\.[^.]+$/i.test(filename) && !/\.(html?)$/i.test(filename)) {
     return "code";
   }
@@ -310,14 +315,20 @@ function getDocumentTitle(
     return filename.replace(/\.(md|markdown)$/i, "");
   }
 
-  if (resolvedKind === "code") {
+  if (resolvedKind === "code" || resolvedKind === "data") {
     return filename.replace(/\.[^.]+$/i, "");
   }
 
   return filename.replace(/\.(html?)$/i, "");
 }
 
-function getSourceMimeType(kind: SourceKind): string {
+function getSourceMimeType(kind: SourceKind, filename?: string | null): string {
+  if (kind === "data") {
+    return getDataFormat(filename || "") === "csv"
+      ? "text/csv; charset=utf-8"
+      : "application/json; charset=utf-8";
+  }
+
   if (kind === "html") {
     return "text/html; charset=utf-8";
   }
@@ -327,6 +338,30 @@ function getSourceMimeType(kind: SourceKind): string {
   }
 
   return "text/plain; charset=utf-8";
+}
+
+/**
+ * Data uploads (CSV/JSON) are always rendered here, never trusted from the
+ * client: the raw file becomes the stored source and the rendered HTML
+ * replaces `file`. Accepts the raw data either as `source` or as `file`.
+ */
+async function renderDataUpload(
+  file: File,
+  source: File | null,
+  title: string | null,
+): Promise<{ file: File; source: File }> {
+  const raw = source ?? file;
+  const text = await raw.text();
+  const sourceFilename = raw.name || "data.json";
+  const format = detectDataFormat(sourceFilename, text);
+  const resolvedTitle = getDocumentTitle(sourceFilename, title, "data");
+  const html = renderDataToHtml(text, resolvedTitle, format);
+  return {
+    file: new File([html], `${sourceFilename}.html`, { type: "text/html" }),
+    source: new File([text], sourceFilename, {
+      type: format === "csv" ? "text/csv" : "application/json",
+    }),
+  };
 }
 
 function narrowSourceKind(value: string | null): SourceKind {
@@ -452,17 +487,23 @@ async function handlePublish(c: Context<AppBindings>, statusCode: 200 | 201 = 20
   const ownerEmail = authenticated ? normalizeEmail(user.email) : "anonymous";
   const formData = await c.req.formData();
   const rawFile = formData.get("file");
-  const file = rawFile instanceof File ? rawFile : null;
+  const rawUploadFile = rawFile instanceof File ? rawFile : null;
   const rawTitle = formData.get("title");
   const title = typeof rawTitle === "string" ? rawTitle : null;
   const rawSlug = formData.get("slug");
   const customSlug = typeof rawSlug === "string" && rawSlug.trim() ? rawSlug.trim() : null;
 
-  const { source, sourceKind, sourceLanguage } = parseSourceFields(formData);
+  const parsed = parseSourceFields(formData);
+  const { sourceKind, sourceLanguage } = parsed;
 
-  if (!file) {
+  if (!rawUploadFile) {
     return c.json({ error: "file is required" }, 400);
   }
+
+  const { file, source } =
+    sourceKind === "data"
+      ? await renderDataUpload(rawUploadFile, parsed.source, title)
+      : { file: rawUploadFile, source: parsed.source };
 
   const registry = getRegistry(c.env);
   let id: string;
@@ -519,7 +560,7 @@ async function handlePublish(c: Context<AppBindings>, statusCode: 200 | 201 = 20
   if (source && sourceKind) {
     writes.push(
       c.env.DOCUMENTS_BUCKET.put(getSourceDocumentKey(id, sourceFilename), source.stream(), {
-        httpMetadata: { contentType: getSourceMimeType(sourceKind) },
+        httpMetadata: { contentType: getSourceMimeType(sourceKind, sourceFilename) },
         customMetadata: { title: resolvedTitle, ownerEmail, sourceKind },
       }),
     );
@@ -639,7 +680,7 @@ api.get("/documents/:id/raw", async (c) => {
 
   const downloadFilename = sourceObject && doc.source_filename ? doc.source_filename : doc.filename;
   const contentType = sourceObject
-    ? getSourceMimeType(narrowSourceKind(doc.source_kind))
+    ? getSourceMimeType(narrowSourceKind(doc.source_kind), doc.source_filename)
     : "text/html; charset=utf-8";
 
   return new Response(object.body, {
@@ -666,7 +707,7 @@ api.get("/documents/:id/source", async (c) => {
 
   return new Response(object.body, {
     headers: createAttachmentHeaders(doc.source_filename, {
-      "X-ShareHTML-Download-Content-Type": getSourceMimeType(narrowSourceKind(doc.source_kind)),
+      "X-ShareHTML-Download-Content-Type": getSourceMimeType(narrowSourceKind(doc.source_kind), doc.source_filename),
       "X-ShareHTML-Source-Kind": doc.source_kind || "html",
       "X-ShareHTML-Source-Language": doc.source_language || "",
     }),
@@ -723,14 +764,20 @@ api.put("/documents/:id", async (c) => {
   if (protectedResponse) return protectedResponse;
   const formData = await c.req.formData();
   const rawFile = formData.get("file");
-  const file = rawFile instanceof File ? rawFile : null;
+  const rawUploadFile = rawFile instanceof File ? rawFile : null;
   const rawTitle = formData.get("title");
   const title = typeof rawTitle === "string" ? rawTitle : null;
-  const { source, sourceKind, sourceLanguage } = parseSourceFields(formData);
+  const parsed = parseSourceFields(formData);
+  const { sourceKind, sourceLanguage } = parsed;
 
-  if (!file) {
+  if (!rawUploadFile) {
     return c.json({ error: "file is required" }, 400);
   }
+
+  const { file, source } =
+    sourceKind === "data"
+      ? await renderDataUpload(rawUploadFile, parsed.source, title)
+      : { file: rawUploadFile, source: parsed.source };
 
   const renderedFilename = file.name || "document.html";
   const sourceFilename = source?.name || renderedFilename;
@@ -806,7 +853,7 @@ api.put("/documents/:id", async (c) => {
     if (source && sourceKind && finalSourceKey) {
       r2Writes.push(
         c.env.DOCUMENTS_BUCKET.put(finalSourceKey, source.stream(), {
-          httpMetadata: { contentType: getSourceMimeType(sourceKind) },
+          httpMetadata: { contentType: getSourceMimeType(sourceKind, sourceFilename) },
           customMetadata: { title: resolvedTitle, ownerEmail: meta.owner_email, sourceKind },
         }),
       );

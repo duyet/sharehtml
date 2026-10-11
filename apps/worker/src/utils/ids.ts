@@ -10,7 +10,7 @@ export function nanoid(size = 5): string {
 }
 
 export function generateSlug(filename: string, suffix?: string): string {
-  let base = filename.replace(/\.(html?|md|markdown)$/i, "");
+  let base = filename.replace(/\.(html?|md|markdown|csv|json)$/i, "");
   base = base.toLowerCase();
   base = base.replace(/[^a-z0-9]+/g, "-");
   base = base.replace(/^-+|-+$/g, "");

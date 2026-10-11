@@ -254,6 +254,35 @@ describe("Document API", () => {
     expect(getStringField(sourceBody, "error")).toBe("source unavailable");
   });
 
+  it("renders CSV uploads server-side and keeps the raw file as source", async () => {
+    const csv = 'item,qty\n"<script>x</script>",3\nb,4\n';
+    const form = new FormData();
+    form.append("file", new File([csv], "stock.csv", { type: "text/csv" }));
+    form.append("source", new File([csv], "stock.csv", { type: "text/csv" }));
+    form.append("sourceKind", "data");
+    const res = await exports.default.fetch("https://example.com/api/documents", {
+      method: "POST",
+      body: form,
+    });
+    expect(res.status).toBe(200);
+    const doc = getRecord(await res.json());
+    const docId = getStringField(doc, "id");
+    expect(getStringField(doc, "title")).toBe("stock");
+
+    // The client-sent `file` is ignored for data: the server renders it.
+    const rendered = await readUtf8(
+      await exports.default.fetch(`https://example.com/api/documents/${docId}/rendered`),
+    );
+    expect(rendered).toContain("2 rows · 2 columns");
+    expect(rendered).toContain("&lt;script&gt;");
+    expect(rendered).not.toContain("<script>");
+
+    const sourceRes = await exports.default.fetch(`https://example.com/d/${docId}/source`);
+    expect(sourceRes.status).toBe(200);
+    expect(sourceRes.headers.get("Content-Type")).toBe("text/csv; charset=utf-8");
+    expect(await readUtf8(sourceRes)).toBe(csv);
+  });
+
   it("returns source unavailable for legacy uploads", async () => {
     const res = await upload("legacy.html", html, "Legacy");
     const doc = getRecord(await res.json());
