@@ -13,7 +13,8 @@ export default defineConfig({
     trace: "on-first-retry",
   },
   webServer: {
-    command: "pnpm run dev",
+    // Built assets are required: the worker reads the Vite manifest at runtime.
+    command: "pnpm run build && vite preview --port 5173 --strictPort",
     env: {
       PLAYWRIGHT: "1",
     },
