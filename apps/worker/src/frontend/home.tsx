@@ -208,7 +208,7 @@ function CalendarHeatmap({ days }: { days: CalendarDay[] }): JSX.Element {
       <input type="radio" name="calendar-metric" id="calendar-uploads" class="calendar-radio" checked />
       <input type="radio" name="calendar-metric" id="calendar-views" class="calendar-radio" />
       <div class="calendar-head">
-        <div class="chart-caption">Activity — last 26 weeks</div>
+        <div class="chart-caption">Activity — last 12 months</div>
         <div class="calendar-toggle">
           <label for="calendar-uploads">Uploads</label>
           <label for="calendar-views">Views</label>
@@ -349,25 +349,6 @@ export function HomeView({
         </header>
 
         <div class="content">
-          <div class="hero">
-            <div class="eyebrow">AI Agent Publishing Platform</div>
-            <h1>
-              Deploy files <em>instantly</em> with sharehtml
-            </h1>
-            <div class="tldr">
-              <b>TL;DR</b> — Three ways to publish: CLI file path, stdin pipe, or curl API. No
-              signup needed. Documents persist indefinitely. Built for AI agents and developers.
-            </div>
-            <div class="hero-actions">
-              <a href="/docs" class="btn-primary">
-                Read the Docs
-              </a>
-              <a href="https://github.com/duyet/sharehtml" class="btn-secondary">
-                View on GitHub
-              </a>
-            </div>
-          </div>
-
           <div class="section">
             <div class="section-label">Quick Start</div>
             <SetupBlock workerUrl={workerUrl} />

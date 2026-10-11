@@ -18,73 +18,6 @@ h1, h2, h3 {
   margin-top: 56px;
 }
 
-/* ── Hero Section ─────────────────────────────────── */
-.hero {
-  padding: 72px 0 48px;
-  border-bottom: 1px solid var(--g300);
-  margin-bottom: 12px;
-  position: relative;
-}
-
-
-.hero .eyebrow {
-  font-family: var(--font-mono);
-  font-size: 11.5px;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--color-accent);
-  margin-bottom: 20px;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.hero .eyebrow::before {
-  content: "";
-  width: 28px;
-  height: 2px;
-  background: var(--color-accent);
-}
-
-.hero h1 {
-  font-family: var(--font-sans);
-  font-weight: 600;
-  letter-spacing: -0.02em;
-  font-size: clamp(36px, 5vw, 58px);
-  line-height: 1.08;
-  margin: 0 0 12px;
-  max-width: 18ch;
-  color: var(--slate);
-}
-
-.hero h1 em {
-  font-style: italic;
-  color: var(--color-accent);
-}
-
-.hero .tldr {
-  font-size: 16px;
-  line-height: 1.65;
-  color: var(--g700);
-  margin: 20px 0 0;
-  max-width: 560px;
-  border: none;
-  border-left: none;
-  border-radius: 0;
-  background: transparent;
-  padding: 0;
-}
-
-.hero .tldr b {
-  color: var(--color-accent);
-}
-
-.hero-actions {
-  display: flex;
-  gap: 12px;
-  margin-top: 36px;
-}
-
 .no-auth-badge {
   display: inline-block;
   font-size: 14px;
@@ -627,9 +560,9 @@ h1, h2, h3 {
 .calendar-cells {
   display: grid;
   grid-auto-flow: column;
-  grid-auto-columns: var(--calendar-cell);
+  grid-template-columns: repeat(53, minmax(0, 1fr));
   gap: var(--calendar-gap);
-  width: max-content;
+  min-width: 640px;
 }
 
 .calendar-months {
@@ -646,12 +579,11 @@ h1, h2, h3 {
 }
 
 .calendar-cells {
-  grid-template-rows: repeat(7, var(--calendar-cell));
+  grid-template-rows: repeat(7, auto);
 }
 
 .calendar-cell {
-  width: var(--calendar-cell);
-  height: var(--calendar-cell);
+  aspect-ratio: 1;
   border-radius: 2px;
   background: var(--g100);
 }
@@ -671,6 +603,8 @@ h1, h2, h3 {
   font-size: 10px;
   color: var(--g500);
 }
+
+.calendar-legend .calendar-cell { width: var(--calendar-cell); }
 
 .calendar-legend span:first-child { margin-right: 4px; }
 .calendar-legend span:last-child { margin-left: 4px; }
