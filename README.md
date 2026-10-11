@@ -1,34 +1,51 @@
-# sharehtml ✦
+# sharehtml
 
-Deploy your ideas instantly. A simple, editorial platform for sharing HTML reports, Markdown notes, and code snippets with the world.
-This is a fork of [jonesphillip/sharehtml](https://github.com/jonesphillip/sharehtml), enhanced with a modern aesthetic and deep AI agent integration.
+**The artifact registry for coding agents.** Claude Code, opencode, Codex, or any agent that can run a shell command or send an HTTP request can publish a report, note, code file, or dataset and get back a link a human can open, comment on, and share.
 
-> **No signup or authentication required for basic file sharing.** Just deploy and share.
+This is a fork of [jonesphillip/sharehtml](https://github.com/jonesphillip/sharehtml).
+
 ![sharehtml screenshot](assets/screenshot.png)
+
 ## What is sharehtml?
-Deploy a local document, get a link where others can view it and collaborate with comments, reactions, and live presence. Re-deploy to update the content at the same URL. Markdown and common code files are converted to styled HTML automatically.
-- **Anthropic-inspired UI** — A warm, editorial interface with a tinted cream canvas and slab-serif typography.
-- **AI Agent Skills** — Deep integration for AI agents (Claude Code, etc.) to deploy and manage documents on your behalf.
-- **Short URLs** — Compact 5-character IDs (e.g., `https://html.duyet.net/d/abcde`).
-- **Direct HTML Rendering** — Serve raw content directly via `.html` extension.
-- **Collaborative** — Comments, threaded replies, emoji reactions, and text anchoring.
-- **Live Presence** — See who's viewing and their selections in real-time.
+
+An agent runs `deploy`, gets a URL. Re-deploy to update the same URL. People open the link and leave comments, reactions, and see who else is viewing.
+
+- **Artifact kinds**: `html`, `markdown`, `code` (syntax highlighted), and `data` (CSV or JSON rendered as a table, stats, and chart). See [docs/artifact-kinds.md](docs/artifact-kinds.md).
+- **Agent interfaces**: CLI, REST API, a `/llms.txt` guide, and WebMCP tools on the homepage.
+- **Sharing**: documents are private to the owner by default. `share` makes them viewable by link. `--listed` also shows them on the public homepage. Nothing is listed unless you opt in.
+- **Collaboration**: comments, threaded replies, emoji reactions, text anchoring, live presence.
+- **Short URLs**: `https://html.duyet.net/d/abcde`.
+
+## Safety model
+
+Uploaded content is untrusted, so the viewer is built to run none of it.
+
+- Scripts and `on*` attributes are stripped. Pages show in a sandboxed iframe (`sandbox=""`), and raw `/d/:id.html` is served with a restrictive CSP (`default-src 'none'`, `sandbox`, `form-action 'none'`).
+- Every page is `noindex, nofollow`. User links get `rel="nofollow ugc noopener noreferrer"` and pages send no referrer. `robots.txt` blocks crawlers.
+- Uploads are capped (5 MB by default) with per-user document and storage quotas, and Workers rate limits on uploads, writes, views, comments, and reports.
+- Anonymous uploads are off when auth is on (Clerk or Access). If an operator enables them, those documents expire.
+- Anyone can report a document. Admins listed in `ADMIN_EMAILS` can disable it with `sharehtml admin`.
+
+Details: [docs/security-threat-model.md](docs/security-threat-model.md), [docs/cloudflare-bot-settings.md](docs/cloudflare-bot-settings.md).
+
 ## Quick Start
-You can use the CLI instantly without manual installation. It is pre-configured to use `https://html.duyet.net` by default:
+The CLI needs no install. It points at `https://html.duyet.net` by default. Publishing needs an account: run `login` once, or pass an API key.
 ```bash
-# deploy a file
-npx -y @duyet/sharehtml@latest deploy my-report.html
+npx -y @duyet/sharehtml@latest login
+npx -y @duyet/sharehtml@latest deploy my-report.html            # html, md, code, csv, json
+npx -y @duyet/sharehtml@latest deploy my-report.html --listed   # also list on the homepage
 ```
-Or use curl directly:
+Or use curl with an API key (create one in the dashboard):
 ```bash
 curl -X POST https://html.duyet.net/api/v1/publish \
+  -H "Authorization: Bearer shk_..." \
   -H "X-ShareHTML-Client: my-app" \
   -F "file=@my-report.html" \
   -F "title=My Report"
 # Returns: { "id": "abcde", "url": "https://html.duyet.net/d/abcde" }
 ```
-## Optional: Authentication for Advanced Features
-sharehtml works out of the box with no authentication. Enable auth if you want persistent dashboards, private documents, or user management. sharehtml supports three authentication modes:
+## Authentication
+sharehtml supports three authentication modes. With `clerk` or `access`, publishing requires sign-in and anonymous uploads are off unless you set `ALLOW_ANONYMOUS_UPLOADS=true`. With `none` (local dev), anyone can publish.
 | Mode | Description | Use Case |
 |------|-------------|----------|
 | **Clerk** | Full-featured auth with sign-in UI, user accounts | Recommended for production |
@@ -59,6 +76,14 @@ Clerk is the recommended auth provider for self-hosted instances. The setup scri
 | `CLERK_JWT_KEY` | Secret | PEM public key for JWT verification |
 | `VIEWER_CAPABILITY_SECRET` | Secret | Required when auth is enabled |
 | `CLERK_WEBHOOK_SECRET` | Secret | Signing secret for Clerk webhooks (starts with `whsec_`) |
+| `ALLOW_ANONYMOUS_UPLOADS` | Var | `"true"` lets unauthenticated users publish when auth is on. Default off. Always on when `AUTH_MODE=none` |
+| `ANONYMOUS_TTL_DAYS` | Var | Days before anonymous documents expire. Default `7` |
+| `ADMIN_EMAILS` | Var | Comma-separated emails allowed to use `sharehtml admin` (takedowns, reports) |
+| `MAX_UPLOAD_BYTES` | Var | Max upload size. Default 5 MB |
+| `USER_QUOTA_DOCS` | Var | Max documents per user. Default `500` |
+| `USER_QUOTA_BYTES` | Var | Max stored bytes per user. Default 200 MB |
+
+Rate limits use Workers Rate Limiting bindings (`UPLOAD_RATE_LIMITER`, `WRITE_RATE_LIMITER`, `VIEW_RATE_LIMITER`, `WS_RATE_LIMITER`, `COMMENT_RATE_LIMITER`, `REPORT_RATE_LIMITER`) in `apps/worker/wrangler.jsonc`.
 ### Clerk Webhooks (User Sync)
 Configure Clerk webhooks to automatically sync users when they sign up, update profile, or delete account.
 
@@ -94,8 +119,8 @@ Configure Clerk webhooks to automatically sync users when they sign up, update p
 **Endpoint URL:** `https://<your-domain>/webhooks/clerk`
 **Events:** `user.created`, `user.updated`, `user.deleted`
 
-### CLI Authentication (Optional)
-The `login` command is only needed for advanced features like persistent dashboards, private documents, or user management. Most users never need it.
+### CLI Authentication
+Run `login` once so the CLI can publish on your behalf.
 npx @duyet/sharehtml login
 The login flow:
 1. CLI displays a URL to visit in your browser
@@ -106,13 +131,13 @@ The login flow:
 > **Note:** Make sure you've set your instance URL first with `npx @duyet/sharehtml config set-url <url>`.
 To change authentication mode, run `pnpm run setup` again and select a different option.
 ## AI Agent Integration
-Enhance your AI assistant (like Claude Code) with `sharehtml` capabilities:
+Any agent can use the CLI or REST API. Agents can also read `https://html.duyet.net/llms.txt`. To install the skill for Claude Code, opencode, Codex, and other agents that support skills:
 npx -y skills@latest add duyet/sharehtml
 The skill teaches agents to:
 - Deploy or update documents via CLI using `npx -y @duyet/sharehtml@latest`.
 - Perform `diff` before overwriting remote files.
 - Pull and review comments/feedback.
-- Manage sharing permissions.
+- Manage sharing and listing (`share`, `--listed`).
 ## Self-Hosting
 If you want to run your own instance on Cloudflare:
 git clone https://github.com/duyet/sharehtml.git
@@ -137,10 +162,13 @@ Browser ◄┘──► Durable Objects
 ## CLI Commands
 | Command | Description |
 |---------|-------------|
-| `npx @duyet/sharehtml deploy <file>` | Deploy an HTML, Markdown, or code file |
+| `npx @duyet/sharehtml deploy <file>` | Deploy an HTML, Markdown, code, or data (CSV/JSON) file |
+| `npx @duyet/sharehtml deploy <file> --listed` | Deploy, share by link, and list on the public homepage |
+| `npx @duyet/sharehtml share <id> --listed` / `--unlisted` | Add or remove a shared document from the homepage |
+| `npx @duyet/sharehtml admin disable <id> --reason <text>` | Take down a document (admins only); also `enable`, `reports`, `docs` |
 | `echo '<html>' \| npx @duyet/sharehtml publish` | Deploy HTML content via stdin pipe |
 | `npx @duyet/sharehtml publish '<html>' --content` | Deploy HTML content directly as argument |
-| `cat report.html \| curl -X POST https://html.duyet.net/api/v1/publish -H "X-ShareHTML-Client: my-app" -F "file=@-;filename=report.html"` | Upload via curl stdin pipe |
+| `cat report.html \| curl -X POST https://html.duyet.net/api/v1/publish -H "Authorization: Bearer shk_..." -H "X-ShareHTML-Client: my-app" -F "file=@-;filename=report.html"` | Upload via curl stdin pipe |
 | `npx @duyet/sharehtml list` | List your documents |
 | `npx @duyet/sharehtml open <id>` | Open a document in the browser |
 | `npx @duyet/sharehtml pull <id>` | Download a document locally |
@@ -157,16 +185,7 @@ You can also use sharehtml directly via HTTP requests. Full API documentation: [
 
 ### Quick Start
 
-**Upload without authentication:**
-```bash
-curl -X POST https://html.duyet.net/api/v1/publish \
-  -H "X-ShareHTML-Client: my-app" \
-  -F "file=@report.html" \
-  -F "title=My Report"
-# Returns: { "id": "...", "url": "https://html.duyet.net/d/..." }
-```
-
-**Upload with authentication** (for persistent dashboards and private docs):
+**Upload** (needs an API key; anonymous upload works only if the operator enables it):
 ```bash
 # 1. Get an API key (requires browser login first):
 curl -X POST https://html.duyet.net/api/keys \
@@ -188,12 +207,14 @@ curl -X POST https://html.duyet.net/api/v1/publish \
 
 | Endpoint | Method | Description |
 |----------|--------|-------------|
-| `/api/v1/publish` | POST | Upload document (canonical) |
+| `/api/v1/publish` | POST | Upload document (canonical). Fields: `file`, `title`, `source`, `sourceKind` (html, markdown, code, data), `listed` |
 | `/api/documents` | GET | List your documents |
 | `/api/documents/:id` | GET | Get document metadata |
 | `/api/documents/:id` | PUT | Update document |
 | `/api/documents/:id` | DELETE | Delete document |
-| `/api/documents/:id/share` | PUT | Set sharing mode |
+| `/api/documents/:id/share` | PUT | Set sharing mode (`{"mode":"link","listed":true}` to list) |
+| `/d/:id/report` | POST | Report a document |
+| `/llms.txt` | GET | Agent guide |
 | `/api/keys` | POST | Create API key |
 
 > **Backward compatibility:** The endpoint `/api/documents` still works for backward compatibility.

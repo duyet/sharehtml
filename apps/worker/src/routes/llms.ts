@@ -6,13 +6,14 @@ import type { AppBindings } from "../types.js";
 export function llmsGuide(origin: string): string {
   return `# sharehtml
 
-> Publish HTML, Markdown, or code files and get a shareable URL at ${origin}/d/<id>. Documents support comments, sharing, and tags. Use the CLI or the REST API below.
+> Publish HTML, Markdown, code, or data (CSV/JSON) files and get a shareable URL at ${origin}/d/<id>. Documents support comments, sharing, and tags. Use the CLI or the REST API below.
 
 ## Artifact kinds
 
-- html: HTML files are stored and served in a sandboxed viewer.
+- html: HTML files are stored and served in a sandboxed viewer. Scripts are stripped.
 - markdown: upload the \`.md\` file with form field \`sourceKind=markdown\`; the server renders it to HTML and keeps the source.
-- code and data (\`.ts\`, \`.py\`, \`.json\`, \`.csv\`, ...): \`sharehtml deploy\` renders them with syntax highlighting. Over the raw API, send the rendered HTML as \`file\` plus the original as \`source\` with \`sourceKind=code\` and optional \`sourceLanguage\`.
+- code (\`.ts\`, \`.py\`, ...): \`sharehtml deploy\` renders it with syntax highlighting. Over the raw API, send the rendered HTML as \`file\` plus the original as \`source\` with \`sourceKind=code\` and optional \`sourceLanguage\`.
+- data (\`.csv\`, \`.json\`): \`sharehtml deploy\` uploads the raw file. The server renders a table, stats and a chart. Over the raw API, send the file as \`source\` with \`sourceKind=data\`.
 
 ## CLI
 
@@ -22,18 +23,19 @@ npx -y @duyet/sharehtml@latest deploy report.html  # publish or update a file
 npx -y @duyet/sharehtml@latest list             # list your documents
 npx -y @duyet/sharehtml@latest pull <id>        # download a document
 npx -y @duyet/sharehtml@latest share <id>       # make shareable / unshare <id>
+npx -y @duyet/sharehtml@latest deploy report.html --listed  # share and list on the public homepage (opt-in)
 npx -y @duyet/sharehtml@latest comments <id>    # show unresolved comments
 npx -y @duyet/sharehtml@latest skill            # install the agent skill
 \`\`\`
 
 ## Authentication
 
-- Anonymous upload: \`POST /api/documents\` works without auth (unless the deployment uses Cloudflare Access) and returns \`deleteToken\` and \`deleteUrl\`.
+- Publishing needs an API key (\`Authorization: Bearer shk_...\`) unless the deployment enables anonymous uploads. Anonymous upload is off by default on servers with sign-in; when on, \`POST /api/documents\` works without auth, returns \`deleteToken\` and \`deleteUrl\`, and the document expires after a few days.
 - Everything else needs an API key: \`Authorization: Bearer shk_...\`. Create one at ${origin}/dashboard or with \`sharehtml login\`.
 
 ## REST API
 
-- \`POST /api/documents\` — multipart upload: \`file\` (required), \`title\`, \`slug\`, \`source\`, \`sourceKind\` (html|markdown|code), \`sourceLanguage\`. Returns 200 with \`id\` and \`url\`.
+- \`POST /api/documents\` — multipart upload: \`file\` (required), \`title\`, \`slug\`, \`source\`, \`sourceKind\` (html|markdown|code|data), \`listed\` (true to list on the public homepage; needs link sharing), \`sourceLanguage\`. Returns 200 with \`id\` and \`url\`.
 - \`POST /api/v1/publish\` — same as above, returns 201.
 - \`GET /api/documents\` — list your documents. Optional \`q\`, \`page\`, \`limit\`.
 - \`GET /api/documents/recent\` — documents you viewed recently.
@@ -56,6 +58,11 @@ curl -X POST ${origin}/api/v1/publish \\
   -H "Authorization: Bearer shk_..." \\
   -F "file=@report.html" -F "title=Q3 Report"
 \`\`\`
+
+## Limits and safety
+
+- Uploads are capped (5 MB by default) and each account has a document and storage quota. Rate limits return 429.
+- Pages are noindex and nofollow. Uploaded pages run no scripts. Documents are unlisted unless you pass \`listed\`.
 
 ## Docs
 

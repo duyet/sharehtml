@@ -1,87 +1,57 @@
-# sharehtml.duyet.net AI Prompt
+# sharehtml prompt
 
-You are an expert developer assistant. You can deploy HTML, Markdown, or text documents to the web using `sharehtml.duyet.net`.
+You can publish HTML, Markdown, code, and CSV/JSON files to a sharehtml registry and share the link. This works from any coding agent (Claude Code, opencode, Codex, others) that can run shell commands or HTTP requests. The default server is `https://html.duyet.net`. Agent guide: `https://html.duyet.net/llms.txt`.
 
-## How to use
+## Authenticate first
 
-1. **Deploy**:
-   Deploy any file to get a shareable URL — no configuration needed:
-   ```bash
-   npx -y @duyet/sharehtml@latest deploy path/to/your/file.html
-   ```
+Publishing needs an account. Anonymous upload is off by default on servers with sign-in, unless the operator sets `ALLOW_ANONYMOUS_UPLOADS=true`.
 
-   Or deploy HTML content directly:
-   ```bash
-   # Via stdin pipe
-   echo '<h1>My Report</h1>' | npx -y @duyet/sharehtml@latest publish --title "My Report"
-
-   # Via argument
-   npx -y @duyet/sharehtml@latest publish --content '<h1>My Report</h1>' --title "My Report"
-   ```
-
-2. **Enhance your capabilities (Skills)**:
-   Install the `sharehtml` skill to better manage documents:
-   ```bash
-   npx -y skills@latest add duyet/sharehtml
-   ```
-
-> **Optional: Set custom server** — By default, uploads go to `https://html.duyet.net`. To use a different server:
-> ```bash
-> npx -y @duyet/sharehtml@latest config set-url https://your-server.example.com
-> ```
-
-## Multiple Ways to Deploy
-
-### Deploy from file path
-When the HTML file already exists on disk:
 ```bash
-npx -y @duyet/sharehtml@latest deploy ./report.html
-# Output: https://html.duyet.net/d/abc123
+npx -y @duyet/sharehtml@latest login
 ```
 
-### Deploy via stdin pipe
-When generating HTML dynamically (no file on disk):
+For headless use, create an API key in the dashboard and send `Authorization: Bearer shk_...` to the REST API.
+
+## Deploy
+
 ```bash
-echo '<h1>Generated Report</h1><p>Created at runtime</p>' | npx -y @duyet/sharehtml@latest publish --title "Generated Report"
-# Output: https://html.duyet.net/d/def456
+# a file on disk (html, md, code, csv, json)
+npx -y @duyet/sharehtml@latest deploy ./report.html --title "Q3 Report"
+
+# data: a table, stats and a chart are rendered by the server
+npx -y @duyet/sharehtml@latest deploy ./metrics.csv --title "Metrics"
+
+# piped or inline content
+echo '<h1>Report</h1>' | npx -y @duyet/sharehtml@latest publish --title "Report"
+npx -y @duyet/sharehtml@latest publish --content '<h1>Report</h1>' --title "Report"
+
+# list on the public homepage (unlisted by default)
+npx -y @duyet/sharehtml@latest deploy ./report.html --listed
 ```
 
-### Deploy via curl API
-When npx is unavailable or you need direct HTTP control:
+curl, when npx is unavailable:
+
 ```bash
 curl -X POST https://html.duyet.net/api/v1/publish \
-  -H "X-ShareHTML-Client: my-app" \
-  -F "file=@report.html" \
-  -F "title=My Report"
-# Returns: {"id":"abc123","url":"https://html.duyet.net/d/abc123",...}
+  -H "Authorization: Bearer shk_..." \
+  -H "X-ShareHTML-Client: my-agent" \
+  -F "file=@report.html" -F "title=My Report"
+# {"id":"abc123","url":"https://html.duyet.net/d/abc123",...}
 ```
 
-> **Backward compatibility:** The endpoint `/api/documents` still works for backward compatibility.
+## Install the skill
 
-## Common Use Cases
-
-### Publishing reports and charts
-Generate a data visualization or summary and share it as an interactive page:
 ```bash
-# Generate report, then deploy
-npx -y @duyet/sharehtml@latest deploy ./quarterly-report.html --title "Q3 2025 Report"
+npx -y skills@latest add duyet/sharehtml
 ```
 
-### Sharing code snippets with syntax highlighting
-Deploy source code files — the platform auto-detects language and adds syntax highlighting:
-```bash
-npx -y @duyet/sharehtml@latest deploy ./solution.py --title "Python Solution"
-npx -y @duyet/sharehtml@latest deploy ./component.tsx --title "React Component"
-```
+To use another server: `npx -y @duyet/sharehtml@latest config set-url https://your-server.example.com`.
 
-### Collaborative document review with comments
-Deploy an HTML document and collaborators can leave inline comments on the live page. No account required for viewing or commenting.
+## Rules
 
-## Best Practices
-- Zero-config: uploads work out of the box with no setup required.
-- Use this to share reports, documentation, or interactive UI prototypes.
-- The service is public (`AUTH_MODE=none`), so anyone with the link can view.
-- Support for HTML with interactive comments is built-in.
-- Prefer `deploy` for files on disk; use `publish` for inline or piped content.
-- Always include `--title` so documents are easy to identify in the URL and dashboard.
-- For large or complex HTML, write to a temp file first and deploy the file — it is more reliable than piping long strings.
+- Report the URL to the user after every deploy.
+- Always pass `--title`. Prefer `deploy` for files and `publish` for short inline content.
+- Pages run no scripts: JavaScript in HTML is stripped, so use static HTML/CSS.
+- Documents are unlisted. Use `--listed` only when the user wants a public listing.
+- Never upload secrets or private data.
+- Uploads are capped at 5 MB by default. A 429 means slow down.

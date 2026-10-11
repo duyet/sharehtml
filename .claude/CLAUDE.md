@@ -64,3 +64,18 @@ After any PR creation (`/cp`, `/cpr`, or `gh pr create`), immediately start baby
 - Never create compatibility shims or workarounds
 - If something isn't wired yet, keep UX surface intact—stub or annotate
 - Test end-to-end: build passes, lint clean, manual verify
+
+## Registry Patterns
+
+- **Artifact kinds**: `html`, `markdown`, `code`, `data` (CSV/JSON). Source of truth: `docs/artifact-kinds.md`. `data` is always rendered by the worker (`src/utils/data-render.ts`), never by the client. A new kind needs worker render, CLI `--type` support, and a docs update.
+- **Paper design system**: colors, fonts, and spacing are tokens in `apps/worker/src/client/theme.css` (see `DESIGN.md`). No hardcoded colors in CSS or TSX; use `var(--...)` tokens.
+- **Safety invariants** (never weaken; tests in `apps/worker/tests` and `e2e/viewer-security.spec.ts` cover them):
+  - Keep the sandboxed script-free viewer and the raw-page CSP; do not add `allow-scripts` or `allow-same-origin`.
+  - All user links get `rel="nofollow ugc noopener noreferrer"`; pages send no referrer.
+  - `noindex, nofollow` everywhere; `/llms.txt` is a usage guide and never lists documents.
+  - Listing is opt-in (`listed` needs link sharing). Anonymous documents are never listed.
+  - Privacy: private documents and tenant totals must not leak to unauthenticated visitors.
+  - Anonymous uploads are off by default when auth is on (`ALLOW_ANONYMOUS_UPLOADS`).
+- **pnpm 11**: pnpm settings (`allowBuilds`, `overrides`, `minimumReleaseAge`) live in `pnpm-workspace.yaml`, not `package.json`.
+- **Vitest flake**: on a busy machine the worker pool can hit `Test timed out in 5000ms` on cold start. Rerun with fewer workers (`npx vitest run --maxWorkers=2` in `apps/worker`) before treating it as a regression.
+- **E2E**: `pnpm e2e` needs `pnpm build` first (it serves `dist/client`).
