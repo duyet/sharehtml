@@ -2,9 +2,9 @@
 /** @jsxImportSource hono/jsx */
 import { raw } from "hono/utils/html";
 import type { AssetUrls } from "../utils/assets.js";
-import { formatDocumentSize, formatRelativeTime } from "../utils/home-view.js";
+import { formatDocumentKind, formatDocumentSize, formatRelativeTime } from "../utils/home-view.js";
 import type { AuthMode, DocumentRow, ShareMode } from "../types.js";
-import { toHtml, safeJsonForScript, ClerkScripts } from "./jsx.js";
+import { toHtml, safeJsonForScript, ClerkScripts, PaperFonts } from "./jsx.js";
 
 interface TagParams {
   assets: AssetUrls;
@@ -45,6 +45,7 @@ export function TagView({
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <title>Tag: {tag} - sharehtml</title>
         <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+        <PaperFonts />
         {assets.dashboardCss && <link rel="stylesheet" href={assets.dashboardCss} />}
         {cfBeaconToken && (
           <script
@@ -96,6 +97,7 @@ export function TagView({
                   </div>
                   <div class="doc-grid-info">
                     <div class="doc-grid-top">
+                      <span class="kind-badge">{formatDocumentKind(doc.source_kind)}</span>
                       <a class="doc-grid-card-title" href={`/d/${doc.id}`}>{doc.title}</a>
                       <span class="doc-grid-filename">{doc.filename}</span>
                     </div>

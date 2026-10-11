@@ -3,7 +3,7 @@ import "./dashboard.css";
 import { setupClerkTopbar } from "./clerk-topbar.js";
 import { BROWSER_CAPABILITY_HEADER } from "../utils/security-constants.js";
 import { isRecord } from "../types.js";
-import { formatDocumentSize, formatRelativeTime } from "../utils/home-view.js";
+import { formatDocumentKind, formatDocumentSize, formatRelativeTime } from "../utils/home-view.js";
 
 interface DashboardDocument {
   id: string;
@@ -12,6 +12,7 @@ interface DashboardDocument {
   size: number;
   created_at: string;
   is_shared: number;
+  source_kind: string | null;
 }
 
 interface ApiKey {
@@ -87,6 +88,7 @@ function renderDocumentCard(doc: DashboardDocument): string {
       </div>
       <div class="doc-grid-info">
         <div class="doc-grid-top">
+          <span class="kind-badge">${formatDocumentKind(doc.source_kind)}</span>
           <a class="doc-grid-card-title" href="/d/${escapeHtml(doc.id)}">${escapeHtml(doc.title)}</a>
           <span class="doc-grid-filename">${escapeHtml(doc.filename)}</span>
         </div>

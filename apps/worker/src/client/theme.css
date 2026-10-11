@@ -4,78 +4,141 @@
   box-sizing: border-box;
 }
 
+/* ── Paper design system ─────────────────────────── */
+/* Primitive tokens. Everything else derives from these, so dark mode only
+   overrides this block. Fonts are loaded by <PaperFonts /> in frontend/jsx.tsx. */
 :root {
-  /* ── Good-HTML Palette ─────────────────────────── */
-  /* Core colors */
-  --ivory: #FAF9F5;
-  --paper: #FFFFFF;
-  --slate: #141413;
-  --clay: #D97757;
-  --clay-d: #c26648;
-  --olive: #788C5D;
-  --oat: #E3DACC;
-  --rust: #B04A3F;
+  --paper-bg: #ffffff;
+  --paper-surface: #fafafa;
+  --paper-border: #ededed;
+  --paper-border-strong: #e5e5e5;
+  --paper-ink: #171717;
+  --paper-body: #404040;
+  --paper-muted: #6b6b6b;
+  --paper-accent: #2563eb;
+  --paper-accent-hover: #1d4ed8;
+  --paper-accent-soft: rgba(37, 99, 235, 0.08);
+  --paper-success: #16a34a;
+  --paper-success-soft: rgba(22, 163, 74, 0.1);
+  --paper-error: #dc2626;
+  --paper-error-soft: rgba(220, 38, 38, 0.08);
+  --paper-on-accent: #ffffff;
+  --paper-overlay: rgba(0, 0, 0, 0.4);
+  --paper-shadow: rgba(0, 0, 0, 0.04);
 
-  /* Neutrals (grays) */
-  --g100: #F0EEE6;
-  --g200: #E6E3DA;
-  --g300: #D1CFC5;
-  --g500: #87867F;
-  --g700: #3D3D3A;
-
-  /* ── Legacy mapping for compatibility ───────────── */
-  --color-primary: var(--clay);
-  --color-primary-active: #c26648;
-  --color-primary-disabled: var(--oat);
-  --color-accent-teal: var(--olive);
-  --color-accent-amber: #e8a55a;
-  --color-error: var(--rust);
-
-  /* Surface */
-  --color-canvas: var(--ivory);
-  --color-surface-soft: var(--g100);
-  --color-surface-card: var(--paper);
-  --color-surface-cream-strong: var(--oat);
-  --color-surface-dark: var(--slate);
-  --color-surface-dark-elevated: #252320;
-  --color-surface-dark-soft: #1f1e1b;
-  --color-hairline: var(--g200);
-  --color-hairline-soft: var(--g300);
-
-  /* Text */
-  --color-ink: var(--slate);
-  --color-body-strong: var(--g700);
-  --color-body: #3d3d3a;
-  --color-muted: var(--g500);
-  --color-muted-soft: #8e8b82;
-  --color-on-primary: var(--paper);
-  --color-on-dark: var(--ivory);
-  --color-on-dark-soft: #a09d96;
-
-  /* Other legacy mappings */
-  --color-bg: var(--color-canvas);
-  --color-surface: var(--color-surface-card);
-  --color-surface-elevated: var(--color-canvas);
-  --color-surface-muted: var(--color-surface-soft);
-  --color-surface-muted-hover: var(--color-surface-card);
-  --color-text: var(--color-ink);
-  --color-text-muted: var(--color-body);
-  --color-text-faint: var(--color-muted);
-  --color-border: var(--color-hairline);
-  --color-border-strong: var(--color-ink);
-  --color-overlay: rgba(20, 20, 19, 0.4);
-  --color-shadow-soft: rgba(20, 20, 19, 0.04);
-  --color-shadow-medium: rgba(20, 20, 19, 0.06);
-  --color-shadow-strong: rgba(20, 20, 19, 0.08);
-  --color-accent: var(--color-primary);
-  --color-accent-contrast: var(--color-on-primary);
+  --radius-control: 8px;
+  --radius-card: 12px;
+  --shadow-subtle: 0 1px 2px var(--paper-shadow);
 }
 
-/* ── Font Stacks ─────────────────────────────────── */
+/* Dark mode is token-only. color-scheme is deliberately not set, so the
+   document viewer iframe keeps its own (light) defaults. */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --paper-bg: #0a0a0a;
+    --paper-surface: #111111;
+    --paper-border: #262626;
+    --paper-border-strong: #333333;
+    --paper-ink: #ededed;
+    --paper-body: #d4d4d4;
+    --paper-muted: #a1a1a1;
+    --paper-accent: #3b82f6;
+    --paper-accent-hover: #60a5fa;
+    --paper-accent-soft: rgba(59, 130, 246, 0.14);
+    --paper-success: #22c55e;
+    --paper-success-soft: rgba(34, 197, 94, 0.14);
+    --paper-error: #f87171;
+    --paper-error-soft: rgba(248, 113, 113, 0.14);
+    --paper-overlay: rgba(0, 0, 0, 0.6);
+    --paper-shadow: rgba(0, 0, 0, 0.3);
+  }
+}
+
+/* Semantic aliases consumed by component CSS and TSX (e.g. var(--g300)). */
 :root {
-  --font-serif: ui-serif, Georgia, "Times New Roman", Times, serif;
-  --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  --font-mono: ui-monospace, "SF Mono", Menlo, Monaco, "Cascadia Code", Consolas, monospace;
+  --ivory: var(--paper-bg);
+  --paper: var(--paper-bg);
+  --slate: var(--paper-ink);
+  --clay: var(--paper-accent);
+  --clay-d: var(--paper-accent-hover);
+  --olive: var(--paper-success);
+  --oat: var(--paper-border-strong);
+  --rust: var(--paper-error);
+
+  --g100: var(--paper-surface);
+  --g200: var(--paper-border);
+  --g300: var(--paper-border-strong);
+  --g500: var(--paper-muted);
+  --g700: var(--paper-body);
+
+  --color-primary: var(--paper-accent);
+  --color-primary-active: var(--paper-accent-hover);
+  --color-primary-disabled: var(--paper-border-strong);
+  --color-primary-soft: var(--paper-accent-soft);
+  --color-accent-teal: var(--paper-success);
+  --color-accent-amber: var(--paper-muted);
+  --color-success: var(--paper-success);
+  --color-success-soft: var(--paper-success-soft);
+  --color-error: var(--paper-error);
+  --color-error-soft: var(--paper-error-soft);
+
+  --color-canvas: var(--paper-bg);
+  --color-surface-soft: var(--paper-surface);
+  --color-surface-card: var(--paper-bg);
+  --color-surface-cream-strong: var(--paper-surface);
+  --color-surface-dark: var(--paper-ink);
+  --color-surface-dark-elevated: var(--paper-body);
+  --color-surface-dark-soft: var(--paper-ink);
+  --color-hairline: var(--paper-border);
+  --color-hairline-soft: var(--paper-border-strong);
+
+  --color-ink: var(--paper-ink);
+  --color-body-strong: var(--paper-body);
+  --color-body: var(--paper-body);
+  --color-muted: var(--paper-muted);
+  --color-muted-soft: var(--paper-muted);
+  --color-on-primary: var(--paper-on-accent);
+  --color-on-dark: var(--paper-bg);
+  --color-on-dark-soft: var(--paper-muted);
+
+  --color-bg: var(--paper-bg);
+  --color-surface: var(--paper-bg);
+  --color-surface-elevated: var(--paper-bg);
+  --color-surface-muted: var(--paper-surface);
+  --color-surface-muted-hover: var(--paper-border);
+  --color-text: var(--paper-ink);
+  --color-text-muted: var(--paper-body);
+  --color-text-faint: var(--paper-muted);
+  --color-border: var(--paper-border);
+  --color-border-strong: var(--paper-border-strong);
+  --color-overlay: var(--paper-overlay);
+  --color-shadow-soft: var(--paper-shadow);
+  --color-shadow-medium: var(--paper-shadow);
+  --color-shadow-strong: var(--paper-shadow);
+  --color-accent: var(--paper-accent);
+  --color-accent-contrast: var(--paper-on-accent);
+}
+
+/* ── Font stacks ─────────────────────────────────── */
+:root {
+  --font-sans: "Geist", system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-mono: "Geist Mono", ui-monospace, "SF Mono", Menlo, Monaco, Consolas, monospace;
+}
+
+/* Kind badge before doc titles (html / md / code) */
+.kind-badge {
+  display: inline-block;
+  flex-shrink: 0;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  font-weight: 500;
+  line-height: 1;
+  padding: 3px 5px;
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  color: var(--color-muted);
+  background: var(--color-surface-soft);
+  text-transform: lowercase;
 }
 
 /* Clerk user button (shared across all pages) */
@@ -83,5 +146,3 @@
   display: inline-flex;
   align-items: center;
 }
-
-/* ── Dark mode (placeholder for future theme variant) ── */

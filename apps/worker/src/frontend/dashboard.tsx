@@ -3,8 +3,8 @@
 import { raw } from "hono/utils/html";
 import type { AuthMode, DocumentRow } from "../types.js";
 import type { AssetUrls } from "../utils/assets.js";
-import { formatDocumentSize, formatRelativeTime } from "../utils/home-view.js";
-import { ClerkScripts, safeJsonForScript, toHtml } from "./jsx.js";
+import { formatDocumentKind, formatDocumentSize, formatRelativeTime } from "../utils/home-view.js";
+import { ClerkScripts, PaperFonts, safeJsonForScript, toHtml } from "./jsx.js";
 
 interface DashboardParams {
   assets: AssetUrls;
@@ -48,6 +48,7 @@ export function DashboardView({
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <title>Dashboard - sharehtml</title>
         <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+        <PaperFonts />
         {assets.dashboardCss && <link rel="stylesheet" href={assets.dashboardCss} />}
         {cfBeaconToken && (
           <script
@@ -105,6 +106,7 @@ export function DashboardView({
                   </div>
                   <div class="doc-grid-info">
                     <div class="doc-grid-top">
+                      <span class="kind-badge">{formatDocumentKind(doc.source_kind)}</span>
                       <a class="doc-grid-card-title" href={`/d/${doc.id}`}>
                         {doc.title}
                       </a>

@@ -3,7 +3,7 @@
 import { raw } from "hono/utils/html";
 import type { AssetUrls } from "../utils/assets.js";
 import type { AuthMode } from "../types.js";
-import { toHtml } from "./jsx.js";
+import { PaperFonts, toHtml } from "./jsx.js";
 
 interface LoginParams {
   assets: AssetUrls;
@@ -27,6 +27,7 @@ export function LoginView({ assets, redirectUrl = "/", authMode, clerkPublishabl
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <title>Sign in - sharehtml</title>
         <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+        <PaperFonts />
         {assets.homeCss && <link rel="stylesheet" href={assets.homeCss} />}
         {clerkScriptUrl && (
           <script

@@ -4,7 +4,7 @@ import { raw } from "hono/utils/html";
 import type { AssetUrls } from "../utils/assets.js";
 import type { AuthMode } from "../types.js";
 import { isAuthEnabled } from "../types.js";
-import { toHtml, escapeScriptContent, safeJsonForScript, ClerkScripts } from "./jsx.js";
+import { toHtml, escapeScriptContent, safeJsonForScript, ClerkScripts, PaperFonts } from "./jsx.js";
 
 interface ShellParams {
   docId: string;
@@ -40,6 +40,7 @@ export function ShellView(
         <meta property="og:type" content="website" />
         <meta name="robots" content="all" />
         <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+        <PaperFonts />
         {assets.shellClientCss && <link rel="stylesheet" href={assets.shellClientCss} />}
         {cfBeaconToken && (
           <script

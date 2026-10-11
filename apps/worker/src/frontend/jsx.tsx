@@ -83,6 +83,20 @@ export function clerkCdnUrl(publishableKey: string): string {
  * on clerk.browser.js auto-instantiates `window.Clerk` so the client never needs
  * `new Clerk(key)`.
  */
+/** Geist + Geist Mono for the Paper design system (allowed by the page CSP). */
+export function PaperFonts(): JSX.Element {
+  return (
+    <>
+      <link rel="preconnect" href="https://fonts.googleapis.com" />
+      <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+      <link
+        rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap"
+      />
+    </>
+  );
+}
+
 export function ClerkScripts({ publishableKey }: { publishableKey: string }): JSX.Element {
   const fapi = clerkCdnUrl(publishableKey);
   return (

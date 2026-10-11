@@ -67,7 +67,7 @@ body {
 }
 
 .docs-toc-link.active {
-  border-color: var(--clay);
+  border-color: var(--color-accent);
   color: var(--slate);
   font-weight: 500;
 }
@@ -83,11 +83,12 @@ body {
 }
 
 .docs-content > h1 {
-  font-family: var(--font-serif);
+  font-family: var(--font-sans);
+  font-weight: 600;
   font-size: 38px;
   color: var(--slate);
   margin-bottom: 14px;
-  letter-spacing: -0.018em;
+  letter-spacing: -0.02em;
 }
 
 .docs-section {
@@ -95,20 +96,22 @@ body {
 }
 
 .docs-section-title {
-  font-family: var(--font-serif);
+  font-family: var(--font-sans);
+  font-weight: 600;
   font-size: 27px;
   color: var(--slate);
   margin: 40px 0 14px;
   scroll-margin-top: 80px;
-  letter-spacing: -0.012em;
+  letter-spacing: -0.02em;
 }
 
 .docs-section-subtitle {
-  font-family: var(--font-serif);
+  font-family: var(--font-sans);
   font-size: 19px;
   color: var(--slate);
   margin: 24px 0 12px;
-  font-weight: 500;
+  font-weight: 600;
+  letter-spacing: -0.02em;
 }
 
 .docs-section p {
@@ -139,7 +142,7 @@ body {
 
 .docs-section pre {
   background: var(--g100);
-  border-radius: 10px;
+  border-radius: var(--radius-card);
   padding: 16px 18px;
   font-family: var(--font-mono);
   font-size: 12.5px;
@@ -161,20 +164,20 @@ body {
 }
 
 .docs-section a {
-  color: var(--clay);
+  color: var(--color-accent);
   text-decoration: none;
   border-bottom: 1px solid transparent;
   transition: border-color 150ms ease;
 }
 
 .docs-section a:hover {
-  border-bottom-color: var(--clay);
+  border-bottom-color: var(--color-accent);
 }
 
 /* ── Tabs ────────────────────────────────────── */
 .docs-tabs {
-  border: 1.5px solid var(--g300);
-  border-radius: 10px;
+  border: 1px solid var(--g300);
+  border-radius: var(--radius-card);
   background: var(--paper);
   margin: 16px 0 8px;
   overflow: hidden;
@@ -256,8 +259,8 @@ body {
 
 /* ── Collapsible Details ───────────────────────── */
 .details {
-  border: 1.5px solid var(--g300);
-  border-radius: 10px;
+  border: 1px solid var(--g300);
+  border-radius: var(--radius-card);
   background: var(--paper);
   margin: 14px 0;
   overflow: hidden;
@@ -267,7 +270,9 @@ body {
   list-style: none;
   cursor: pointer;
   padding: 14px 16px;
-  font-family: var(--font-serif);
+  font-family: var(--font-sans);
+  font-weight: 600;
+  letter-spacing: -0.02em;
   font-size: 16px;
   color: var(--slate);
   display: flex;
@@ -281,7 +286,7 @@ body {
 
 .details summary::before {
   content: "▸";
-  color: var(--clay);
+  color: var(--color-accent);
   font-family: var(--font-sans);
   font-size: 12px;
   transition: transform 120ms;
@@ -311,16 +316,16 @@ body {
 .callout {
   display: flex;
   gap: 12px;
-  border: 1.5px solid var(--oat);
-  background: rgba(227, 218, 204, 0.35);
-  border-radius: 10px;
+  border: 1px solid var(--oat);
+  background: var(--color-surface-soft);
+  border-radius: var(--radius-card);
   padding: 14px 16px;
   margin: 18px 0;
   font-size: 14px;
 }
 
 .callout .ico {
-  color: var(--clay);
+  color: var(--color-accent);
   font-weight: 600;
   flex-shrink: 0;
 }
@@ -336,7 +341,9 @@ body {
 }
 
 .faq dt {
-  font-family: var(--font-serif);
+  font-family: var(--font-sans);
+  font-weight: 600;
+  letter-spacing: -0.02em;
   font-size: 16px;
   color: var(--slate);
   margin-top: 18px;
@@ -354,7 +361,7 @@ body {
   position: sticky;
   top: 88px;
   align-self: start;
-  border: 1.5px solid var(--g300);
+  border: 1px solid var(--g300);
   border-radius: 12px;
   background: var(--paper);
   padding: 18px 18px 8px;
@@ -378,7 +385,9 @@ body {
 }
 
 .glossary dl dt {
-  font-family: var(--font-serif);
+  font-family: var(--font-sans);
+  font-weight: 600;
+  letter-spacing: -0.02em;
   font-size: 15px;
   color: var(--slate);
   margin-top: 0;
@@ -393,7 +402,7 @@ body {
 
 .glossary dl dt.hl,
 .glossary dl dt.hl + dd {
-  background: rgba(217, 119, 87, 0.10);
+  background: var(--color-primary-soft);
   margin-left: -8px;
   margin-right: -8px;
   padding-left: 8px;
@@ -403,7 +412,7 @@ body {
 
 /* ── Term Highlighting ───────────────────────── */
 .term {
-  border-bottom: 1.5px dotted var(--clay);
+  border-bottom: 1.5px dotted var(--color-accent);
   cursor: help;
   color: var(--slate);
 }

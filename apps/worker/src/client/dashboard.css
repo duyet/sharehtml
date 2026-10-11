@@ -7,17 +7,18 @@
 .topbar {
   position: sticky;
   top: 0;
-  height: 64px;
+  height: 56px;
   z-index: 10;
-  border-bottom: 1.5px solid var(--g300);
-  background: var(--ivory);
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-bg);
 }
 
 .topbar-home {
-  font-family: var(--font-serif);
-  font-size: 22px;
-  font-weight: 500;
-  color: var(--slate);
+  font-family: var(--font-sans);
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--color-ink);
   text-decoration: none;
   display: flex;
   align-items: center;
@@ -32,7 +33,7 @@
 
 .topbar-email {
   font-size: 14px;
-  color: var(--g500);
+  color: var(--color-muted);
 }
 
 /* ── Dashboard Layout ──────────────────────────── */
@@ -49,7 +50,7 @@
   justify-content: space-between;
   margin-bottom: 36px;
   padding-bottom: 24px;
-  border-bottom: 1.5px solid var(--g200);
+  border-bottom: 1px solid var(--g200);
 }
 
 .dashboard-eyebrow {
@@ -57,7 +58,7 @@
   font-size: 11px;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: var(--clay);
+  color: var(--color-accent);
   margin-bottom: 8px;
 }
 
@@ -82,7 +83,7 @@
 
 .doc-grid-card {
   background: var(--paper);
-  border: 1.5px solid var(--g300);
+  border: 1px solid var(--g300);
   border-radius: 12px;
   overflow: hidden;
   transition:
@@ -93,7 +94,7 @@
 
 .doc-grid-card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(20, 20, 19, 0.08);
+  box-shadow: var(--shadow-subtle);
   border-color: var(--g500);
 }
 
@@ -124,9 +125,9 @@
 }
 
 .doc-grid-card-title {
-  font-family: var(--font-serif);
+  font-family: var(--font-sans);
   font-size: 17px;
-  font-weight: 500;
+  font-weight: 600;
   color: var(--slate);
   text-decoration: none;
   display: block;
@@ -134,11 +135,11 @@
   text-overflow: ellipsis;
   white-space: nowrap;
   transition: color 150ms ease;
-  letter-spacing: -0.008em;
+  letter-spacing: -0.02em;
 }
 
 .doc-grid-card-title:hover {
-  color: var(--clay);
+  color: var(--color-accent);
 }
 
 .doc-grid-filename {
@@ -192,19 +193,19 @@
 }
 
 .badge-link {
-  background: rgba(120, 140, 93, 0.12);
+  background: var(--color-success-soft);
   color: var(--olive);
-  border: 1px solid rgba(120, 140, 93, 0.25);
+  border: 1px solid var(--color-success);
 }
 
 .badge-email {
-  background: rgba(217, 119, 87, 0.1);
-  color: var(--clay);
-  border: 1px solid rgba(217, 119, 87, 0.25);
+  background: var(--color-primary-soft);
+  color: var(--color-accent);
+  border: 1px solid var(--color-primary);
 }
 
 .badge-private {
-  background: rgba(135, 134, 127, 0.06);
+  background: var(--color-surface-soft);
   color: var(--g500);
   border: 1px solid var(--g200);
 }
@@ -218,7 +219,7 @@
 .doc-grid-btn {
   font-size: 12px;
   padding: 5px 12px;
-  border-radius: 6px;
+  border-radius: var(--radius-control);
   border: 1px solid var(--g200);
   background: var(--paper);
   color: var(--g700);
@@ -238,11 +239,11 @@
 }
 
 .doc-grid-btn-view {
-  color: var(--clay);
+  color: var(--color-accent);
 }
 
 .doc-grid-btn-view:hover {
-  border-color: var(--clay);
+  border-color: var(--color-accent);
   background: var(--ivory);
 }
 
@@ -268,9 +269,10 @@
 }
 
 .dashboard-empty-title {
-  font-family: var(--font-serif);
+  font-family: var(--font-sans);
   font-size: 22px;
-  font-weight: 500;
+  font-weight: 600;
+  letter-spacing: -0.02em;
   color: var(--slate);
   margin-bottom: 8px;
 }
@@ -302,7 +304,7 @@
 .pagination-link {
   font-family: var(--font-sans);
   font-size: 13px;
-  color: var(--clay);
+  color: var(--color-accent);
   text-decoration: none;
   padding: 6px 14px;
   border: 1px solid var(--g200);
@@ -315,7 +317,7 @@
 }
 
 .pagination-link:hover {
-  border-color: var(--clay);
+  border-color: var(--color-accent);
   background: var(--ivory);
 }
 
@@ -357,7 +359,7 @@
   background: var(--paper);
   border-radius: 12px;
   padding: 24px 24px 20px;
-  border: 1.5px solid var(--g300);
+  border: 1px solid var(--g300);
 }
 
 .api-keys-empty {
@@ -453,7 +455,7 @@
 .modal-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(20, 20, 19, 0.45);
+  background: var(--color-overlay);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -463,17 +465,19 @@
 
 .modal-content {
   background: var(--paper);
-  border-radius: 14px;
+  border-radius: var(--radius-card);
   padding: 28px;
   max-width: 440px;
   width: 100%;
   margin: 16px;
-  box-shadow: 0 16px 48px rgba(20, 20, 19, 0.14);
+  box-shadow: var(--shadow-subtle);
   border: 1px solid var(--g200);
 }
 
 .modal-title {
-  font-family: var(--font-serif);
+  font-family: var(--font-sans);
+  font-weight: 600;
+  letter-spacing: -0.02em;
   font-size: 22px;
   color: var(--slate);
   margin-bottom: 8px;
@@ -493,7 +497,7 @@
 }
 
 .modal-submit {
-  background: var(--clay);
+  background: var(--color-accent);
   color: var(--paper);
   padding: 8px 18px;
   border-radius: 8px;
@@ -505,7 +509,7 @@
 }
 
 .modal-submit:hover {
-  background: var(--clay-d);
+  background: var(--color-primary-active);
 }
 
 .modal-cancel {
