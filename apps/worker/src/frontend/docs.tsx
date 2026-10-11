@@ -68,7 +68,7 @@ export function DocsView({ assets }: DocsParams): string {
 npx -y @duyet/sharehtml deploy path/to/file.html</pre>
                 <pre><span class="docs-comment"># Deploy with curl — no dependencies</span>{"\n"}
 curl -X POST https://html.duyet.net/api/v1/publish \
-  -H "X-ShareHTML-Client: my-app" \
+  -H "Authorization: Bearer $SHAREHTML_API_KEY" \
   -H "Authorization: Bearer shk_..." \
   -F "file=@report.html" \
   -F "title=My Report"</pre>
@@ -359,7 +359,7 @@ curl -X POST https://html.duyet.net/api/keys \
                   <button data-t="3">Update</button>
                   <button data-t="4">Delete</button>
                 </div>
-                <pre class="on"><span class="docs-comment"># Upload a document (no auth required)</span>{"\n"}
+                <pre class="on"><span class="docs-comment"># Upload a document (API key required unless anonymous uploads are enabled)</span>{"\n"}
 curl -X POST https://html.duyet.net/api/v1/publish \
   -H "X-ShareHTML-Client: my-app" \
   -F "file=@report.html" \

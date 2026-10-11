@@ -251,7 +251,7 @@ function AnalyticsSection({ analytics }: AnalyticsSectionProps): JSX.Element {
     <div class="section">
       <div class="section-label">Analytics</div>
       <div class="analytics-card">
-        <div class="stats-band" style={`grid-template-columns:repeat(${metrics.length},1fr)`}>
+        <div class="stats-band" style={`--stat-cols:${metrics.length}`}>
           {metrics.map((metric) => (
             <div class="stat-cell">
               <div class="stat-value">{metric.value}</div>
