@@ -47,6 +47,7 @@ function buildCspPolicy(options: CspOptions): string[] {
   }
 
   dirs.push("worker-src 'self' blob:");
+  dirs.push("frame-ancestors 'self'");
 
   return dirs;
 }

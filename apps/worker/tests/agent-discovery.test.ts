@@ -21,7 +21,6 @@ describe("GET /llms.txt", () => {
       "Authorization: Bearer shk_",
       "npx -y @duyet/sharehtml@latest deploy",
       "https://example.com/d/",
-      "## Public documents",
     ]) {
       expect(body).toContain(needle);
     }

@@ -26,6 +26,20 @@ function getSourceMimeType(kind: string, filename: string): string {
 
 const CAPABILITY_TTL_SECONDS = 600;
 
+// Raw uploader HTML is served top-level on the app origin. `sandbox` gives it
+// an opaque origin with no scripts, forms, popups or top navigation.
+export const RAW_HTML_CSP = [
+  "default-src 'none'",
+  "style-src 'unsafe-inline'",
+  "img-src data:",
+  "font-src data:",
+  "media-src data:",
+  "sandbox",
+  "form-action 'none'",
+  "base-uri 'none'",
+  "frame-ancestors 'self'",
+].join("; ");
+
 const viewer = new Hono<AppBindings>();
 
 // Viewer shell
@@ -54,12 +68,12 @@ viewer.get("/d/:id", async (c) => {
         ? renderMarkdownToHtml(stored, doc.title)
         : stored;
 
-    return new Response(body, {
+    return new Response(sanitizeDocumentStream(body), {
       headers: {
         "Content-Type": "text/html; charset=utf-8",
         "X-Content-Type-Options": "nosniff",
         "Content-Security-Policy":
-          "default-src 'none'; style-src 'unsafe-inline'; img-src data:; font-src data:; media-src data:",
+          RAW_HTML_CSP,
         "Cache-Control": "public, max-age=0, must-revalidate",
       },
     });

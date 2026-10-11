@@ -1,6 +1,25 @@
-const JAVASCRIPT_URI = /^\s*javascript:/i;
+const UNSAFE_URI = /^(javascript:|vbscript:|data:text\/html)/i;
+const URL_ATTRIBUTES = new Set(["href", "src", "action", "formaction", "xlink:href"]);
 
-const scriptRemover = {
+export const USER_LINK_REL = "nofollow ugc noopener noreferrer";
+
+// Browsers decode entities and drop ASCII whitespace/control chars before
+// reading the scheme, so "java&#x09;script:" must be caught too.
+function normalizeUri(value: string): string {
+  return value
+    .replace(/&#x([0-9a-f]+);?/gi, (_, hex) => String.fromCodePoint(Number.parseInt(hex, 16)))
+    .replace(/&#(\d+);?/g, (_, dec) => String.fromCodePoint(Number.parseInt(dec, 10)))
+    .replace(/&(tab|newline|colon);/gi, (_, name: string) =>
+      name.toLowerCase() === "colon" ? ":" : "",
+    )
+    .replace(/[\u0000- ]/g, "");
+}
+
+export function isUnsafeUri(value: string): boolean {
+  return UNSAFE_URI.test(normalizeUri(value));
+}
+
+const remover = {
   element(element: { remove(): void }) {
     element.remove();
   },
@@ -20,7 +39,7 @@ const attributeSanitizer = {
         removals.push(name);
         continue;
       }
-      if ((lower === "href" || lower === "src") && JAVASCRIPT_URI.test(value)) {
+      if (URL_ATTRIBUTES.has(lower) && isUnsafeUri(value)) {
         rewrites.push([name, "#"]);
       }
     }
@@ -33,21 +52,53 @@ const attributeSanitizer = {
   },
 };
 
+// Outbound links from user content must pass no ranking signal and no
+// referrer. In-page anchors stay as they are.
+const linkHardener = {
+  element(element: { getAttribute(name: string): string | null; setAttribute(name: string, value: string): void }) {
+    const href = element.getAttribute("href");
+    if (href === null || href.trim().startsWith("#")) return;
+    element.setAttribute("rel", USER_LINK_REL);
+    element.setAttribute("target", "_blank");
+    element.setAttribute("referrerpolicy", "no-referrer");
+  },
+};
+
+const PRIVACY_META = '<meta name="referrer" content="no-referrer"><meta name="robots" content="noindex, nofollow">';
+
 /**
- * Strips executable script content from a document's rendered HTML so it
- * cannot run when served inside the sandboxed viewer iframe. This is defense
- * in depth on top of the iframe sandbox attribute.
+ * Hardens uploader HTML before it is served, either into the sandboxed viewer
+ * iframe or as the raw /d/:id.html page. This is defense in depth on top of
+ * the iframe sandbox attribute and the raw page CSP.
  *
- * Removes <script> elements, inline event-handler attributes (on*), and
- * neutralizes javascript: href/src URLs. The first-party collaboration runtime
- * is injected by the client after this content is fetched, so it is unaffected.
+ * - Removes <script>, <base>, and <meta http-equiv> (refresh redirects).
+ * - Removes on* handler attributes.
+ * - Neutralizes javascript:, vbscript: and data:text/html in URL attributes.
+ * - Rewrites <a>/<area> links to rel="nofollow ugc noopener noreferrer"
+ *   target="_blank".
+ * - Injects no-referrer and noindex meta tags.
  *
- * Streams through HTMLRewriter so the response body is transformed without
- * buffering it fully into memory.
+ * Streams through HTMLRewriter so the body is not buffered into memory.
  */
 export function sanitizeDocumentStream(body: BodyInit): ReadableStream {
+  let injected = false;
   return new HTMLRewriter()
-    .on("script", scriptRemover)
+    .on("script", remover)
+    .on("base", remover)
+    .on("meta[http-equiv]", remover)
     .on("*", attributeSanitizer)
+    .on("a[href], area[href]", linkHardener)
+    .on("head", {
+      element(element) {
+        if (injected) return;
+        injected = true;
+        element.prepend(PRIVACY_META, { html: true });
+      },
+    })
+    .onDocument({
+      end(end) {
+        if (!injected) end.append(PRIVACY_META, { html: true });
+      },
+    })
     .transform(new Response(body)).body as ReadableStream;
 }

@@ -46,6 +46,7 @@ export function DashboardView({
       <head>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <meta name="robots" content="noindex, nofollow" />
         <title>Dashboard - sharehtml</title>
         <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
         <PaperFonts />
@@ -107,7 +108,7 @@ export function DashboardView({
                   <div class="doc-grid-info">
                     <div class="doc-grid-top">
                       <span class="kind-badge">{formatDocumentKind(doc.source_kind)}</span>
-                      <a class="doc-grid-card-title" href={`/d/${doc.id}`}>
+                      <a class="doc-grid-card-title" href={`/d/${doc.id}`} rel="nofollow">
                         {doc.title}
                       </a>
                       <span class="doc-grid-filename">{doc.filename}</span>
@@ -118,7 +119,7 @@ export function DashboardView({
                       <span class={`share-badge ${badge.cls}`}>{badge.label}</span>
                     </div>
                     <div class="doc-grid-actions">
-                      <a class="doc-grid-btn doc-grid-btn-view" href={`/d/${doc.id}`}>
+                      <a class="doc-grid-btn doc-grid-btn-view" href={`/d/${doc.id}`} rel="nofollow">
                         view
                       </a>
                       <button class="doc-grid-btn doc-grid-btn-delete" data-doc-id={doc.id}>

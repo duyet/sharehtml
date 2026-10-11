@@ -38,7 +38,7 @@ export function ShellView(
         <title>{title} — sharehtml</title>
         <meta property="og:title" content={title} />
         <meta property="og:type" content="website" />
-        <meta name="robots" content="all" />
+        <meta name="robots" content="noindex, nofollow" />
         <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
         <PaperFonts />
         {assets.shellClientCss && <link rel="stylesheet" href={assets.shellClientCss} />}
