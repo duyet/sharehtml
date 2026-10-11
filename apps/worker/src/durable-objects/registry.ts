@@ -28,6 +28,8 @@ const USER_COLORS = [
   "#ea580c",
 ];
 
+const CALENDAR_DAYS = 182;
+
 export class RegistryDO extends DurableObject<Env> {
   sql: SqlStorage;
 
@@ -94,6 +96,7 @@ export class RegistryDO extends DurableObject<Env> {
     this.ensureUpdatedAtIndex();
     this.ensureDocumentTagsTable();
     this.ensureDeleteTokenColumn();
+    this.ensureDailyStatsTable();
   }
 
   private ensureUpdatedAtIndex() {
@@ -176,6 +179,31 @@ export class RegistryDO extends DurableObject<Env> {
     const hasDeleteToken = columns.some((column) => column.name === "delete_token");
     if (hasDeleteToken) return;
     this.sql.exec("ALTER TABLE documents ADD COLUMN delete_token TEXT");
+  }
+
+  private ensureDailyStatsTable() {
+    const columns = this.sql.exec<{ name: string }>("PRAGMA table_info(daily_stats)").toArray();
+    if (columns.length > 0) return;
+
+    this.ctx.storage.transactionSync(() => {
+      this.sql.exec(`
+        CREATE TABLE daily_stats (
+          date TEXT PRIMARY KEY,
+          uploads INTEGER NOT NULL DEFAULT 0,
+          views INTEGER NOT NULL DEFAULT 0
+        )
+      `);
+      // One-time backfill. Views cannot be reconstructed (views table keeps only the last view).
+      this.sql.exec(
+        "INSERT INTO daily_stats (date, uploads) SELECT date(created_at), COUNT(*) FROM documents GROUP BY date(created_at)",
+      );
+    });
+  }
+
+  private bumpDailyStat(column: "uploads" | "views") {
+    this.sql.exec(
+      `INSERT INTO daily_stats (date, ${column}) VALUES (date('now'), 1) ON CONFLICT(date) DO UPDATE SET ${column} = ${column} + 1`,
+    );
   }
 
   private normalizeTag(tag: string): string {
@@ -324,6 +352,7 @@ export class RegistryDO extends DurableObject<Env> {
       doc.source_language ?? null,
       doc.delete_token ?? null,
     );
+    this.bumpDailyStat("uploads");
     if (doc.tags && doc.tags.length > 0) {
       await this.setDocumentTags(doc.id, doc.tags);
     }
@@ -505,6 +534,7 @@ export class RegistryDO extends DurableObject<Env> {
       "UPDATE documents SET view_count = COALESCE(view_count, 0) + 1 WHERE id = ?",
       docId,
     );
+    this.bumpDailyStat("views");
   }
 
   async getRecentViews(userEmail: string, limit = 20): Promise<RecentViewRow[]> {
@@ -687,6 +717,22 @@ export class RegistryDO extends DurableObject<Env> {
     const [sharedDocsResult] = this.sql
       .exec<{ count: number }>("SELECT COUNT(*) as count FROM documents WHERE is_shared = 1")
       .toArray();
+    const since = new Date(Date.now() - (CALENDAR_DAYS - 1) * 86400000).toISOString().slice(0, 10);
+    const stats = new Map(
+      this.sql
+        .exec<{ date: string; uploads: number; views: number }>(
+          "SELECT date, uploads, views FROM daily_stats WHERE date >= ?",
+          since,
+        )
+        .toArray()
+        .map((row) => [row.date, row] as const),
+    );
+    const calendar: HomeAnalytics["calendar"] = [];
+    for (let i = CALENDAR_DAYS - 1; i >= 0; i--) {
+      const date = new Date(Date.now() - i * 86400000).toISOString().slice(0, 10);
+      const row = stats.get(date);
+      calendar.push({ date, uploads: Number(row?.uploads) || 0, views: Number(row?.views) || 0 });
+    }
     const totalDocs = docsResult?.count || 0;
     const totalViews = viewsResult?.total || 0;
 
@@ -699,6 +745,7 @@ export class RegistryDO extends DurableObject<Env> {
       todayViews: todayViewsResult?.count || 0,
       uploadsPerDay,
       viewsPerDay,
+      calendar,
       sharedDocs: sharedDocsResult?.count || 0,
       avgViewsPerDoc: totalDocs > 0 ? Math.round((totalViews / totalDocs) * 10) / 10 : 0,
     };

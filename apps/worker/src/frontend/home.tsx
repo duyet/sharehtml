@@ -151,6 +151,84 @@ function Chart({
   );
 }
 
+type CalendarDay = HomeAnalytics["calendar"][number];
+
+// Bucket a count into 0-4 relative to the series max.
+function calendarLevel(count: number, max: number): number {
+  if (count <= 0 || max <= 0) return 0;
+  return Math.min(4, Math.ceil((count / max) * 4));
+}
+
+function CalendarGrid({
+  days,
+  metric,
+  className,
+}: {
+  days: CalendarDay[];
+  metric: "uploads" | "views";
+  className: string;
+}): JSX.Element {
+  const max = Math.max(0, ...days.map((d) => d[metric]));
+  const startDow = new Date(`${days[0].date}T00:00:00Z`).getUTCDay();
+  const months = days.map((d, i) => {
+    const month = d.date.slice(5, 7);
+    const prev = i === 0 ? "" : days[i - 1].date.slice(5, 7);
+    return month === prev ? "" : d.date.slice(0, 7);
+  });
+  const names = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  return (
+    <div class={`calendar-grid ${className}`}>
+      <div class="calendar-months">
+        {days.map((d, i) =>
+          months[i] ? (
+            <span style={`grid-column:${Math.floor((i + startDow) / 7) + 1}`}>
+              {names[Number(d.date.slice(5, 7)) - 1]}
+            </span>
+          ) : null,
+        )}
+      </div>
+      <div class="calendar-cells">
+        {days.map((d, i) => (
+          <div
+            class={`calendar-cell calendar-level-${calendarLevel(d[metric], max)}`}
+            style={i === 0 ? `grid-row:${startDow + 1}` : undefined}
+            title={`${d.date} · ${d[metric]} ${metric === "uploads" ? (d[metric] === 1 ? "upload" : "uploads") : d[metric] === 1 ? "view" : "views"}`}
+          ></div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function CalendarHeatmap({ days }: { days: CalendarDay[] }): JSX.Element {
+  return (
+    <div class="calendar">
+      <input type="radio" name="calendar-metric" id="calendar-uploads" class="calendar-radio" checked />
+      <input type="radio" name="calendar-metric" id="calendar-views" class="calendar-radio" />
+      <div class="calendar-head">
+        <div class="chart-caption">Activity — last 26 weeks</div>
+        <div class="calendar-toggle">
+          <label for="calendar-uploads">Uploads</label>
+          <label for="calendar-views">Views</label>
+        </div>
+      </div>
+      <CalendarGrid days={days} metric="uploads" className="calendar-grid-uploads" />
+      <CalendarGrid days={days} metric="views" className="calendar-grid-views" />
+      <div class="calendar-legend">
+        <span>Less</span>
+        {[0, 1, 2, 3, 4].map((l) => (
+          <span class={`calendar-cell calendar-level-${l}`}></span>
+        ))}
+        <span>More</span>
+      </div>
+      <div class="calendar-note">
+        Uploads are counted from existing documents. Views are counted from the release date of
+        this feature.
+      </div>
+    </div>
+  );
+}
+
 function AnalyticsSection({ analytics }: AnalyticsSectionProps): JSX.Element {
   const metrics = [
     { value: analytics.totalDocs, label: "Total uploads" },
@@ -197,6 +275,7 @@ function AnalyticsSection({ analytics }: AnalyticsSectionProps): JSX.Element {
             />
           </div>
         </div>
+        <CalendarHeatmap days={analytics.calendar} />
       </div>
     </div>
   );
