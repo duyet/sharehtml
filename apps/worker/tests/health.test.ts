@@ -25,6 +25,8 @@ describe("GET /docs.md", () => {
     const body = await response.text();
     expect(body).toContain("curl -X POST https://html.duyet.net/api/documents");
     expect(body).toContain('-F "file=@report.html"');
-    expect(body).toContain("Reference: https://html.duyet.net/docs.md");
+    // The agent prompt must point at the auth-aware CLI flow, not anonymous curl.
+    expect(body).toContain("sharehtml@latest login");
+    expect(body).toContain("Reference: https://html.duyet.net/llms.txt");
   });
 });

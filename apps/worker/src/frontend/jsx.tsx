@@ -17,19 +17,19 @@ export function SetupBlock({ workerUrl }: { workerUrl: string }): JSX.Element {
         </div>
         <div class="method-card">
           <div class="method-label">HTTP — curl API</div>
-          <pre>{raw(`curl -X POST ${workerUrl}/api/documents \\\n  -F "file=@report.html" \\\n  -F "title=Q3 Report"`)}</pre>
+          <pre>{raw(`curl -X POST ${workerUrl}/api/documents \\\n  -H "Authorization: Bearer $SHAREHTML_API_KEY" \\\n  -F "file=@report.html" \\\n  -F "title=Q3 Report"`)}</pre>
         </div>
       </div>
 
       <p class="setup-skills-label">
-        Add <b>sharehtml skills</b> to your AI Agent (Claude Code, etc.):
+        Add <b>sharehtml skills</b> to your coding agent (Claude Code, opencode, Codex):
       </p>
       <pre class="pre-wrap">npx -y skills@latest add duyet/sharehtml</pre>
 
       <p class="setup-skills-label">
-        Or copy &amp; paste this prompt to your AI Agent (Cursor, Windsurf, Claude, etc.):
+        Or paste this prompt into any coding agent:
       </p>
-      <pre class="pre-wrap">{"Deploy this to the web using sharehtml. Use the upload API, no auth required:\n"}{"`"}curl -X POST https://html.duyet.net/api/documents -F "file=@path/to/file.html" -F "title=Document Title"{"`"}{"\nReference: https://html.duyet.net/docs.md"}</pre>
+      <pre class="pre-wrap">{`Publish this with sharehtml. Sign in once with \`npx -y @duyet/sharehtml@latest login\`, then run \`npx -y @duyet/sharehtml@latest deploy path/to/file.html\` and share the returned URL.\nReference: ${workerUrl}/llms.txt`}</pre>
     </div>
   );
 }

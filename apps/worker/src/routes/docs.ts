@@ -45,9 +45,8 @@ The response includes the document ID and public URL:
 Use this when asking an AI agent to publish a file:
 
 \`\`\`text
-Deploy this to the web using sharehtml. Use the upload API, no auth required:
-curl -X POST https://html.duyet.net/api/documents -F "file=@path/to/file.html" -F "title=Document Title"
-Reference: https://html.duyet.net/docs.md
+Publish this with sharehtml. Sign in once with \`npx -y @duyet/sharehtml@latest login\`, then run \`npx -y @duyet/sharehtml@latest deploy path/to/file.html\` and share the returned URL.
+Reference: https://html.duyet.net/llms.txt
 \`\`\`
 
 ## API notes
