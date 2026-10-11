@@ -639,9 +639,13 @@ export class RegistryDO extends DurableObject<Env> {
       return doc.source_filename ? [rendered, getSourceDocumentKey(doc.id, doc.source_filename)] : [rendered];
     });
     await this.env.DOCUMENTS_BUCKET.delete(keys);
-    for (const doc of expired) {
-      await this.deleteDocument(doc.id);
-    }
+    this.ctx.storage.transactionSync(() => {
+      for (const doc of expired) {
+        this.sql.exec("DELETE FROM shared_emails WHERE doc_id = ?", doc.id);
+        this.sql.exec("DELETE FROM document_tags WHERE doc_id = ?", doc.id);
+        this.sql.exec("DELETE FROM documents WHERE id = ?", doc.id);
+      }
+    });
     return expired.map((doc) => doc.id);
   }
 

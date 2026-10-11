@@ -61,6 +61,8 @@ export async function requireRateLimit(
  * limiter so a page load does not burn the connect budget and vice versa.
  */
 export const viewerRateLimit: MiddlewareHandler<AppBindings> = async (c, next) => {
+  // Reports have their own, stricter limiter in the report handler.
+  if (c.req.method === "POST" && c.req.path.endsWith("/report")) return next();
   const name: RateLimiterName = c.req.path.endsWith("/ws") ? "WS_RATE_LIMITER" : "VIEW_RATE_LIMITER";
   const limited = await requireRateLimit(c, name);
   if (limited) return limited;

@@ -16,6 +16,11 @@ const clientMessageTypes = new Set<string>([
   "reaction:add", "reaction:remove",
 ]);
 
+// Messages that write content other viewers see share the comment limiter.
+const rateLimitedMessageTypes = new Set<string>([
+  "comment:create", "comment:update", "comment:resolve", "reaction:add",
+]);
+
 function isClientMessage(value: unknown): value is ClientMessage {
   return isRecord(value) && typeof value.type === "string" && clientMessageTypes.has(value.type);
 }
@@ -272,6 +277,11 @@ export class DocumentDO extends DurableObject<Env> {
 
     if (!isClientMessage(parsed)) return;
 
+    if (rateLimitedMessageTypes.has(parsed.type) && (await this.isWriteRateLimited(ws))) {
+      ws.send(JSON.stringify({ type: "error", message: "Too many comments, slow down." }));
+      return;
+    }
+
     switch (parsed.type) {
       case "user:join":
         return this.handleUserJoin(ws, parsed);
@@ -410,18 +420,19 @@ export class DocumentDO extends DurableObject<Env> {
     );
   }
 
-  private async handleCommentCreate(
+  private async isWriteRateLimited(ws: WebSocket): Promise<boolean> {
+    const attachment = this.getAttachment(ws);
+    if (!attachment) return false; // handlers ignore sockets that have not joined
+    const limitKey = attachment.rateLimitKey ?? `ws:${attachment.email}`;
+    return isRateLimited(this.env.COMMENT_RATE_LIMITER, limitKey);
+  }
+
+  private handleCommentCreate(
     ws: WebSocket,
     msg: Extract<ClientMessage, { type: "comment:create" }>,
   ) {
     const attachment = this.getAttachment(ws);
     if (!attachment) return;
-
-    const limitKey = attachment.rateLimitKey ?? `ws:${attachment.email}`;
-    if (await isRateLimited(this.env.COMMENT_RATE_LIMITER, limitKey)) {
-      ws.send(JSON.stringify({ type: "error", message: "Too many comments, slow down." }));
-      return;
-    }
 
     const content = msg.content.slice(0, DocumentDO.MAX_COMMENT_LENGTH);
     const anchorJson = msg.anchor ? JSON.stringify(msg.anchor) : null;
@@ -520,11 +531,12 @@ export class DocumentDO extends DurableObject<Env> {
     const attachment = this.getAttachment(ws);
     if (!attachment) return;
 
-    this.sql.exec(
+    const { rowsWritten } = this.sql.exec(
       "UPDATE comments SET resolved = ?, updated_at = datetime('now') WHERE id = ?",
       msg.resolved ? 1 : 0,
       msg.id,
     );
+    if (rowsWritten === 0) return;
     this.broadcast({
       type: "comment:resolved",
       id: msg.id,

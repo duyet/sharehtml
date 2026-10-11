@@ -83,7 +83,7 @@ export function ShellView(
             <a class="topbar-link" href={`/d/${docId}.html`} title="View raw HTML">
               raw
             </a>
-            <button class="topbar-link" id="report-doc" title="Report abuse" aria-label="Report this document">
+            <button type="button" class="topbar-link" id="report-doc" title="Report abuse" aria-label="Report this document">
               report
             </button>
             <div class="export-menu">
