@@ -668,6 +668,37 @@ async function refreshCapabilityToken() {
 
 setInterval(refreshCapabilityToken, CAPABILITY_REFRESH_INTERVAL_MS);
 
+const REPORT_REASONS = ["phishing", "malware", "spam", "illegal", "harassment", "other"];
+
+async function reportDocument() {
+  const answer = prompt(`Report this document. Reason (${REPORT_REASONS.join(", ")}):`, "phishing");
+  if (answer === null) return;
+  const reason = answer.trim().toLowerCase();
+  if (!REPORT_REASONS.includes(reason)) {
+    alert(`Please enter one of: ${REPORT_REASONS.join(", ")}`);
+    return;
+  }
+  const details = prompt("Optional details for the moderators:", "") ?? "";
+  try {
+    const response = await viewerFetch(`/d/${DOC_ID}/report`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ reason, details }),
+    });
+    alert(
+      response.ok
+        ? "Thanks, the report was sent to the moderators."
+        : response.status === 429
+          ? "Too many reports, please try again later."
+          : "Could not send the report.",
+    );
+  } catch {
+    alert("Could not send the report.");
+  }
+}
+
+document.getElementById("report-doc")?.addEventListener("click", () => void reportDocument());
+
 async function loadDocumentIntoIframe() {
   try {
     const contentResponse = await viewerFetch(CONTENT_PATH);

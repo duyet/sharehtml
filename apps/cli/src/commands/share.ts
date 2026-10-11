@@ -20,10 +20,22 @@ export const shareCmd = new Command("share")
   .option("--link", "Share with anyone who has the link (skip prompt)")
   .option("--add <email>", "Add an email to the share list")
   .option("--remove <email>", "Remove an email from the share list")
-  .action(async (document: string, opts: { link?: boolean; add?: string; remove?: string }) => {
+  .option("--listed", "List the document on the public homepage (implies --link)")
+  .option("--unlisted", "Remove the document from the public homepage listing")
+  .action(async (
+    document: string,
+    opts: { link?: boolean; add?: string; remove?: string; listed?: boolean; unlisted?: boolean },
+  ) => {
     try {
       if (!(await deploymentRequiresLogin())) {
         throw new Error("This deployment already allows link access to all documents.");
+      }
+
+      if (opts.listed && opts.unlisted) {
+        throw new Error("choose either --listed or --unlisted, not both");
+      }
+      if ((opts.listed || opts.unlisted) && (opts.add || opts.remove)) {
+        throw new Error("--listed/--unlisted only apply to link sharing");
       }
 
       const doc = await resolveDocumentReference(document);
@@ -58,7 +70,7 @@ export const shareCmd = new Command("share")
       }
 
       // Default: link-share. Prompt if switching away from email mode.
-      if (!opts.link) {
+      if (!opts.link && !opts.listed && !opts.unlisted) {
         const state = await getDocumentSharing(doc.id);
         if (state.mode === "emails" && state.emails.length > 0) {
           console.log(`This document is shared with ${state.emails.length} ${state.emails.length === 1 ? "person" : "people"}:`);
@@ -73,10 +85,15 @@ export const shareCmd = new Command("share")
         }
       }
 
-      await setDocumentSharing(doc.id, { mode: "link" });
+      const listed = opts.listed ? true : opts.unlisted ? false : undefined;
+      const result = await setDocumentSharing(doc.id, {
+        mode: "link",
+        ...(listed !== undefined ? { listed } : {}),
+      });
       console.log(`Shared: ${doc.title}`);
-      console.log(`  id:  ${doc.id}`);
-      console.log(`  url: ${getDocumentUrl(doc.id)}`);
+      console.log(`  id:     ${doc.id}`);
+      console.log(`  url:    ${getDocumentUrl(doc.id)}`);
+      console.log(`  listed: ${result.listed ? "yes (public homepage)" : "no"}`);
     } catch (err) {
       console.error(`Error: ${(err as Error).message}`);
       process.exit(1);

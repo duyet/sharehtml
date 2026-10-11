@@ -27,6 +27,8 @@ interface DeployResult {
   filename: string;
   size: number;
   isShared: boolean;
+  listed?: boolean;
+  expiresAt?: string | null;
 }
 
 interface DocumentMeta {
@@ -41,6 +43,10 @@ interface DocumentMeta {
   source_filename?: string | null;
   source_kind?: string | null;
   source_language?: string | null;
+  listed?: number;
+  disabled_at?: string | null;
+  disabled_reason?: string | null;
+  expires_at?: string | null;
 }
 
 interface AuthContext {
@@ -214,6 +220,18 @@ function isUploadRequest(path: string, method?: string): boolean {
   return method === "POST" && (path === "/api/v1/publish" || path === "/api/documents");
 }
 
+function parseServerError(body: string): { error?: string; code?: string } {
+  try {
+    const json = JSON.parse(body) as Record<string, unknown>;
+    return {
+      error: typeof json.error === "string" ? json.error : undefined,
+      code: typeof json.code === "string" ? json.code : undefined,
+    };
+  } catch {
+    return {};
+  }
+}
+
 async function checkResponse(
   resp: Response,
   action: string,
@@ -225,6 +243,19 @@ async function checkResponse(
   }
 
   if (resp.ok) return;
+
+  // Abuse controls: size limit, quota, rate limit, admin-only, takedown.
+  if (resp.status === 413 || resp.status === 429 || resp.status === 451 || resp.status === 403) {
+    const body = await resp.clone().text().catch(() => "");
+    const { error, code } = parseServerError(body);
+    if (resp.status === 413) throw new Error(`${action} failed: ${error || "file too large"}`);
+    if (resp.status === 429) {
+      const retry = code === "rate_limited" ? ` (retry after ${resp.headers.get("Retry-After") || "60"}s)` : "";
+      throw new Error(`${action} failed: ${error || "too many requests"}${retry}`);
+    }
+    if (resp.status === 451) throw new Error(`${action} failed: ${error || "document disabled"}`);
+    if (code === "not_admin") throw new Error(`${action} failed: your account is not an admin on this server`);
+  }
 
   if (resp.status === 401 || resp.status === 403) {
     const body = await resp.text().catch(() => "");
@@ -285,6 +316,7 @@ function buildUploadFormData(
   title?: string,
   slug?: string,
   tags?: string[],
+  listed?: boolean,
 ): FormData {
   const formData = new FormData();
   formData.append("file", prepared.renderedBlob, prepared.renderedFilename);
@@ -298,6 +330,7 @@ function buildUploadFormData(
   if (tags && tags.length > 0) {
     formData.append("tags", tags.join(","));
   }
+  if (listed) formData.append("listed", "true");
   return formData;
 }
 
@@ -306,12 +339,13 @@ export async function deployDocument(
   title?: string,
   slug?: string,
   tags?: string[],
+  listed?: boolean,
 ): Promise<DeployResult> {
   const prepared = await prepareDocumentUpload(filePath, title);
   const resp = await requestWithAccess("Upload", {
     path: "/api/v1/publish",
     method: "POST",
-    body: buildUploadFormData(prepared, title, slug, tags),
+    body: buildUploadFormData(prepared, title, slug, tags, listed),
   });
   return parseJson<DeployResult>(resp, "Upload");
 }
@@ -360,13 +394,14 @@ export async function deployContent(
     sourceKind?: SourceKind;
     sourceLanguage?: string;
     tags?: string[];
+    listed?: boolean;
   },
 ): Promise<DeployResult> {
   const prepared = await prepareContentUpload(content, filename, options);
   const resp = await requestWithAccess("Upload", {
     path: "/api/v1/publish",
     method: "POST",
-    body: buildUploadFormData(prepared, options?.title, options?.slug, options?.tags),
+    body: buildUploadFormData(prepared, options?.title, options?.slug, options?.tags, options?.listed),
   });
   return parseJson<DeployResult>(resp, "Upload");
 }
@@ -406,8 +441,10 @@ export async function deleteDocument(id: string): Promise<void> {
 }
 
 type ShareMode = "private" | "link" | "emails";
-type ShareOptions = { mode: "private" } | { mode: "link" } | { mode: "emails"; emails: string[] };
-type ShareState = { mode: ShareMode; emails: string[] };
+type ShareOptions = ({ mode: "private" } | { mode: "link" } | { mode: "emails"; emails: string[] }) & {
+  listed?: boolean;
+};
+type ShareState = { mode: ShareMode; emails: string[]; listed?: boolean };
 
 export async function setDocumentSharing(id: string, options: ShareOptions): Promise<ShareState> {
   const resp = await requestWithAccess("Update sharing", {
@@ -556,4 +593,39 @@ export async function getAllTags(): Promise<{ tag: string; count: number }[]> {
 export function getDocumentUrl(id: string): string {
   const { workerUrl } = getClient();
   return `${workerUrl}/d/${id}`;
+}
+
+export interface AbuseReport {
+  id: string;
+  doc_id: string;
+  reason: string;
+  details: string;
+  reporter: string;
+  created_at: string;
+  doc_title: string | null;
+  doc_owner_email: string | null;
+  doc_disabled_at: string | null;
+}
+
+export async function adminListReports(limit?: number): Promise<AbuseReport[]> {
+  const query = limit ? `?limit=${limit}` : "";
+  const resp = await requestWithAccess("List reports", { path: `/api/admin/reports${query}` });
+  return (await parseJson<{ reports: AbuseReport[] }>(resp, "List reports")).reports;
+}
+
+export async function adminListDocuments(limit?: number): Promise<DocumentMeta[]> {
+  const query = limit ? `?limit=${limit}` : "";
+  const resp = await requestWithAccess("List documents", { path: `/api/admin/documents${query}` });
+  return (await parseJson<{ documents: DocumentMeta[] }>(resp, "List documents")).documents;
+}
+
+export async function adminSetDisabled(id: string, disabled: boolean, reason?: string): Promise<DocumentMeta> {
+  const action = disabled ? "Disable" : "Enable";
+  const resp = await requestWithAccess(action, {
+    path: `/api/admin/documents/${encodeURIComponent(id)}/${disabled ? "disable" : "enable"}`,
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(disabled ? { reason } : {}),
+  });
+  return (await parseJson<{ document: DocumentMeta }>(resp, action)).document;
 }

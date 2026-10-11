@@ -32,6 +32,15 @@
       }
     ]
   },
+  // Workers Rate Limiting binding; limits are per key per Cloudflare location.
+  "ratelimits": [
+    { "name": "UPLOAD_RATE_LIMITER", "namespace_id": "1001", "simple": { "limit": 10, "period": 60 } },
+    { "name": "WRITE_RATE_LIMITER", "namespace_id": "1002", "simple": { "limit": 60, "period": 60 } },
+    { "name": "VIEW_RATE_LIMITER", "namespace_id": "1003", "simple": { "limit": 300, "period": 60 } },
+    { "name": "WS_RATE_LIMITER", "namespace_id": "1004", "simple": { "limit": 30, "period": 60 } },
+    { "name": "COMMENT_RATE_LIMITER", "namespace_id": "1005", "simple": { "limit": 20, "period": 60 } },
+    { "name": "REPORT_RATE_LIMITER", "namespace_id": "1006", "simple": { "limit": 5, "period": 60 } }
+  ],
   "upload_source_maps": true,
   "observability": {
     "logs": {
@@ -93,6 +102,14 @@
           "binding": "DOCUMENTS_BUCKET",
           "bucket_name": "sharehtml-documents"
         }
+      ],
+      "ratelimits": [
+        { "name": "UPLOAD_RATE_LIMITER", "namespace_id": "2001", "simple": { "limit": 10, "period": 60 } },
+        { "name": "WRITE_RATE_LIMITER", "namespace_id": "2002", "simple": { "limit": 60, "period": 60 } },
+        { "name": "VIEW_RATE_LIMITER", "namespace_id": "2003", "simple": { "limit": 300, "period": 60 } },
+        { "name": "WS_RATE_LIMITER", "namespace_id": "2004", "simple": { "limit": 30, "period": 60 } },
+        { "name": "COMMENT_RATE_LIMITER", "namespace_id": "2005", "simple": { "limit": 20, "period": 60 } },
+        { "name": "REPORT_RATE_LIMITER", "namespace_id": "2006", "simple": { "limit": 5, "period": 60 } }
       ],
       "durable_objects": {
         "bindings": [

@@ -61,6 +61,7 @@ export const deployCmd = new Command("deploy")
   .option("-u, --update", "Update existing document without prompting")
   .option("--share", "Make the document shareable after deploy")
   .option("--private", "Keep the document private after deploy")
+  .option("--listed", "Share by link and list the document on the public homepage")
   .option("--slug <slug>", "Custom slug for the document")
   .option("--content <html>", "HTML content string (alternative to file path)")
   .option("--type <type>", "Content type: html, markdown, code, data (default: html)")
@@ -72,6 +73,7 @@ export const deployCmd = new Command("deploy")
     update?: boolean;
     share?: boolean;
     private?: boolean;
+    listed?: boolean;
     slug?: string;
     content?: string;
     type?: SourceKind;
@@ -83,6 +85,12 @@ export const deployCmd = new Command("deploy")
       console.error("Error: choose either --share or --private, not both");
       process.exit(1);
     }
+    if (opts.listed && opts.private) {
+      console.error("Error: --listed needs a shared document; drop --private");
+      process.exit(1);
+    }
+    // Listing implies link sharing.
+    if (opts.listed) opts.share = true;
 
     // Parse tags
     const tags = opts.tags ? opts.tags.split(",").map((t) => t.trim()).filter(Boolean) : [];
@@ -158,7 +166,7 @@ export const deployCmd = new Command("deploy")
           });
           let isShared = result.isShared;
           if ((opts.share || opts.private) && supportsPrivateDocuments) {
-            const updated = await updateDocumentSharing(existing.id, Boolean(opts.share));
+            const updated = await updateDocumentSharing(existing.id, Boolean(opts.share), opts.listed);
             isShared = updated.isShared;
           }
           console.log(`\nUpdated! ${result.url}`);
@@ -173,10 +181,11 @@ export const deployCmd = new Command("deploy")
             sourceKind,
             sourceLanguage,
             tags,
+            listed: opts.listed,
           });
           let isShared = result.isShared;
           if ((opts.share || opts.private) && supportsPrivateDocuments) {
-            const updated = await updateDocumentSharing(result.id, Boolean(opts.share));
+            const updated = await updateDocumentSharing(result.id, Boolean(opts.share), opts.listed);
             isShared = updated.isShared;
           }
           console.log(`\nDeployed! ${result.url}`);
@@ -261,7 +270,7 @@ export const deployCmd = new Command("deploy")
         const result = await updateDocument(existing.id, filePath, opts.title, tags);
         let isShared = result.isShared;
         if ((opts.share || opts.private) && supportsPrivateDocuments) {
-          const updated = await updateDocumentSharing(existing.id, Boolean(opts.share));
+          const updated = await updateDocumentSharing(existing.id, Boolean(opts.share), opts.listed);
           isShared = updated.isShared;
         }
         setDocumentMapping(filePath, result.id);
@@ -276,10 +285,10 @@ export const deployCmd = new Command("deploy")
         console.log(`  source: ${result.url}/source`);
       } else {
         console.log(`Deploying ${file}...`);
-        const result = await deployDocument(filePath, opts.title, opts.slug, tags);
+        const result = await deployDocument(filePath, opts.title, opts.slug, tags, opts.listed);
         let isShared = result.isShared;
         if ((opts.share || opts.private) && supportsPrivateDocuments) {
-          const updated = await updateDocumentSharing(result.id, Boolean(opts.share));
+          const updated = await updateDocumentSharing(result.id, Boolean(opts.share), opts.listed);
           isShared = updated.isShared;
         }
         setDocumentMapping(filePath, result.id);
