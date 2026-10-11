@@ -5,6 +5,7 @@ import { BROWSER_CAPABILITY_HEADER } from "../utils/security-constants.js";
 import { isRecord } from "../types.js";
 import {
   buildHomePath,
+  formatDocumentKind,
   formatDocumentSize,
   formatDocumentsResultsLabel,
   formatRelativeTime,
@@ -16,6 +17,7 @@ interface HomeDocumentSummary {
   filename: string;
   size: number;
   created_at: string;
+  source_kind: string | null;
 }
 
 interface HomeDocumentsResponse {
@@ -143,6 +145,7 @@ function renderHomeDocumentsList(
     list.innerHTML = documents.map((doc) => `
       <a class="doc-card" href="/d/${escapeHtml(doc.id)}">
         <div class="doc-card-top">
+          <span class="kind-badge">${formatDocumentKind(doc.source_kind)}</span>
           <span class="doc-card-title">${escapeHtml(doc.title)}</span>
           <span class="doc-card-filename">${escapeHtml(doc.filename)}</span>
         </div>

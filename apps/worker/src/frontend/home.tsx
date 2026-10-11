@@ -12,10 +12,11 @@ import type { AssetUrls } from "../utils/assets.js";
 import {
   buildHomePath,
   formatBytes,
+  formatDocumentKind,
   formatDocumentSize,
   formatRelativeTime,
 } from "../utils/home-view.js";
-import { ClerkScripts, SetupBlock, safeJsonForScript, toHtml } from "./jsx.js";
+import { ClerkScripts, PaperFonts, SetupBlock, safeJsonForScript, toHtml } from "./jsx.js";
 
 interface HomeParams {
   assets: AssetUrls;
@@ -48,6 +49,7 @@ function DocCard({ doc, subtitle }: DocCardProps): JSX.Element {
   return (
     <a class="doc-card" href={`/d/${doc.id}.html`}>
       <div class="doc-card-top">
+        <span class="kind-badge">{formatDocumentKind(doc.source_kind)}</span>
         <span class="doc-card-title">{doc.title}</span>
         <span class="doc-card-filename">{doc.filename}</span>
       </div>
@@ -307,6 +309,7 @@ export function HomeView({
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <title>sharehtml</title>
         <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+        <PaperFonts />
         {assets.homeCss && <link rel="stylesheet" href={assets.homeCss} />}
         {cfBeaconToken && (
           <script

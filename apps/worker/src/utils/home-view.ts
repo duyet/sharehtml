@@ -63,3 +63,10 @@ export function formatDocumentsResultsLabel(totalCount: number, query: string): 
 
   return `${totalCount} document${totalCount === 1 ? "" : "s"}`;
 }
+
+/** Short label for the kind badge shown before document titles in lists. */
+export function formatDocumentKind(sourceKind: string | null | undefined): "html" | "md" | "code" {
+  if (sourceKind === "markdown") return "md";
+  if (sourceKind === "code") return "code";
+  return "html";
+}

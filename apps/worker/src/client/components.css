@@ -12,9 +12,9 @@
 
 /* ── TL;DR Box ────────────────────────────────── */
 .tldr {
-  border: 1.5px solid var(--color-hairline);
+  border: 1px solid var(--color-hairline);
   border-left: 3px solid var(--color-primary);
-  border-radius: 10px;
+  border-radius: var(--radius-card);
   background: var(--color-canvas);
   padding: 16px 18px;
   margin: 16px 0;
@@ -26,8 +26,8 @@
 
 /* ── Collapsible Details ───────────────────────── */
 details {
-  border: 1.5px solid var(--color-hairline);
-  border-radius: 10px;
+  border: 1px solid var(--color-hairline);
+  border-radius: var(--radius-card);
   background: var(--color-surface-card);
   margin: 14px 0;
   overflow: hidden;
@@ -37,7 +37,9 @@ summary {
   list-style: none;
   cursor: pointer;
   padding: 14px 16px;
-  font-family: var(--font-serif);
+  font-family: var(--font-sans);
+  font-weight: 600;
+  letter-spacing: -0.02em;
   font-size: 16px;
   color: var(--color-ink);
   display: flex;
@@ -53,7 +55,7 @@ summary::-webkit-details-marker {
 summary::before {
   content: "▸";
   color: var(--color-primary);
-  font-family: Inter, sans-serif;
+  font-family: var(--font-sans);
   font-size: 12px;
   transition: transform 120ms;
 }
@@ -86,9 +88,9 @@ details[open] summary::before {
 .docs-callout {
   display: flex;
   gap: 12px;
-  border: 1.5px solid var(--color-surface-card);
-  background: rgba(239, 233, 222, 0.5);
-  border-radius: 10px;
+  border: 1px solid var(--color-surface-card);
+  background: var(--color-surface-soft);
+  border-radius: var(--radius-card);
   padding: 14px 16px;
   margin: 18px 0;
   font-size: 14px;
@@ -115,9 +117,10 @@ details[open] summary::before {
 
 .faq dt,
 .docs-faq dt {
-  font-family: var(--font-serif);
+  font-family: var(--font-sans);
   font-size: 16px;
-  font-weight: 500;
+  font-weight: 600;
+  letter-spacing: -0.02em;
   color: var(--color-ink);
   margin-top: 18px;
 }
@@ -134,7 +137,7 @@ details[open] summary::before {
 .docs-highlight-box {
   background: var(--color-surface-card);
   border: 1px solid var(--color-hairline);
-  border-radius: 10px;
+  border-radius: var(--radius-card);
   padding: 16px 18px;
   margin: 16px 0;
   max-width: 680px;
@@ -170,7 +173,7 @@ details[open] summary::before {
 
 .stat-card {
   background: var(--paper);
-  border: 1.5px solid var(--g300);
+  border: 1px solid var(--g300);
   border-radius: 12px;
   padding: 20px 22px 18px;
 }
@@ -181,9 +184,10 @@ details[open] summary::before {
 }
 
 .stat-num {
-  font-family: var(--font-serif);
+  font-family: var(--font-sans);
   font-size: 44px;
-  font-weight: 500;
+  font-weight: 600;
+  letter-spacing: -0.02em;
   line-height: 1;
   color: var(--slate);
   margin-bottom: 8px;
@@ -247,7 +251,7 @@ details[open] summary::before {
   border-collapse: separate;
   border-spacing: 0;
   background: var(--paper);
-  border: 1.5px solid var(--g300);
+  border: 1px solid var(--g300);
   border-radius: 12px;
   overflow: hidden;
 }
@@ -322,7 +326,7 @@ details[open] summary::before {
 
 /* ── Risk Table ────────────────────────────────── */
 .risk-table {
-  border: 1.5px solid var(--g300);
+  border: 1px solid var(--g300);
   border-radius: 12px;
   overflow: hidden;
   background: var(--paper);
@@ -341,7 +345,7 @@ details[open] summary::before {
 }
 
 .risk-table-row + .risk-table-row {
-  border-top: 1.5px solid var(--g300);
+  border-top: 1px solid var(--g300);
 }
 
 .risk-table-cell {
@@ -350,7 +354,7 @@ details[open] summary::before {
 }
 
 .risk-table-cell + .risk-table-cell {
-  border-left: 1.5px solid var(--g300);
+  border-left: 1px solid var(--g300);
 }
 
 @media (max-width: 780px) {
@@ -374,13 +378,13 @@ details[open] summary::before {
   font-family: var(--font-mono);
   font-size: 11px;
   padding: 2px 8px;
-  border-radius: 6px;
+  border-radius: var(--radius-control);
   font-weight: 600;
 }
 
 .sev-badge.high {
-  background: rgba(217, 119, 87, 0.20);
-  color: #8A3B1E;
+  background: var(--color-primary-soft);
+  color: var(--color-primary-active);
 }
 
 .sev-badge.med {
@@ -389,8 +393,8 @@ details[open] summary::before {
 }
 
 .sev-badge.low {
-  background: rgba(120, 140, 93, 0.16);
-  color: #4B5C39;
+  background: var(--color-success-soft);
+  color: var(--color-success);
 }
 
 /* ── Milestone Timeline ────────────────────────── */
@@ -452,8 +456,9 @@ details[open] summary::before {
 }
 
 .milestone-body h3 {
-  font-family: var(--font-serif);
-  font-weight: 500;
+  font-family: var(--font-sans);
+  font-weight: 600;
+  letter-spacing: -0.02em;
   font-size: 19px;
   color: var(--slate);
   margin-bottom: 4px;
@@ -477,7 +482,7 @@ details[open] summary::before {
   font-size: 11.5px;
   background: var(--g100);
   border: 1px solid var(--g300);
-  border-radius: 6px;
+  border-radius: var(--radius-control);
   padding: 3px 8px;
   color: var(--g700);
 }
@@ -485,7 +490,7 @@ details[open] summary::before {
 /* ── Prompt Box ─────────────────────────────────── */
 .prompt-box {
   background: var(--g100);
-  border: 1.5px solid var(--g300);
+  border: 1px solid var(--g300);
   border-radius: 12px;
   padding: 16px 20px;
   font-size: 14.5px;
@@ -517,7 +522,7 @@ details[open] summary::before {
 }
 
 .carry-item + .carry-item {
-  border-top: 1px solid rgba(20, 20, 19, 0.08);
+  border-top: 1px solid var(--color-border);
 }
 
 .carry-tag {

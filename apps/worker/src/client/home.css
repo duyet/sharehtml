@@ -7,7 +7,7 @@ body {
   min-height: 100vh;
 }
 
-h1, h2, h3, .display-serif {
+h1, h2, h3 {
   letter-spacing: -0.018em;
 }
 
@@ -21,21 +21,11 @@ h1, h2, h3, .display-serif {
 /* ── Hero Section ─────────────────────────────────── */
 .hero {
   padding: 72px 0 48px;
-  border-bottom: 1.5px solid var(--g300);
+  border-bottom: 1px solid var(--g300);
   margin-bottom: 12px;
   position: relative;
 }
 
-.hero::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  right: -32px;
-  width: 420px;
-  height: 420px;
-  background: radial-gradient(circle, rgba(217, 119, 87, 0.06) 0%, transparent 70%);
-  pointer-events: none;
-}
 
 .hero .eyebrow {
   font-family: var(--font-mono);
@@ -57,8 +47,9 @@ h1, h2, h3, .display-serif {
 }
 
 .hero h1 {
-  font-family: var(--font-serif);
-  font-weight: 500;
+  font-family: var(--font-sans);
+  font-weight: 600;
+  letter-spacing: -0.02em;
   font-size: clamp(36px, 5vw, 58px);
   line-height: 1.08;
   margin: 0 0 12px;
@@ -114,15 +105,15 @@ h1, h2, h3, .display-serif {
 
 .method-card {
   background: var(--g100);
-  border-radius: 10px;
+  border-radius: var(--radius-card);
   padding: 16px 18px;
-  border: 1.5px solid var(--g200);
+  border: 1px solid var(--g200);
   transition: border-color 150ms ease, box-shadow 150ms ease;
 }
 
 .method-card:hover {
   border-color: var(--g300);
-  box-shadow: 0 2px 8px rgba(20, 20, 19, 0.04);
+  box-shadow: var(--shadow-subtle);
 }
 
 .method-label {
@@ -167,10 +158,10 @@ h1, h2, h3, .display-serif {
 /* ── Setup Block ─────────────────────────────────── */
 .setup-block {
   background: var(--paper);
-  border-radius: 14px;
+  border-radius: var(--radius-card);
   padding: 28px 28px 24px;
-  border: 1.5px solid var(--g300);
-  box-shadow: 0 1px 3px rgba(20, 20, 19, 0.03);
+  border: 1px solid var(--g300);
+  box-shadow: var(--shadow-subtle);
 }
 
 .setup-block p {
@@ -240,7 +231,7 @@ h1, h2, h3, .display-serif {
   font-size: 12px;
   background: var(--color-canvas);
   border: 1px solid var(--color-hairline);
-  border-radius: 6px;
+  border-radius: var(--radius-control);
   cursor: pointer;
 }
 
@@ -274,7 +265,7 @@ h1, h2, h3, .display-serif {
 
 .recent-card {
   background: var(--paper);
-  border: 1.5px solid var(--g300);
+  border: 1px solid var(--g300);
   border-radius: 12px;
   padding: 22px;
   text-decoration: none;
@@ -285,15 +276,15 @@ h1, h2, h3, .display-serif {
 }
 
 .recent-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(20, 20, 19, 0.08);
-  border-color: var(--g500);
+  border-color: var(--color-border-strong);
+  background: var(--color-surface-soft);
 }
 
 .recent-card-title {
-  font-family: var(--font-serif);
+  font-family: var(--font-sans);
   font-size: 17px;
-  font-weight: 500;
+  font-weight: 600;
+  letter-spacing: -0.02em;
   color: var(--color-ink);
   margin-bottom: 6px;
 }
@@ -311,56 +302,61 @@ h1, h2, h3, .display-serif {
 }
 
 .doc-list {
-  display: grid;
-  grid-template-columns: repeat(1, minmax(0, 1fr));
-  gap: 12px;
+  display: flex;
+  flex-direction: column;
+  border-top: 1px solid var(--color-border);
 }
 
 .doc-card {
-  background: var(--paper);
-  border: 1.5px solid var(--g300);
-  border-radius: 12px;
-  padding: 18px 22px;
-  text-decoration: none;
   display: flex;
-  flex-direction: column;
-  transition: transform 150ms ease, box-shadow 150ms ease, border-color 150ms ease;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 4px;
+  border-bottom: 1px solid var(--color-border);
+  text-decoration: none;
+  transition: background 120ms ease;
 }
 
 .doc-card:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 6px 20px rgba(20, 20, 19, 0.06);
-  border-color: var(--g500);
+  background: var(--color-surface-soft);
 }
 
 .doc-card-top {
   display: flex;
-  align-items: baseline;
-  gap: 14px;
-  margin-bottom: 6px;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  min-width: 0;
 }
 
 .doc-card-title {
-  font-family: var(--font-serif);
-  font-size: 18px;
+  font-size: 15px;
   font-weight: 500;
-  color: var(--slate);
+  color: var(--color-ink);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  flex: 1;
-  letter-spacing: -0.008em;
+  min-width: 0;
 }
 
 .doc-card-filename {
   font-family: var(--font-mono);
-  font-size: 11px;
-  color: var(--g500);
+  font-size: 12px;
+  color: var(--color-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex-shrink: 1;
+  min-width: 0;
 }
 
 .doc-card-meta {
+  margin-left: auto;
   font-size: 13px;
-  color: var(--g700);
+  color: var(--color-muted);
+  white-space: nowrap;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
 }
 
 /* ── Features Grid ─────────────────────────────────── */
@@ -375,9 +371,10 @@ h1, h2, h3, .display-serif {
 }
 
 .feature-item h3 {
-  font-family: var(--font-serif);
+  font-family: var(--font-sans);
   font-size: 20px;
-  font-weight: 500;
+  font-weight: 600;
+  letter-spacing: -0.02em;
   color: var(--color-ink);
   margin-bottom: 12px;
 }
@@ -404,7 +401,7 @@ h1, h2, h3, .display-serif {
 .pagination-link {
   padding: 6px 14px;
   background: var(--paper);
-  border: 1.5px solid var(--g300);
+  border: 1px solid var(--g300);
   border-radius: 999px;
   text-decoration: none;
   color: var(--g700);
@@ -429,9 +426,9 @@ h1, h2, h3, .display-serif {
 
 /* ── Analytics ────────────────────────────────────── */
 .analytics-card {
-  background: var(--paper);
-  border: 1.5px solid var(--g300);
-  border-radius: 12px;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
   overflow: hidden;
 }
 
@@ -446,25 +443,22 @@ h1, h2, h3, .display-serif {
 }
 
 .stat-cell + .stat-cell {
-  border-left: 1px solid var(--g200);
+  border-left: 1px solid var(--color-border);
 }
 
 .stat-value {
-  font-family: var(--font-serif);
+  font-family: var(--font-sans);
   font-size: 24px;
-  font-weight: 500;
+  font-weight: 600;
   line-height: 1;
-  color: var(--slate);
-  letter-spacing: -0.018em;
+  color: var(--color-ink);
+  letter-spacing: -0.02em;
   font-variant-numeric: tabular-nums;
 }
 
 .stat-label {
-  font-family: var(--font-mono);
-  font-size: 10px;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  color: var(--g500);
+  font-size: 12px;
+  color: var(--color-muted);
   margin-top: 6px;
 }
 
@@ -528,10 +522,6 @@ h1, h2, h3, .display-serif {
 
   .hero {
     padding: 48px 0 36px;
-  }
-
-  .hero::before {
-    display: none;
   }
 
   .hero h1 {

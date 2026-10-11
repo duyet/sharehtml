@@ -13,11 +13,11 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-h1, h2, h3, h4, .display-serif {
-  font-family: var(--font-serif);
+h1, h2, h3, h4 {
+  font-family: var(--font-sans);
   color: var(--color-ink);
-  font-weight: 500;
-  letter-spacing: -0.01em;
+  font-weight: 600;
+  letter-spacing: -0.02em;
 }
 
 h1 { font-size: 38px; line-height: 1.15; }
@@ -86,8 +86,8 @@ li {
   align-items: center;
   justify-content: space-between;
   padding: 0 32px;
-  background: var(--ivory);
-  border-bottom: 1.5px solid var(--g300);
+  background: var(--color-bg);
+  border-bottom: 1px solid var(--color-border);
   position: fixed;
   top: 0;
   left: 0;
@@ -96,10 +96,11 @@ li {
 }
 
 .topbar-home {
-  font-family: var(--font-serif);
-  font-size: 20px;
-  font-weight: 500;
-  color: var(--slate);
+  font-family: var(--font-sans);
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--color-ink);
   text-decoration: none;
   display: flex;
   align-items: center;
@@ -120,7 +121,7 @@ li {
 
 .topbar-link {
   font-size: 14px;
-  color: var(--color-body);
+  color: var(--color-muted);
   text-decoration: none;
 }
 
@@ -133,8 +134,9 @@ button.topbar-link {
   font-family: inherit;
 }
 
-.topbar-link:hover {
-  color: var(--clay);
+.topbar-link:hover,
+.topbar-link[aria-current="page"] {
+  color: var(--color-ink);
 }
 
 .topbar-email {
@@ -154,7 +156,7 @@ button.topbar-link {
   width: 28px;
   height: 28px;
   border-radius: 50%;
-  background: var(--color-muted, #d4d4d4);
+  background: var(--color-border-strong);
   opacity: 0.25;
 }
 
@@ -189,7 +191,7 @@ button.topbar-link {
   text-decoration: none;
   font-weight: 500;
   font-size: 16px;
-  border: 1.5px solid var(--g300);
+  border: 1px solid var(--g300);
   transition: border-color 120ms ease;
 }
 
@@ -199,8 +201,8 @@ button.topbar-link {
 
 /* ── Tabs ─────────────────────────────────────── */
 .tabs {
-  border: 1.5px solid var(--color-hairline);
-  border-radius: 10px;
+  border: 1px solid var(--color-hairline);
+  border-radius: var(--radius-card);
   background: var(--color-canvas);
   margin: 16px 0 8px;
   overflow: hidden;

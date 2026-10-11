@@ -1,7 +1,7 @@
 @import "./theme.css";
 
 body {
-  font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-family: var(--font-sans);
   font-size: 16px;
   line-height: 1.55;
   color: var(--color-body);
@@ -13,22 +13,23 @@ body {
 
 /* Top bar */
 .topbar {
-  height: 64px;
+  height: 56px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 0 32px;
-  background: var(--color-canvas);
-  border-bottom: 2px solid var(--color-primary);
+  background: var(--color-bg);
+  border-bottom: 1px solid var(--color-border);
   position: sticky;
   top: 0;
   z-index: 10;
 }
 .topbar-home {
-  font-family: var(--font-serif);
-  font-size: 24px;
-  font-weight: 400;
-  color: var(--color-primary);
+  font-family: var(--font-sans);
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--color-ink);
   text-decoration: none;
   display: flex;
   align-items: center;
@@ -36,17 +37,18 @@ body {
 }
 .topbar-home::before {
   content: "✦";
-  color: var(--color-ink);
-  font-size: 18px;
+  color: var(--color-muted);
+  font-size: 14px;
 }
 .topbar-title-wrapper {
   position: relative;
   min-width: 0;
 }
 .topbar-title {
-  font-family: var(--font-serif);
-  font-size: 18px;
-  font-weight: 400;
+  font-family: var(--font-sans);
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
   color: var(--color-ink);
   overflow: hidden;
   text-overflow: ellipsis;
@@ -61,7 +63,7 @@ body {
   background: var(--color-canvas);
   border: 1px solid var(--color-hairline);
   border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(20, 20, 19, 0.08);
+  box-shadow: var(--shadow-subtle);
   padding: 12px 16px;
   white-space: nowrap;
   z-index: 100;
@@ -130,7 +132,7 @@ body {
   background: var(--color-canvas);
   border: 1px solid var(--color-hairline);
   border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(20, 20, 19, 0.08);
+  box-shadow: var(--shadow-subtle);
   padding: 12px 16px;
   white-space: nowrap;
   z-index: 100;
@@ -391,23 +393,25 @@ body {
   width: 100%;
   height: 100%;
   border: none;
+  /* Shared docs are authored for a light page; never let dark tokens show through. */
+  background: #ffffff;
 }
 .selection-toolbar-overlay {
   position: fixed;
   display: flex;
   align-items: center;
   gap: 2px;
-  background: #000000;
+  background: var(--color-surface-dark);
   border-radius: 4px;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-subtle);
   font-size: 12px;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-family: var(--font-sans);
   padding: 2px;
   z-index: 10000;
   user-select: none;
 }
 .selection-toolbar-btn {
-  color: #ffffff;
+  color: var(--color-on-dark);
   background: none;
   border: none;
   border-radius: 3px;
@@ -421,23 +425,23 @@ body {
 }
 @media (hover: hover) {
   .selection-toolbar-btn:hover {
-    background: rgba(255, 255, 255, 0.15);
+    background: color-mix(in srgb, var(--color-on-dark) 15%, transparent);
   }
 }
 .selection-toolbar-btn:active {
-  background: rgba(255, 255, 255, 0.15);
+  background: color-mix(in srgb, var(--color-on-dark) 15%, transparent);
 }
 .selection-toolbar-divider {
   width: 1px;
   height: 16px;
-  background: rgba(255, 255, 255, 0.2);
+  background: color-mix(in srgb, var(--color-on-dark) 20%, transparent);
 }
 .selection-emoji-picker {
   position: fixed;
   background: var(--color-canvas);
-  border: 1px solid #000000;
-  border-radius: 6px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-control);
+  box-shadow: var(--shadow-subtle);
   padding: 8px;
   z-index: 10001;
   user-select: none;
@@ -462,11 +466,11 @@ body {
 }
 @media (hover: hover) {
   .selection-emoji-picker-btn:hover {
-    background: #f5f5f5;
+    background: var(--color-surface-muted-hover);
   }
 }
 .selection-emoji-picker-btn:active {
-  background: #f5f5f5;
+  background: var(--color-surface-muted-hover);
 }
 .mobile-selection-bar {
   display: none;
@@ -474,7 +478,7 @@ body {
   left: 0;
   right: 0;
   bottom: 0;
-  background: #000000;
+  background: var(--color-surface-dark);
   padding: 12px 16px;
   padding-bottom: calc(12px + env(safe-area-inset-bottom));
   z-index: 10000;
@@ -492,7 +496,7 @@ body {
 .mobile-selection-bar .selection-toolbar-divider {
   width: 1px;
   height: 20px;
-  background: rgba(255, 255, 255, 0.2);
+  background: color-mix(in srgb, var(--color-on-dark) 20%, transparent);
 }
 .mobile-compose {
   display: flex;
@@ -502,7 +506,7 @@ body {
 }
 .mobile-compose-quote {
   font-size: 12px;
-  color: rgba(255, 255, 255, 0.5);
+  color: color-mix(in srgb, var(--color-on-dark) 50%, transparent);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -520,27 +524,27 @@ body {
 }
 .mobile-compose-input {
   flex: 1;
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: color-mix(in srgb, var(--color-on-dark) 10%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-on-dark) 20%, transparent);
   border-radius: 8px;
   padding: 10px 12px;
   font-size: 16px;
   font-family: inherit;
-  color: #ffffff;
+  color: var(--color-on-dark);
   outline: none;
   resize: none;
   min-height: 40px;
   max-height: 120px;
 }
 .mobile-compose-input::placeholder {
-  color: rgba(255, 255, 255, 0.4);
+  color: color-mix(in srgb, var(--color-on-dark) 40%, transparent);
 }
 .mobile-compose-input:focus {
-  border-color: rgba(255, 255, 255, 0.4);
+  border-color: color-mix(in srgb, var(--color-on-dark) 40%, transparent);
 }
 .mobile-compose-send {
   background: var(--color-canvas);
-  color: #000000;
+  color: var(--color-ink);
   border: none;
   border-radius: 8px;
   padding: 10px 16px;
@@ -556,7 +560,7 @@ body {
 .mobile-compose-cancel {
   background: none;
   border: none;
-  color: rgba(255, 255, 255, 0.5);
+  color: color-mix(in srgb, var(--color-on-dark) 50%, transparent);
   font-size: 13px;
   cursor: pointer;
   padding: 0;
@@ -572,18 +576,18 @@ body {
   background: none;
   border-radius: 4px;
   cursor: pointer;
-  color: #ffffff;
+  color: var(--color-on-dark);
   font-size: 22px;
   transition: background 120ms ease;
   -webkit-tap-highlight-color: transparent;
 }
 @media (hover: hover) {
   .mobile-emoji-btn:hover {
-    background: rgba(255, 255, 255, 0.15);
+    background: color-mix(in srgb, var(--color-on-dark) 15%, transparent);
   }
 }
 .mobile-emoji-btn:active {
-  background: rgba(255, 255, 255, 0.15);
+  background: color-mix(in srgb, var(--color-on-dark) 15%, transparent);
 }
 .mobile-selection-back {
   margin-left: auto;
@@ -701,7 +705,7 @@ body {
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: 4px;
-  box-shadow: 0 1px 3px var(--color-shadow-soft);
+  box-shadow: var(--shadow-subtle);
   padding: 12px;
   transition: border-color 120ms ease, box-shadow 120ms ease;
   opacity: 1;
@@ -806,7 +810,7 @@ body {
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: 4px;
-  box-shadow: 0 1px 3px var(--color-shadow-soft);
+  box-shadow: var(--shadow-subtle);
   padding: 10px 12px;
   animation: fadeIn 150ms ease;
   cursor: pointer;
@@ -929,7 +933,7 @@ body {
   background: var(--color-surface-elevated);
   border: 1px solid var(--color-hairline);
   border-radius: 4px;
-  box-shadow: 0 1px 4px var(--color-shadow-medium);
+  box-shadow: var(--shadow-subtle);
   padding: 12px;
   animation: fadeIn 150ms ease;
 }
@@ -1063,12 +1067,13 @@ body {
   max-width: 440px;
   width: 100%;
   text-align: center;
-  box-shadow: 0 4px 12px rgba(20, 20, 19, 0.08);
+  box-shadow: var(--shadow-subtle);
 }
 .modal-title {
-  font-family: var(--font-serif);
+  font-family: var(--font-sans);
   font-size: 24px;
-  font-weight: 400;
+  font-weight: 600;
+  letter-spacing: -0.02em;
   color: var(--color-ink);
   margin-bottom: 24px;
 }
