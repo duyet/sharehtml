@@ -23,6 +23,9 @@ function generateTestWranglerConfig() {
   config.name = "sharehtml-test";
   config.main = "../src/index.ts";
   config.workers_dev = true;
+  // Suites share one client key (dev@localhost / unknown IP); keep real
+  // limiter bindings but lift the ceilings. 429 paths use injected fakes.
+  for (const limiter of config.ratelimits ?? []) limiter.simple.limit = 1_000_000;
 
   writeFileSync(outPath, JSON.stringify(config, null, 2), "utf-8");
   return outPath;

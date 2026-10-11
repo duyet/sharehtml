@@ -8,6 +8,12 @@ declare namespace Cloudflare {
 	}
 	interface ProductionEnv {
 		DOCUMENTS_BUCKET: R2Bucket;
+		UPLOAD_RATE_LIMITER: RateLimit;
+		WRITE_RATE_LIMITER: RateLimit;
+		VIEW_RATE_LIMITER: RateLimit;
+		WS_RATE_LIMITER: RateLimit;
+		COMMENT_RATE_LIMITER: RateLimit;
+		REPORT_RATE_LIMITER: RateLimit;
 		ASSETS: Fetcher;
 		AUTH_MODE: "access" | "clerk";
 		ACCESS_AUD: "";
@@ -21,6 +27,12 @@ declare namespace Cloudflare {
 	}
 	interface Env {
 		DOCUMENTS_BUCKET: R2Bucket;
+		UPLOAD_RATE_LIMITER: RateLimit;
+		WRITE_RATE_LIMITER: RateLimit;
+		VIEW_RATE_LIMITER: RateLimit;
+		WS_RATE_LIMITER: RateLimit;
+		COMMENT_RATE_LIMITER: RateLimit;
+		REPORT_RATE_LIMITER: RateLimit;
 		ASSETS: Fetcher;
 		AUTH_MODE: "access" | "clerk" | "none";
 		ACCESS_AUD?: "";

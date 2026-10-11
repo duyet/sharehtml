@@ -3,6 +3,7 @@ import { isRecord, parseDocumentSnapshot } from "../types.js";
 import type { CommentRow, ReactionRow, DocumentSnapshot } from "../types.js";
 import type { ClientMessage, ServerMessage } from "@sharehtml/shared";
 import type { Anchor, Comment, Reaction, UserPresence } from "@sharehtml/shared";
+import { isRateLimited } from "../utils/rate-limit.js";
 import { getRegistry } from "../utils/registry.js";
 import { findAnchorRangeInText, getElementSelector, rebuildAnchor } from "../utils/anchors.js";
 import { collectAnnotatableElementsFromHtml, remapElementAnchor } from "../utils/document-elements.js";
@@ -24,6 +25,8 @@ interface WsAttachment {
   name: string;
   color: string;
   verifiedEmail?: string;
+  /** Rate-limit key computed by the worker (user email or client IP). */
+  rateLimitKey?: string;
 }
 
 function parseAttachment(raw: unknown): WsAttachment | null {
@@ -36,6 +39,7 @@ function parseAttachment(raw: unknown): WsAttachment | null {
     name: raw.name,
     color: raw.color,
     verifiedEmail: typeof raw.verifiedEmail === "string" ? raw.verifiedEmail : undefined,
+    rateLimitKey: typeof raw.rateLimitKey === "string" ? raw.rateLimitKey : undefined,
   };
 }
 
@@ -45,6 +49,11 @@ function parseAttachment(raw: unknown): WsAttachment | null {
 function parseVerifiedEmail(raw: unknown): string | undefined {
   if (!isRecord(raw)) return undefined;
   return typeof raw.verifiedEmail === "string" ? raw.verifiedEmail : undefined;
+}
+
+function parseRateLimitKey(raw: unknown): string | undefined {
+  if (!isRecord(raw)) return undefined;
+  return typeof raw.rateLimitKey === "string" ? raw.rateLimitKey : undefined;
 }
 
 function getSelectedWebSocketProtocol(header: string | null): string | null {
@@ -186,14 +195,15 @@ export class DocumentDO extends DurableObject<Env> {
         return new Response("Expected WebSocket", { status: 426 });
       }
       const verifiedEmail = request.headers.get("X-Verified-Email") || undefined;
+      const rateLimitKey = request.headers.get("X-Rate-Limit-Key") || undefined;
       const selectedProtocol = getSelectedWebSocketProtocol(
         request.headers.get("Sec-WebSocket-Protocol"),
       );
       const pair = new WebSocketPair();
       this.ctx.acceptWebSocket(pair[1]);
       // Store verified email from Access JWT so handleUserJoin can enforce it
-      if (verifiedEmail) {
-        pair[1].serializeAttachment({ verifiedEmail });
+      if (verifiedEmail || rateLimitKey) {
+        pair[1].serializeAttachment({ verifiedEmail, rateLimitKey });
       }
       const headers = new Headers();
       if (selectedProtocol) {
@@ -286,7 +296,9 @@ export class DocumentDO extends DurableObject<Env> {
 
   private async handleUserJoin(ws: WebSocket, msg: Extract<ClientMessage, { type: "user:join" }>) {
     // Use verified email from Access JWT if available, ignore client-claimed email
-    const verifiedEmail = parseVerifiedEmail(ws.deserializeAttachment());
+    const accepted = ws.deserializeAttachment();
+    const verifiedEmail = parseVerifiedEmail(accepted);
+    const rateLimitKey = parseRateLimitKey(accepted);
     const email = verifiedEmail || msg.email;
     const name = msg.name.slice(0, DocumentDO.MAX_NAME_LENGTH);
 
@@ -296,6 +308,7 @@ export class DocumentDO extends DurableObject<Env> {
       name,
       color: "",
       verifiedEmail,
+      rateLimitKey,
     };
 
     const user = await registry.getUser(email);
@@ -397,12 +410,18 @@ export class DocumentDO extends DurableObject<Env> {
     );
   }
 
-  private handleCommentCreate(
+  private async handleCommentCreate(
     ws: WebSocket,
     msg: Extract<ClientMessage, { type: "comment:create" }>,
   ) {
     const attachment = this.getAttachment(ws);
     if (!attachment) return;
+
+    const limitKey = attachment.rateLimitKey ?? `ws:${attachment.email}`;
+    if (await isRateLimited(this.env.COMMENT_RATE_LIMITER, limitKey)) {
+      ws.send(JSON.stringify({ type: "error", message: "Too many comments, slow down." }));
+      return;
+    }
 
     const content = msg.content.slice(0, DocumentDO.MAX_COMMENT_LENGTH);
     const anchorJson = msg.anchor ? JSON.stringify(msg.anchor) : null;
