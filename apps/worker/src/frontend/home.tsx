@@ -310,6 +310,11 @@ export function HomeView({
         <title>sharehtml</title>
         <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
         <PaperFonts />
+        <link rel="alternate" type="text/markdown" href="/llms.txt" title="Agent guide" />
+        <meta
+          name="description"
+          content="Publish HTML, Markdown, or code and get a shareable link. AI agents: read /llms.txt for the CLI and REST API."
+        />
         {assets.homeCss && <link rel="stylesheet" href={assets.homeCss} />}
         {cfBeaconToken && (
           <script

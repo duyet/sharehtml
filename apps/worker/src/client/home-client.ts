@@ -3,6 +3,7 @@ import "./home.css";
 import { setupClerkTopbar } from "./clerk-topbar.js";
 import { BROWSER_CAPABILITY_HEADER } from "../utils/security-constants.js";
 import { isRecord } from "../types.js";
+import { findModelContext, registerAgentTools } from "./webmcp.js";
 import {
   buildHomePath,
   formatDocumentKind,
@@ -325,4 +326,13 @@ function initTabs(): void {
 }
 
 initHomeClient();
+
+const agentConfig = getHomeClientConfig();
+if (agentConfig) {
+  registerAgentTools(findModelContext({ document, navigator }), {
+    homeCapabilityToken: agentConfig.homeCapabilityToken,
+    capabilityHeader: BROWSER_CAPABILITY_HEADER,
+    requiresLogin: agentConfig.requiresLogin,
+  });
+}
 // force rebuild
