@@ -21,7 +21,7 @@ npx -y skills@latest add duyet/sharehtml
 ## Common Commands
 | Command | Description |
 |---------|-------------|
-| `npx @duyet/sharehtml deploy <file>` | Deploy an HTML, Markdown, or code file |
+| `npx @duyet/sharehtml deploy <file>` | Deploy an HTML, Markdown, code, or data (CSV/JSON) file |
 | `echo '<html>' \| npx @duyet/sharehtml publish` | Deploy HTML content via stdin pipe |
 | `npx @duyet/sharehtml publish --content '<html>'` | Deploy HTML content directly as argument |
 | `cat report.html \| curl -X POST https://html.duyet.net/api/v1/publish -H "X-ShareHTML-Client: my-app" -F "file=@-;filename=report.html"` | Upload via curl stdin pipe |
