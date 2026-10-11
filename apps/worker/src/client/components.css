@@ -179,7 +179,7 @@ details[open] summary::before {
 }
 
 .stat-card.warn {
-  border-left: 4px solid var(--clay);
+  border-left: 4px solid var(--color-accent);
   padding-left: 19px;
 }
 
@@ -237,7 +237,7 @@ details[open] summary::before {
   width: 7px;
   height: 7px;
   border-radius: 2px;
-  background: var(--clay);
+  background: var(--color-accent);
 }
 
 .highlights li strong {
@@ -287,13 +287,13 @@ details[open] summary::before {
 .pr-link {
   font-family: var(--font-mono);
   font-size: 13px;
-  color: var(--clay);
+  color: var(--color-accent);
   text-decoration: none;
   border-bottom: 1px dotted transparent;
 }
 
 .pr-link:hover {
-  border-bottom-color: var(--clay);
+  border-bottom-color: var(--color-accent);
 }
 
 /* ── Risk Indicator ─────────────────────────────── */
@@ -317,7 +317,7 @@ details[open] summary::before {
 }
 
 .risk-dot.med {
-  background: var(--clay);
+  background: var(--color-accent);
 }
 
 .risk-dot.high {
@@ -430,7 +430,7 @@ details[open] summary::before {
   height: 14px;
   border-radius: 50%;
   background: var(--paper);
-  border: 3px solid var(--clay);
+  border: 3px solid var(--color-accent);
   margin-top: 4px;
   flex-shrink: 0;
 }

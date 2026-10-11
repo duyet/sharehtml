@@ -168,7 +168,7 @@ button.topbar-link {
 /* ── Buttons ───────────────────────────────── */
 .btn-primary {
   display: inline-block;
-  background: var(--clay);
+  background: var(--color-accent);
   color: var(--paper);
   padding: 12px 24px;
   border-radius: 8px;
@@ -179,7 +179,7 @@ button.topbar-link {
 }
 
 .btn-primary:hover {
-  background: var(--clay-d);
+  background: var(--color-primary-active);
 }
 
 .btn-secondary {

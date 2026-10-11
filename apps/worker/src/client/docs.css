@@ -67,7 +67,7 @@ body {
 }
 
 .docs-toc-link.active {
-  border-color: var(--clay);
+  border-color: var(--color-accent);
   color: var(--slate);
   font-weight: 500;
 }
@@ -164,14 +164,14 @@ body {
 }
 
 .docs-section a {
-  color: var(--clay);
+  color: var(--color-accent);
   text-decoration: none;
   border-bottom: 1px solid transparent;
   transition: border-color 150ms ease;
 }
 
 .docs-section a:hover {
-  border-bottom-color: var(--clay);
+  border-bottom-color: var(--color-accent);
 }
 
 /* ── Tabs ────────────────────────────────────── */
@@ -286,7 +286,7 @@ body {
 
 .details summary::before {
   content: "▸";
-  color: var(--clay);
+  color: var(--color-accent);
   font-family: var(--font-sans);
   font-size: 12px;
   transition: transform 120ms;
@@ -325,7 +325,7 @@ body {
 }
 
 .callout .ico {
-  color: var(--clay);
+  color: var(--color-accent);
   font-weight: 600;
   flex-shrink: 0;
 }
@@ -412,7 +412,7 @@ body {
 
 /* ── Term Highlighting ───────────────────────── */
 .term {
-  border-bottom: 1.5px dotted var(--clay);
+  border-bottom: 1.5px dotted var(--color-accent);
   cursor: help;
   color: var(--slate);
 }

@@ -58,7 +58,7 @@
   font-size: 11px;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: var(--clay);
+  color: var(--color-accent);
   margin-bottom: 8px;
 }
 
@@ -139,7 +139,7 @@
 }
 
 .doc-grid-card-title:hover {
-  color: var(--clay);
+  color: var(--color-accent);
 }
 
 .doc-grid-filename {
@@ -200,7 +200,7 @@
 
 .badge-email {
   background: var(--color-primary-soft);
-  color: var(--clay);
+  color: var(--color-accent);
   border: 1px solid var(--color-primary);
 }
 
@@ -239,11 +239,11 @@
 }
 
 .doc-grid-btn-view {
-  color: var(--clay);
+  color: var(--color-accent);
 }
 
 .doc-grid-btn-view:hover {
-  border-color: var(--clay);
+  border-color: var(--color-accent);
   background: var(--ivory);
 }
 
@@ -304,7 +304,7 @@
 .pagination-link {
   font-family: var(--font-sans);
   font-size: 13px;
-  color: var(--clay);
+  color: var(--color-accent);
   text-decoration: none;
   padding: 6px 14px;
   border: 1px solid var(--g200);
@@ -317,7 +317,7 @@
 }
 
 .pagination-link:hover {
-  border-color: var(--clay);
+  border-color: var(--color-accent);
   background: var(--ivory);
 }
 
@@ -497,7 +497,7 @@
 }
 
 .modal-submit {
-  background: var(--clay);
+  background: var(--color-accent);
   color: var(--paper);
   padding: 8px 18px;
   border-radius: 8px;
@@ -509,7 +509,7 @@
 }
 
 .modal-submit:hover {
-  background: var(--clay-d);
+  background: var(--color-primary-active);
 }
 
 .modal-cancel {

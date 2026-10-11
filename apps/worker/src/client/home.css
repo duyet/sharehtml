@@ -32,7 +32,7 @@ h1, h2, h3 {
   font-size: 11.5px;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: var(--clay);
+  color: var(--color-accent);
   margin-bottom: 20px;
   display: flex;
   align-items: center;
@@ -43,7 +43,7 @@ h1, h2, h3 {
   content: "";
   width: 28px;
   height: 2px;
-  background: var(--clay);
+  background: var(--color-accent);
 }
 
 .hero h1 {
@@ -59,7 +59,7 @@ h1, h2, h3 {
 
 .hero h1 em {
   font-style: italic;
-  color: var(--clay);
+  color: var(--color-accent);
 }
 
 .hero .tldr {
@@ -76,7 +76,7 @@ h1, h2, h3 {
 }
 
 .hero .tldr b {
-  color: var(--clay);
+  color: var(--color-accent);
 }
 
 .hero-actions {
@@ -121,7 +121,7 @@ h1, h2, h3 {
   font-size: 10.5px;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: var(--clay);
+  color: var(--color-accent);
   margin-bottom: 10px;
   display: flex;
   align-items: center;
@@ -500,7 +500,7 @@ h1, h2, h3 {
 .chart-bar {
   flex: 1;
   min-height: 2px;
-  background: var(--clay);
+  background: var(--color-accent);
   border-radius: 2px 2px 0 0;
   opacity: 0.85;
 }
@@ -609,7 +609,7 @@ h1, h2, h3 {
 
 #calendar-uploads:focus-visible ~ .calendar-head label[for="calendar-uploads"],
 #calendar-views:focus-visible ~ .calendar-head label[for="calendar-views"] {
-  outline: 2px solid var(--clay);
+  outline: 2px solid var(--color-accent);
   outline-offset: 2px;
 }
 
@@ -656,10 +656,10 @@ h1, h2, h3 {
   background: var(--g100);
 }
 
-.calendar-level-1 { background: color-mix(in srgb, var(--clay) 25%, var(--g100)); }
-.calendar-level-2 { background: color-mix(in srgb, var(--clay) 50%, var(--g100)); }
-.calendar-level-3 { background: color-mix(in srgb, var(--clay) 75%, var(--g100)); }
-.calendar-level-4 { background: var(--clay); }
+.calendar-level-1 { background: color-mix(in srgb, var(--color-accent) 25%, var(--color-surface-soft)); }
+.calendar-level-2 { background: color-mix(in srgb, var(--color-accent) 50%, var(--color-surface-soft)); }
+.calendar-level-3 { background: color-mix(in srgb, var(--color-accent) 75%, var(--color-surface-soft)); }
+.calendar-level-4 { background: var(--color-accent); }
 
 .calendar-legend {
   display: flex;
