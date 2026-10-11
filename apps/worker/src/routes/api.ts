@@ -33,7 +33,14 @@ import { createAttachmentHeaders } from "../utils/download.js";
 import { emailsMatch, normalizeEmail } from "../utils/email.js";
 import { detectDataFormat, getDataFormat, isDataFilename, renderDataToHtml } from "../utils/data-render.js";
 import { renderMarkdownToHtml } from "../utils/markdown.js";
-import { checkRateLimit, type RateLimitConfig, rateLimitKey } from "../utils/rate-limit.js";
+import {
+  anonymousUploadsAllowed,
+  formatBytes,
+  getAbuseLimits,
+  type AbuseLimits,
+} from "../utils/abuse-config.js";
+import { requireRateLimit } from "../utils/rate-limit.js";
+import { admin } from "./admin.js";
 import { getRegistry } from "../utils/registry.js";
 import {
   requireHomeBrowserCapability,
@@ -166,17 +173,6 @@ api.get("/dashboard", async (c) => {
 
 // API Key CRUD
 
-const RATE_LIMIT: RateLimitConfig = { windowMs: 60_000, maxRequests: 30 };
-
-function requireRateLimit(c: Parameters<typeof rateLimitKey>[0]): Response | null {
-  const key = rateLimitKey(c);
-  const result = checkRateLimit(key, RATE_LIMIT);
-  if (!result.allowed) {
-    return c.json({ error: "Too many requests" }, 429);
-  }
-  return null;
-}
-
 function generateApiKey(): string {
   const chars = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
   // Rejection sampling to avoid modulo bias
@@ -204,7 +200,7 @@ api.post("/keys", async (c) => {
     return c.json({ error: "Authentication required" }, 401);
   }
 
-  const rateLimited = requireRateLimit(c);
+  const rateLimited = await requireRateLimit(c, "WRITE_RATE_LIMITER");
   if (rateLimited) return rateLimited;
 
   // API key management requires session-based auth, not API key auth
@@ -267,7 +263,7 @@ api.delete("/keys/:id", async (c) => {
     return c.json({ error: "Authentication required" }, 401);
   }
 
-  const rateLimited = requireRateLimit(c);
+  const rateLimited = await requireRateLimit(c, "WRITE_RATE_LIMITER");
   if (rateLimited) return rateLimited;
 
   if (user.source === "api-key") {
@@ -382,7 +378,9 @@ function parseSourceFields(formData: FormData): {
   return { source, sourceKind, sourceLanguage };
 }
 
-type ShareRequest = { mode: ShareMode; emails?: string[] } | { mode: "link" | "private" };
+type ShareRequest = ({ mode: ShareMode; emails?: string[] } | { mode: "link" | "private" }) & {
+  listed?: boolean;
+};
 
 function parseShareRequestBody(body: unknown): {
   value: ShareRequest | null;
@@ -392,6 +390,23 @@ function parseShareRequestBody(body: unknown): {
     return { value: null, error: "invalid request body" };
   }
 
+  if (body.listed !== undefined && typeof body.listed !== "boolean") {
+    return { value: null, error: "listed must be a boolean" };
+  }
+  const parsed = parseShareMode(body);
+  if (parsed.value && typeof body.listed === "boolean") {
+    if (body.listed && parsed.value.mode !== "link") {
+      return { value: null, error: "only link-shared documents can be listed" };
+    }
+    parsed.value.listed = body.listed;
+  }
+  return parsed;
+}
+
+function parseShareMode(body: Record<string, unknown>): {
+  value: ShareRequest | null;
+  error: string | null;
+} {
   if (isShareMode(body.mode)) {
     if (body.mode !== "emails") {
       return { value: { mode: body.mode }, error: null };
@@ -471,18 +486,91 @@ async function restoreDocumentSnapshot(
   }
 }
 
+// Multipart framing overhead allowed on top of the file and source parts.
+const MULTIPART_OVERHEAD_BYTES = 64 * 1024;
+
+function uploadTooLarge(c: Context<AppBindings>, limits: AbuseLimits): Response {
+  return c.json(
+    {
+      error: `Upload too large: each file must be ${formatBytes(limits.maxUploadBytes)} or smaller`,
+      code: "upload_too_large",
+      maxBytes: limits.maxUploadBytes,
+    },
+    413,
+  );
+}
+
+/** Rejects oversized bodies before buffering them with formData(). */
+function rejectOversizedBody(c: Context<AppBindings>, limits: AbuseLimits): Response | null {
+  const declared = Number.parseInt(c.req.header("Content-Length") || "", 10);
+  const ceiling = limits.maxUploadBytes * 2 + MULTIPART_OVERHEAD_BYTES;
+  return Number.isFinite(declared) && declared > ceiling ? uploadTooLarge(c, limits) : null;
+}
+
+/** Content-Length can be absent (chunked), so check parsed parts too. */
+function rejectOversizedParts(
+  c: Context<AppBindings>,
+  limits: AbuseLimits,
+  parts: Array<File | null>,
+): Response | null {
+  return parts.some((part) => part && part.size > limits.maxUploadBytes) ? uploadTooLarge(c, limits) : null;
+}
+
+async function rejectOverQuota(
+  c: Context<AppBindings>,
+  limits: AbuseLimits,
+  ownerEmail: string,
+  change: { addedDocs: number; addedBytes: number },
+): Promise<Response | null> {
+  const stats = await getRegistry(c.env).getUserStats(ownerEmail);
+  if (change.addedDocs > 0 && stats.docCount + change.addedDocs > limits.quotaDocs) {
+    return c.json(
+      {
+        error: `Document quota reached (${limits.quotaDocs} documents). Delete old documents to publish more.`,
+        code: "quota_exceeded",
+      },
+      429,
+    );
+  }
+  if (change.addedBytes > 0 && stats.storageUsed + change.addedBytes > limits.quotaBytes) {
+    return c.json(
+      {
+        error: `Storage quota reached (${formatBytes(limits.quotaBytes)}). Delete old documents to publish more.`,
+        code: "quota_exceeded",
+      },
+      429,
+    );
+  }
+  return null;
+}
+
+function parseBooleanField(value: FormDataEntryValue | null): boolean {
+  return value === "true" || value === "1";
+}
+
 async function handlePublish(c: Context<AppBindings>, statusCode: 200 | 201 = 200) {
   const user = c.get("authUser");
   const authenticated = isAuthenticated(user);
 
-  const rateLimited = requireRateLimit(c);
+  const rateLimited = await requireRateLimit(c, "UPLOAD_RATE_LIMITER");
   if (rateLimited) return rateLimited;
+
+  if (!authenticated && !anonymousUploadsAllowed(c.env)) {
+    return c.json(
+      { error: "Sign in to publish. Anonymous uploads are disabled on this server.", code: "auth_required" },
+      401,
+    );
+  }
 
   // Capability check only for authenticated users
   if (authenticated) {
     const protectedResponse = await requireHomeBrowserCapability(c);
     if (protectedResponse) return protectedResponse;
   }
+
+  const limits = getAbuseLimits(c.env);
+  const oversized = rejectOversizedBody(c, limits);
+  if (oversized) return oversized;
 
   const ownerEmail = authenticated ? normalizeEmail(user.email) : "anonymous";
   const formData = await c.req.formData();
@@ -499,6 +587,24 @@ async function handlePublish(c: Context<AppBindings>, statusCode: 200 | 201 = 20
   if (!rawUploadFile) {
     return c.json({ error: "file is required" }, 400);
   }
+
+  const oversizedParts = rejectOversizedParts(c, limits, [rawUploadFile, parsed.source]);
+  if (oversizedParts) return oversizedParts;
+
+  // Anonymous uploads skip the per-owner quota (they share one owner) and
+  // rely on the per-IP upload limiter plus the expiry TTL instead.
+  if (authenticated) {
+    const overQuota = await rejectOverQuota(c, limits, ownerEmail, {
+      addedDocs: 1,
+      addedBytes: rawUploadFile.size,
+    });
+    if (overQuota) return overQuota;
+  }
+
+  // Anonymous documents are never listed; listing needs link sharing.
+  const isShared = !authenticated ? 1 : isAuthEnabled(c.env.AUTH_MODE) ? 0 : 1;
+  const listed = authenticated && isShared === 1 && parseBooleanField(formData.get("listed"));
+  const expiresInDays = authenticated ? null : limits.anonymousTtlDays;
 
   const { file, source } =
     sourceKind === "data"
@@ -548,12 +654,14 @@ async function handlePublish(c: Context<AppBindings>, statusCode: 200 | 201 = 20
       size: file.size,
       owner_email: ownerEmail,
       // Anonymous documents always shared; authenticated users respect AUTH_MODE
-      is_shared: !authenticated ? 1 : isAuthEnabled(c.env.AUTH_MODE) ? 0 : 1,
+      is_shared: isShared,
       rendered_filename: renderedFilename,
       source_filename: source && sourceKind ? sourceFilename : null,
       source_kind: sourceKind,
       source_language: sourceLanguage,
       delete_token: deleteToken,
+      listed,
+      expires_in_days: expiresInDays,
     }),
   ];
 
@@ -582,7 +690,11 @@ async function handlePublish(c: Context<AppBindings>, statusCode: 200 | 201 = 20
       filename: sourceFilename,
       size: file.size,
       // Anonymous uploads always shared; authenticated uploads respect AUTH_MODE
-      isShared: !authenticated ? true : !isAuthEnabled(c.env.AUTH_MODE),
+      isShared: isShared === 1,
+      listed,
+      expiresAt: expiresInDays
+        ? new Date(Date.now() + expiresInDays * 86_400_000).toISOString()
+        : null,
     },
     statusCode,
   );
@@ -756,12 +868,17 @@ api.put("/documents/:id", async (c) => {
     return c.json({ error: "Authentication required" }, 401);
   }
 
-  const rateLimited = requireRateLimit(c);
+  const rateLimited = await requireRateLimit(c, "UPLOAD_RATE_LIMITER");
   if (rateLimited) return rateLimited;
 
   const id = c.req.param("id");
   const protectedResponse = await requireViewerBrowserCapability(c, id);
   if (protectedResponse) return protectedResponse;
+
+  const limits = getAbuseLimits(c.env);
+  const oversized = rejectOversizedBody(c, limits);
+  if (oversized) return oversized;
+
   const formData = await c.req.formData();
   const rawFile = formData.get("file");
   const rawUploadFile = rawFile instanceof File ? rawFile : null;
@@ -774,14 +891,8 @@ api.put("/documents/:id", async (c) => {
     return c.json({ error: "file is required" }, 400);
   }
 
-  const { file, source } =
-    sourceKind === "data"
-      ? await renderDataUpload(rawUploadFile, parsed.source, title)
-      : { file: rawUploadFile, source: parsed.source };
-
-  const renderedFilename = file.name || "document.html";
-  const sourceFilename = source?.name || renderedFilename;
-  const nextHtml = await file.text();
+  const oversizedParts = rejectOversizedParts(c, limits, [rawUploadFile, parsed.source]);
+  if (oversizedParts) return oversizedParts;
 
   const registry = getRegistry(c.env);
   const meta = await registry.getDocument(id);
@@ -793,6 +904,21 @@ api.put("/documents/:id", async (c) => {
   if (!emailsMatch(meta.owner_email, c.get("authUser").email)) {
     return c.json({ error: "forbidden" }, 403);
   }
+
+  const overQuota = await rejectOverQuota(c, limits, meta.owner_email, {
+    addedDocs: 0,
+    addedBytes: rawUploadFile.size - meta.size,
+  });
+  if (overQuota) return overQuota;
+
+  const { file, source } =
+    sourceKind === "data"
+      ? await renderDataUpload(rawUploadFile, parsed.source, title)
+      : { file: rawUploadFile, source: parsed.source };
+
+  const renderedFilename = file.name || "document.html";
+  const sourceFilename = source?.name || renderedFilename;
+  const nextHtml = await file.text();
 
   const existingSourceKind = isSourceKind(meta.source_kind) ? meta.source_kind : null;
   const resolvedTitle = getDocumentTitle(sourceFilename, title, sourceKind || existingSourceKind);
@@ -919,7 +1045,7 @@ api.get("/documents/:id/share", async (c) => {
   }
   const mode = shareModeFromInt(doc.is_shared);
   const emails = mode === "emails" ? await registry.getSharedEmails(id) : [];
-  return c.json({ mode, emails });
+  return c.json({ mode, emails, listed: Boolean(doc.listed) });
 });
 
 api.put("/documents/:id/share", async (c) => {
@@ -928,7 +1054,7 @@ api.put("/documents/:id/share", async (c) => {
     return c.json({ error: "Authentication required" }, 401);
   }
 
-  const rateLimited = requireRateLimit(c);
+  const rateLimited = await requireRateLimit(c, "WRITE_RATE_LIMITER");
   if (rateLimited) return rateLimited;
 
   const id = c.req.param("id");
@@ -965,9 +1091,19 @@ api.put("/documents/:id/share", async (c) => {
       emails.filter((e) => e.toLowerCase() !== ownerEmail),
     );
   }
+  if (parsedBody.value.listed !== undefined) {
+    await registry.setDocumentListed(id, parsedBody.value.listed);
+  }
 
   const responseEmails = mode === "emails" ? await registry.getSharedEmails(id) : [];
-  return c.json({ ok: true, mode, isShared: mode === "link", emails: responseEmails });
+  const updated = await registry.getDocument(id);
+  return c.json({
+    ok: true,
+    mode,
+    isShared: mode === "link",
+    listed: Boolean(updated?.listed),
+    emails: responseEmails,
+  });
 });
 
 // Tag endpoints
@@ -995,7 +1131,7 @@ api.put("/documents/:id/tags", async (c) => {
     return c.json({ error: "Authentication required" }, 401);
   }
 
-  const rateLimited = requireRateLimit(c);
+  const rateLimited = await requireRateLimit(c, "WRITE_RATE_LIMITER");
   if (rateLimited) return rateLimited;
 
   const id = c.req.param("id");
@@ -1032,7 +1168,7 @@ api.post("/documents/:id/tags", async (c) => {
     return c.json({ error: "Authentication required" }, 401);
   }
 
-  const rateLimited = requireRateLimit(c);
+  const rateLimited = await requireRateLimit(c, "WRITE_RATE_LIMITER");
   if (rateLimited) return rateLimited;
 
   const id = c.req.param("id");
@@ -1072,7 +1208,7 @@ api.delete("/documents/:id/tags/:tag", async (c) => {
     return c.json({ error: "Authentication required" }, 401);
   }
 
-  const rateLimited = requireRateLimit(c);
+  const rateLimited = await requireRateLimit(c, "WRITE_RATE_LIMITER");
   if (rateLimited) return rateLimited;
 
   const id = c.req.param("id");
@@ -1115,7 +1251,7 @@ api.delete("/documents/:id", async (c) => {
     return c.json({ error: "Authentication required" }, 401);
   }
 
-  const rateLimited = requireRateLimit(c);
+  const rateLimited = await requireRateLimit(c, "WRITE_RATE_LIMITER");
   if (rateLimited) return rateLimited;
 
   const id = c.req.param("id");
@@ -1153,7 +1289,7 @@ api.delete("/documents/:id", async (c) => {
 
 // Delete document by token (no auth required)
 api.delete("/documents/:id/token/:token", async (c) => {
-  const rateLimited = requireRateLimit(c);
+  const rateLimited = await requireRateLimit(c, "WRITE_RATE_LIMITER");
   if (rateLimited) return rateLimited;
 
   const id = c.req.param("id");
@@ -1218,6 +1354,8 @@ api.get("/documents/:id/comments", async (c) => {
     comments,
   });
 });
+
+api.route("/admin", admin);
 
 // Stats endpoints
 api.get("/stats/user", async (c) => {

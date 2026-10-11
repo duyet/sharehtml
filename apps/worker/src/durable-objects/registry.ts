@@ -5,10 +5,16 @@ import type {
   GlobalStats,
   HomeAnalytics,
   RecentViewRow,
+  ReportRow,
   UserRow,
   UserStats,
 } from "../types.js";
+import { getRenderedDocumentKey, getLegacyDocumentKey, getSourceDocumentKey } from "../utils/document-storage.js";
 import { normalizeEmail } from "../utils/email.js";
+
+const PURGE_BATCH = 100;
+// A document is publicly visible only while it is not taken down or expired.
+const LIVE_DOCUMENT = "disabled_at IS NULL AND (expires_at IS NULL OR expires_at > datetime('now'))";
 
 const USER_COLORS = [
   "#e11d48",
@@ -99,6 +105,37 @@ export class RegistryDO extends DurableObject<Env> {
     this.ensureDocumentTagsTable();
     this.ensureDeleteTokenColumn();
     this.ensureDailyStatsTable();
+    this.ensureAbuseControls();
+  }
+
+  private ensureAbuseControls() {
+    const columns = this.sql.exec<{ name: string }>("PRAGMA table_info(documents)").toArray();
+    const names = new Set(columns.map((column) => column.name));
+    // Existing documents stay unlisted; owners opt in explicitly.
+    if (!names.has("listed")) {
+      this.sql.exec("ALTER TABLE documents ADD COLUMN listed INTEGER NOT NULL DEFAULT 0");
+    }
+    if (!names.has("expires_at")) {
+      this.sql.exec("ALTER TABLE documents ADD COLUMN expires_at TEXT");
+    }
+    if (!names.has("disabled_at")) {
+      this.sql.exec("ALTER TABLE documents ADD COLUMN disabled_at TEXT");
+    }
+    if (!names.has("disabled_reason")) {
+      this.sql.exec("ALTER TABLE documents ADD COLUMN disabled_reason TEXT");
+    }
+    this.sql.exec("CREATE INDEX IF NOT EXISTS idx_documents_expires_at ON documents (expires_at)");
+    this.sql.exec(`
+      CREATE TABLE IF NOT EXISTS reports (
+        id TEXT PRIMARY KEY,
+        doc_id TEXT NOT NULL,
+        reason TEXT NOT NULL,
+        details TEXT NOT NULL DEFAULT '',
+        reporter TEXT NOT NULL,
+        created_at TEXT NOT NULL DEFAULT (datetime('now'))
+      )
+    `);
+    this.sql.exec("CREATE INDEX IF NOT EXISTS idx_reports_created ON reports (created_at DESC)");
   }
 
   private ensureUpdatedAtIndex() {
@@ -339,9 +376,14 @@ export class RegistryDO extends DurableObject<Env> {
     source_language?: string | null;
     tags?: string[];
     delete_token?: string | null;
+    listed?: boolean;
+    /** Days until the document is purged; anonymous uploads only. */
+    expires_in_days?: number | null;
   }) {
+    const expiresModifier = doc.expires_in_days ? `+${Math.floor(doc.expires_in_days)} days` : null;
     this.sql.exec(
-      "INSERT INTO documents (id, title, filename, size, owner_email, is_shared, rendered_filename, source_filename, source_kind, source_language, delete_token) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+      `INSERT INTO documents (id, title, filename, size, owner_email, is_shared, rendered_filename, source_filename, source_kind, source_language, delete_token, listed, expires_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CASE WHEN ? IS NULL THEN NULL ELSE datetime('now', ?) END)`,
       doc.id,
       doc.title,
       doc.filename,
@@ -353,8 +395,14 @@ export class RegistryDO extends DurableObject<Env> {
       doc.source_kind ?? null,
       doc.source_language ?? null,
       doc.delete_token ?? null,
+      doc.listed && doc.is_shared === 1 ? 1 : 0,
+      expiresModifier,
+      expiresModifier,
     );
     this.bumpDailyStat("uploads");
+    if (expiresModifier) {
+      await this.scheduleExpiryAlarm();
+    }
     if (doc.tags && doc.tags.length > 0) {
       await this.setDocumentTags(doc.id, doc.tags);
     }
@@ -496,10 +544,114 @@ export class RegistryDO extends DurableObject<Env> {
   }
 
   async setDocumentShareMode(id: string, mode: number) {
-    this.sql.exec("UPDATE documents SET is_shared = ? WHERE id = ?", mode, id);
+    // Only link-shared documents can stay listed.
+    this.sql.exec(
+      "UPDATE documents SET is_shared = ?, listed = CASE WHEN ? = 1 THEN listed ELSE 0 END WHERE id = ?",
+      mode,
+      mode,
+      id,
+    );
     if (mode !== 2) {
       this.sql.exec("DELETE FROM shared_emails WHERE doc_id = ?", id);
     }
+  }
+
+  async setDocumentListed(id: string, listed: boolean) {
+    this.sql.exec(
+      "UPDATE documents SET listed = CASE WHEN ? = 1 AND is_shared = 1 AND owner_email != 'anonymous' THEN 1 ELSE 0 END WHERE id = ?",
+      listed ? 1 : 0,
+      id,
+    );
+  }
+
+  /** Admin takedown. Pass null to restore the document. */
+  async setDocumentDisabled(id: string, reason: string | null): Promise<DocumentRow | null> {
+    if (reason === null) {
+      this.sql.exec("UPDATE documents SET disabled_at = NULL, disabled_reason = NULL WHERE id = ?", id);
+    } else {
+      this.sql.exec(
+        "UPDATE documents SET disabled_at = datetime('now'), disabled_reason = ?, listed = 0 WHERE id = ?",
+        reason,
+        id,
+      );
+    }
+    return this.getDocument(id);
+  }
+
+  async createReport(report: { id: string; docId: string; reason: string; details: string; reporter: string }) {
+    this.sql.exec(
+      "INSERT INTO reports (id, doc_id, reason, details, reporter) VALUES (?, ?, ?, ?, ?)",
+      report.id,
+      report.docId,
+      report.reason,
+      report.details,
+      report.reporter,
+    );
+  }
+
+  async listReports(limit = 100): Promise<ReportRow[]> {
+    return this.sql
+      .exec<ReportRow>(
+        `SELECT r.id, r.doc_id, r.reason, r.details, r.reporter, r.created_at,
+                d.title AS doc_title, d.owner_email AS doc_owner_email, d.disabled_at AS doc_disabled_at
+         FROM reports r LEFT JOIN documents d ON d.id = r.doc_id
+         ORDER BY r.created_at DESC LIMIT ?`,
+        limit,
+      )
+      .toArray();
+  }
+
+  async listRecentDocuments(limit = 100): Promise<DocumentRow[]> {
+    return this.sql
+      .exec<DocumentRow>("SELECT * FROM documents ORDER BY created_at DESC LIMIT ?", limit)
+      .toArray();
+  }
+
+  private async scheduleExpiryAlarm() {
+    const [next] = this.sql
+      .exec<{ expires_at: string }>(
+        "SELECT expires_at FROM documents WHERE expires_at IS NOT NULL ORDER BY expires_at ASC LIMIT 1",
+      )
+      .toArray();
+    if (!next) return;
+    const at = Date.parse(`${next.expires_at.replace(" ", "T")}Z`);
+    const current = await this.ctx.storage.getAlarm();
+    if (current === null || current > at) {
+      await this.ctx.storage.setAlarm(Math.max(at, Date.now()));
+    }
+  }
+
+  /** Deletes expired documents (rows and R2 objects). Returns the purged ids. */
+  async purgeExpiredDocuments(): Promise<string[]> {
+    const expired = this.sql
+      .exec<Pick<DocumentRow, "id" | "filename" | "rendered_filename" | "source_filename">>(
+        `SELECT id, filename, rendered_filename, source_filename FROM documents
+         WHERE expires_at IS NOT NULL AND expires_at <= datetime('now') LIMIT ?`,
+        PURGE_BATCH,
+      )
+      .toArray();
+    if (expired.length === 0) return [];
+
+    const keys = expired.flatMap((doc) => {
+      const rendered = doc.rendered_filename
+        ? getRenderedDocumentKey(doc.id, doc.rendered_filename)
+        : getLegacyDocumentKey(doc.id, doc.filename);
+      return doc.source_filename ? [rendered, getSourceDocumentKey(doc.id, doc.source_filename)] : [rendered];
+    });
+    await this.env.DOCUMENTS_BUCKET.delete(keys);
+    for (const doc of expired) {
+      await this.deleteDocument(doc.id);
+    }
+    return expired.map((doc) => doc.id);
+  }
+
+  async alarm() {
+    const purged = await this.purgeExpiredDocuments();
+    if (purged.length === PURGE_BATCH) {
+      await this.ctx.storage.setAlarm(Date.now() + 1000);
+      return;
+    }
+    await this.scheduleExpiryAlarm();
   }
 
   async setSharedEmails(docId: string, emails: string[]) {
@@ -556,7 +708,9 @@ export class RegistryDO extends DurableObject<Env> {
   async listPublicDocuments(): Promise<DocumentRow[]> {
     return this.sql
       .exec<DocumentRow>(
-        "SELECT * FROM documents WHERE is_shared = 1 ORDER BY created_at DESC LIMIT 50",
+        `SELECT * FROM documents
+         WHERE is_shared = 1 AND listed = 1 AND owner_email != 'anonymous' AND ${LIVE_DOCUMENT}
+         ORDER BY created_at DESC LIMIT 50`,
       )
       .toArray();
   }

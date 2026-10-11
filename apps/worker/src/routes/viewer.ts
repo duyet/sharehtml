@@ -8,10 +8,12 @@ import { loadDocWithAccessCheck } from "../utils/document-access.js";
 import { getRenderedObject, getSourceObject } from "../utils/document-storage.js";
 import { createAttachmentHeaders } from "../utils/download.js";
 import { normalizeEmail } from "../utils/email.js";
+import { rateLimitKey, viewerRateLimit } from "../utils/rate-limit.js";
 import { getDataFormat } from "../utils/data-render.js";
 import { looksLikeHtml, renderMarkdownToHtml } from "../utils/markdown.js";
 import { requireViewerBrowserCapability } from "../utils/request-security.js";
 import { sanitizeDocumentStream } from "../utils/sanitize-html.js";
+import { reportDocument } from "./report.js";
 
 function getSourceMimeType(kind: string, filename: string): string {
   if (kind === "data") {
@@ -42,6 +44,9 @@ export const RAW_HTML_CSP = [
 ].join("; ");
 
 const viewer = new Hono<AppBindings>();
+
+viewer.use("/d/*", viewerRateLimit);
+viewer.post("/d/:id/report", reportDocument);
 
 // Viewer shell
 viewer.get("/d/:id", async (c) => {
@@ -176,6 +181,7 @@ viewer.get("/d/:id/ws", async (c) => {
 
   const headers = new Headers(c.req.raw.headers);
   headers.set("X-Verified-Email", email);
+  headers.set("X-Rate-Limit-Key", rateLimitKey(c.get("authUser"), c.req));
 
   const docId = c.env.DOCUMENT_DO.idFromName(id);
   const docDo = c.env.DOCUMENT_DO.get(docId);

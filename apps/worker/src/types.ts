@@ -51,6 +51,22 @@ export type DocumentRow = {
   source_language: string | null;
   view_count?: number;
   delete_token?: string | null;
+  listed?: number;
+  expires_at?: string | null;
+  disabled_at?: string | null;
+  disabled_reason?: string | null;
+};
+
+export type ReportRow = {
+  id: string;
+  doc_id: string;
+  reason: string;
+  details: string;
+  reporter: string;
+  created_at: string;
+  doc_title: string | null;
+  doc_owner_email: string | null;
+  doc_disabled_at: string | null;
 };
 
 export type RecentViewRow = {
@@ -135,8 +151,18 @@ export function parseDocumentSnapshot(value: unknown): DocumentSnapshot | null {
   return value as DocumentSnapshot;
 }
 
+/** Optional anti-abuse settings; defaults live in utils/abuse-config.ts. */
+export type AbuseControlVars = {
+  MAX_UPLOAD_BYTES?: string;
+  USER_QUOTA_DOCS?: string;
+  USER_QUOTA_BYTES?: string;
+  ALLOW_ANONYMOUS_UPLOADS?: string;
+  ANONYMOUS_TTL_DAYS?: string;
+  ADMIN_EMAILS?: string;
+};
+
 export type AppBindings = {
-  Bindings: Env & { CF_BEACON_TOKEN?: string };
+  Bindings: Env & AbuseControlVars & { CF_BEACON_TOKEN?: string };
   Variables: {
     authUser: import("./utils/auth.js").AuthUser;
   };
