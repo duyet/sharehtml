@@ -165,6 +165,7 @@ export type HomeAnalytics = {
   todayViews: number;
   uploadsPerDay: Array<{ date: string; count: number }>;
   viewsPerDay: Array<{ date: string; count: number }>;
+  calendar: Array<{ date: string; uploads: number; views: number }>;
   sharedDocs: number;
   avgViewsPerDoc: number;
 };

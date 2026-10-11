@@ -31,6 +31,7 @@ describe("HomeView analytics privacy", () => {
           todayViews: 9,
           uploadsPerDay: [{ date: "2026-06-05", count: 3 }],
           viewsPerDay: [{ date: "2026-06-05", count: 2 }],
+          calendar: [{ date: "2026-06-05", uploads: 3, views: 2 }],
           sharedDocs: 5,
           avgViewsPerDoc: 3.7,
         },
