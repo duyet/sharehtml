@@ -31,6 +31,9 @@ npx -y skills@latest add duyet/sharehtml
 | `npx @duyet/sharehtml diff <file>` | Compare local file against the deployed version |
 | `npx @duyet/sharehtml comments <id>` | Show unresolved comments for a document |
 | `npx @duyet/sharehtml delete <id>` | Delete a document |
+| `npx @duyet/sharehtml deploy <file> --listed` | Share by link and list the document on the public homepage (unlisted by default) |
+| `npx @duyet/sharehtml share <id> --listed` / `--unlisted` | Add or remove a shared document from the public homepage |
+| `npx @duyet/sharehtml admin disable <id> --reason phishing` | Take down a document (admins in `ADMIN_EMAILS` only); also `admin enable`, `admin reports`, `admin docs` |
 | `npx @duyet/sharehtml config set-url <url>` | Set the sharehtml URL |
 
 ## HTTP API
@@ -38,7 +41,7 @@ npx -y skills@latest add duyet/sharehtml
 The CLI wraps a REST API that you can call directly with curl or any HTTP client:
 
 ```bash
-# Upload (no auth needed)
+# Upload (no auth needed on servers without auth, or with ALLOW_ANONYMOUS_UPLOADS=true)
 curl -X POST https://html.duyet.net/api/v1/publish \
   -H "X-ShareHTML-Client: my-app" \
   -F "file=@report.html" \
@@ -63,7 +66,7 @@ https://github.com/duyet/sharehtml
 
 ### Authentication (Advanced)
 
-Uploading files does not require authentication. The `login` command is only needed when connecting to a self-hosted instance that has authentication enabled (Clerk or Cloudflare Access), and you want access to advanced features like persistent dashboards or private documents.
+Uploading files does not require authentication on instances without auth. Instances with Clerk or Cloudflare Access disable anonymous uploads unless the operator sets `ALLOW_ANONYMOUS_UPLOADS=true`; anonymous documents then expire after 7 days. The `login` command is only needed when connecting to a self-hosted instance that has authentication enabled (Clerk or Cloudflare Access), and you want access to advanced features like persistent dashboards or private documents.
 
 ```bash
 npx @duyet/sharehtml login

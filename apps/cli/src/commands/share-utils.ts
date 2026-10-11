@@ -43,15 +43,23 @@ export async function resolveDocumentReference(reference: string): Promise<Resol
   };
 }
 
-export async function updateDocumentSharing(reference: string, isShared: boolean): Promise<ResolvedDocument> {
+export async function updateDocumentSharing(
+  reference: string,
+  isShared: boolean,
+  listed?: boolean,
+): Promise<ResolvedDocument & { listed: boolean }> {
   const document = await resolveDocumentReference(reference);
   if (!document) {
     throw new Error(`Document not found: ${reference}`);
   }
 
-  const result = await setDocumentSharing(document.id, { mode: isShared ? "link" : "private" });
+  const result = await setDocumentSharing(document.id, {
+    mode: isShared ? "link" : "private",
+    ...(listed !== undefined ? { listed } : {}),
+  });
   return {
     ...document,
     isShared: result.mode === "link",
+    listed: Boolean(result.listed),
   };
 }
