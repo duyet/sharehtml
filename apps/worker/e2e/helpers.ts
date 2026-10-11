@@ -92,9 +92,6 @@ export async function deleteDocument(request: APIRequestContext, docId: string):
 export async function openViewer(page: Page, docId: string) {
   await page.goto(`/d/${docId}`);
   await page.locator("#doc-iframe").waitFor();
-  await page.locator("#name-input").fill("PJ");
-  await page.locator("#name-submit").click();
-  await expect(page.locator("#name-modal")).toBeHidden();
   return page.frameLocator("#doc-iframe");
 }
 
