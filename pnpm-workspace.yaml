@@ -4,7 +4,11 @@ packages:
 
 minimumReleaseAge: 2880
 
-ignoredBuiltDependencies:
-  - esbuild
-  - sharp
-  - workerd
+allowBuilds:
+  '@clerk/shared': false
+  esbuild: false
+  sharp: false
+  workerd: false
+
+overrides:
+  ws: 8.20.1
