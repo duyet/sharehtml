@@ -16,11 +16,13 @@ const doc = (id: string) => ({
 });
 
 describe("calendar analytics", () => {
-  it("returns 182 zero-filled days ending today (UTC), public counts only", async () => {
+  it("returns 53 Sunday-aligned weeks ending today (UTC), public counts only", async () => {
     const analytics = await registry("cal-shape").getHomeAnalytics(false);
     const { calendar } = analytics;
-    expect(calendar).toHaveLength(182);
-    expect(calendar[181].date).toBe(new Date().toISOString().slice(0, 10));
+    // Full-width heatmap needs exactly 53 columns: 52 full weeks + the current partial week.
+    expect(calendar).toHaveLength(52 * 7 + new Date().getUTCDay() + 1);
+    expect(new Date(`${calendar[0].date}T00:00:00Z`).getUTCDay()).toBe(0);
+    expect(calendar[calendar.length - 1].date).toBe(new Date().toISOString().slice(0, 10));
     expect(calendar.every((d) => d.uploads === 0 && d.views === 0)).toBe(true);
     expect(analytics.totalUsers).toBeNull();
     expect(analytics.totalStorage).toBeNull();
@@ -34,7 +36,8 @@ describe("calendar analytics", () => {
     await reg.recordView("u@example.com", "cal-a");
     await reg.recordView("v@example.com", "cal-b");
 
-    const today = (await reg.getHomeAnalytics(false)).calendar[181];
+    const { calendar } = await reg.getHomeAnalytics(false);
+    const today = calendar[calendar.length - 1];
     expect(today.uploads).toBe(2);
     // views table collapses repeat views per (user, doc); daily_stats must not.
     expect(today.views).toBe(3);
@@ -42,7 +45,7 @@ describe("calendar analytics", () => {
 
   it("renders a heatmap with titled cells and the views caveat", () => {
     const assets = { homeCss: "/h.css" } as AssetUrls;
-    const calendar = Array.from({ length: 182 }, (_, i) => ({
+    const calendar = Array.from({ length: 371 }, (_, i) => ({
       date: new Date(Date.UTC(2026, 3, 13) + i * 86400000).toISOString().slice(0, 10),
       uploads: i === 181 ? 3 : 0,
       views: 0,
@@ -79,6 +82,6 @@ describe("calendar analytics", () => {
     expect(html).toContain("2026-10-11 · 3 uploads");
     expect(html).toContain("calendar-level-4");
     expect(html).toContain("release date of this feature");
-    expect([...html.matchAll(/class="calendar-cell calendar-level-\d"/g)]).toHaveLength(182 * 2 + 5);
+    expect([...html.matchAll(/class="calendar-cell calendar-level-\d"/g)]).toHaveLength(371 * 2 + 5);
   });
 });

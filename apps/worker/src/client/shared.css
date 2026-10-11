@@ -182,23 +182,6 @@ button.topbar-link {
   background: var(--color-primary-active);
 }
 
-.btn-secondary {
-  display: inline-block;
-  background: var(--paper);
-  color: var(--slate);
-  padding: 12px 24px;
-  border-radius: 8px;
-  text-decoration: none;
-  font-weight: 500;
-  font-size: 16px;
-  border: 1px solid var(--g300);
-  transition: border-color 120ms ease;
-}
-
-.btn-secondary:hover {
-  border-color: var(--slate);
-}
-
 /* ── Tabs ─────────────────────────────────────── */
 .tabs {
   border: 1px solid var(--color-hairline);

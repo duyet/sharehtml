@@ -28,7 +28,9 @@ const USER_COLORS = [
   "#ea580c",
 ];
 
-const CALENDAR_DAYS = 182;
+// 52 full weeks plus the current partial week, so the heatmap always renders
+// exactly 53 columns starting on a Sunday. Days before any data are empty cells.
+const CALENDAR_FULL_WEEKS = 52;
 
 export class RegistryDO extends DurableObject<Env> {
   sql: SqlStorage;
@@ -717,7 +719,8 @@ export class RegistryDO extends DurableObject<Env> {
     const [sharedDocsResult] = this.sql
       .exec<{ count: number }>("SELECT COUNT(*) as count FROM documents WHERE is_shared = 1")
       .toArray();
-    const since = new Date(Date.now() - (CALENDAR_DAYS - 1) * 86400000).toISOString().slice(0, 10);
+    const calendarDays = CALENDAR_FULL_WEEKS * 7 + new Date().getUTCDay() + 1;
+    const since = new Date(Date.now() - (calendarDays - 1) * 86400000).toISOString().slice(0, 10);
     const stats = new Map(
       this.sql
         .exec<{ date: string; uploads: number; views: number }>(
@@ -728,7 +731,7 @@ export class RegistryDO extends DurableObject<Env> {
         .map((row) => [row.date, row] as const),
     );
     const calendar: HomeAnalytics["calendar"] = [];
-    for (let i = CALENDAR_DAYS - 1; i >= 0; i--) {
+    for (let i = calendarDays - 1; i >= 0; i--) {
       const date = new Date(Date.now() - i * 86400000).toISOString().slice(0, 10);
       const row = stats.get(date);
       calendar.push({ date, uploads: Number(row?.uploads) || 0, views: Number(row?.views) || 0 });
