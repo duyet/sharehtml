@@ -52,3 +52,8 @@ type: project
 - Evidence: `pnpm test` (default) intermittently fails 4 unrelated tests with `Test timed out in 5000ms` on health/sharing/api-keys/api — while the same suite passes cleanly with `pnpm exec vitest run --no-file-parallelism` (79/79).
 - Root cause: the `@cloudflare/vitest-pool-workers` pool contends under file-level parallelism on this machine, causing worker bootstrap timeouts rather than real assertion failures.
 - Fix pattern: run the worker test suite with `--no-file-parallelism` for a stable local gate; do not trust default-parallel timeouts as regressions.
+
+## 2026-10-12: Docs drift after the registry changes (PRs #55-#62)
+
+- Evidence: README, SKILL.md, PROMPT.md, CLI README, `/llms.txt`, and `/docs` still said "no signup required" and curl examples had no API key, while anonymous upload is off by default when auth is on (`anonymousUploadsAllowed` in `utils/abuse-config.ts`).
+- Fix pattern: when changing auth, limits, kinds, or env vars, update the README env table, `routes/llms.ts`, `frontend/docs.tsx`, the CLI README, and both SKILL.md copies (root and `skills/sharehtml/`) together.

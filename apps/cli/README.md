@@ -2,21 +2,23 @@
 
 Bun CLI for deploying local documents to [sharehtml](https://html.duyet.net) for collaborative commenting.
 ## Quick Start
-You can use the CLI instantly without manual installation. It is pre-configured to use `https://html.duyet.net` by default. **No authentication is required to upload files.**
+You can use the CLI instantly without manual installation. It is pre-configured to use `https://html.duyet.net` by default. **Publishing requires login or an API key.** Anonymous upload is off by default on servers with sign-in and works only if the operator sets `ALLOW_ANONYMOUS_UPLOADS=true`.
 ```bash
-# deploy a file — no login needed
+# log in once, then deploy a file
+npx -y @duyet/sharehtml@latest login
 npx -y @duyet/sharehtml@latest deploy my-report.html
 ```
 Or use curl to hit the API directly:
 ```bash
 curl -X POST https://html.duyet.net/api/v1/publish \
+  -H "Authorization: Bearer shk_..." \
   -H "X-ShareHTML-Client: my-app" \
   -F "file=@my-report.html" \
   -F "title=My Report"
 # Returns: { "id": "abcde", "url": "https://html.duyet.net/d/abcde" }
 ```
 ## AI Agent Integration
-Enhance your AI assistant (like Claude Code) with `sharehtml` capabilities:
+Works with Claude Code, opencode, Codex, or any agent that can run shell commands. Agents can also read `/llms.txt` on your server. Add the skill with `sharehtml` capabilities:
 npx -y skills@latest add duyet/sharehtml
 ## Common Commands
 | Command | Description |
@@ -41,13 +43,13 @@ npx -y skills@latest add duyet/sharehtml
 The CLI wraps a REST API that you can call directly with curl or any HTTP client:
 
 ```bash
-# Upload (no auth needed on servers without auth, or with ALLOW_ANONYMOUS_UPLOADS=true)
+# Anonymous upload (only on servers without auth, or with ALLOW_ANONYMOUS_UPLOADS=true)
 curl -X POST https://html.duyet.net/api/v1/publish \
   -H "X-ShareHTML-Client: my-app" \
   -F "file=@report.html" \
   -F "title=My Report"
 
-# Upload using API key (for authenticated instances)
+# Upload using an API key
 curl -X POST https://html.duyet.net/api/v1/publish \
   -H "X-ShareHTML-Client: my-app" \
   -H "Authorization: Bearer shk_..." \
@@ -66,7 +68,7 @@ https://github.com/duyet/sharehtml
 
 ### Authentication (Advanced)
 
-Uploading files does not require authentication on instances without auth. Instances with Clerk or Cloudflare Access disable anonymous uploads unless the operator sets `ALLOW_ANONYMOUS_UPLOADS=true`; anonymous documents then expire after 7 days. The `login` command is only needed when connecting to a self-hosted instance that has authentication enabled (Clerk or Cloudflare Access), and you want access to advanced features like persistent dashboards or private documents.
+Instances without auth accept anonymous uploads. Instances with Clerk or Cloudflare Access disable anonymous uploads unless the operator sets `ALLOW_ANONYMOUS_UPLOADS=true`; anonymous documents then expire after 7 days. Run `login` to publish to an instance that has authentication enabled (Clerk or Cloudflare Access).
 
 ```bash
 npx @duyet/sharehtml login

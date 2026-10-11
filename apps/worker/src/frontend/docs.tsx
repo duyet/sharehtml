@@ -69,6 +69,7 @@ npx -y @duyet/sharehtml deploy path/to/file.html</pre>
                 <pre><span class="docs-comment"># Deploy with curl — no dependencies</span>{"\n"}
 curl -X POST https://html.duyet.net/api/v1/publish \
   -H "X-ShareHTML-Client: my-app" \
+  -H "Authorization: Bearer shk_..." \
   -F "file=@report.html" \
   -F "title=My Report"</pre>
               </div>
@@ -76,8 +77,8 @@ curl -X POST https://html.duyet.net/api/v1/publish \
               <div class="callout">
                 <span class="ico">★</span>
                 <div>
-                  <b>No signup required.</b> Deploy anonymously — your document will be live instantly.
-                  Documents persist indefinitely. Authenticate later for a persistent dashboard, API keys, and document management.
+                  <b>Anonymous upload is off by default</b> on servers with sign-in. Sign in and create an API key to publish, unless the operator enables anonymous uploads
+                  (those documents expire after a few days). Documents are unlisted unless you pass <code>--listed</code>.
                 </div>
               </div>
 
@@ -102,6 +103,7 @@ npx -y @duyet/sharehtml deploy report.html</pre>
                     <pre><span class="docs-comment"># Deploy with curl</span>{"\n"}
 curl -X POST https://html.duyet.net/api/v1/publish \
   -H "X-ShareHTML-Client: my-app" \
+  -H "Authorization: Bearer shk_..." \
   -F "file=@report.html"</pre>
                   </div>
 
@@ -158,6 +160,7 @@ sharehtml deploy report.html</code></pre>
                   <p>Agents can also deploy directly via HTTP API:</p>
                   <pre><code>curl -X POST https://html.duyet.net/api/v1/publish \
   -H "X-ShareHTML-Client: my-app" \
+  -H "Authorization: Bearer shk_..." \
   -F "file=@report.html" \
   -F "title=Agent Report"</code></pre>
                   <p>The agent will deploy files and return the live URL automatically.</p>
@@ -208,12 +211,12 @@ sharehtml deploy report.html</code></pre>
 
               <p>
                 AI agents can deploy to sharehtml via CLI or HTTP API. The CLI is the simplest
-                method and requires no authentication for anonymous deployments.
+                method. Publishing needs an API key unless the deployment enables anonymous uploads.
               </p>
 
-              <h3 class="docs-section-subtitle">Anonymous Deployment</h3>
+              <h3 class="docs-section-subtitle">Anonymous Deployment (only if enabled)</h3>
               <p>
-                Agents can deploy without credentials via CLI or HTTP API:
+                On deployments that set <code>ALLOW_ANONYMOUS_UPLOADS=true</code> (or run with no auth), agents can deploy without credentials. Supported kinds: html, markdown, code, and data (<code>.csv</code>, <code>.json</code>):
               </p>
 
               <div class="docs-tabs" data-tabs="agent-anon">
@@ -230,9 +233,9 @@ curl -X POST https://html.duyet.net/api/v1/publish \
   -F "title=Agent Report"</pre>
               </div>
 
-              <h3 class="docs-section-subtitle">Authenticated Deployment (Optional)</h3>
+              <h3 class="docs-section-subtitle">Authenticated Deployment</h3>
               <p>
-                Auth is optional and only needed for account management features (dashboard, API keys, document ownership).
+                Auth is required to publish unless the operator enables anonymous uploads. It also unlocks the dashboard, API keys, and document ownership.
                 To link deployments to your account:
               </p>
 
