@@ -255,8 +255,8 @@ SHAREHTML_API_KEY=your-api-key</pre>
 
               <h3 class="docs-section-subtitle">LLM Discovery</h3>
               <p>
-                The <code>/llms.txt</code> endpoint provides a machine-readable index of public
-                documents for AI agents to discover.
+                The <code>/llms.txt</code> endpoint gives AI agents a usage guide (CLI, REST API,
+                auth) followed by an index of public documents.
               </p>
 
               <h3 class="docs-section-subtitle">Skills Integration</h3>

@@ -5,6 +5,7 @@ import { HomeView } from "./frontend/home.js";
 import { TagView } from "./frontend/tag.js";
 import { api, v1 } from "./routes/api.js";
 import { docs, docsMarkdownResponse } from "./routes/docs.js";
+import { llmsTxtResponse } from "./routes/llms.js";
 import { viewer } from "./routes/viewer.js";
 import webhooks from "./routes/webhooks.js";
 import type { AppBindings } from "./types.js";
@@ -68,22 +69,7 @@ app.route("/api", api);
 app.route("/api/v1", v1);
 app.route("/", viewer);
 
-app.get("/llms.txt", async (c) => {
-  const registry = getRegistry(c.env);
-  const docs = await registry.listPublicDocuments();
-  const url = new URL(c.req.url);
-  const origin = `${url.protocol}//${url.host}`;
-
-  const lines = [
-    "# sharehtml documents",
-    "",
-    "A list of publicly available documents.",
-    "",
-    ...docs.map((d) => `- [${d.title}](${origin}/d/${d.id}) (${d.size} bytes)`),
-  ];
-
-  return c.text(lines.join("\n"));
-});
+app.get("/llms.txt", llmsTxtResponse);
 
 // Legacy /login route — Clerk modal now handles sign-in inline.
 app.get("/login", (c) => c.redirect("/"));
