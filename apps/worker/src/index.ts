@@ -22,6 +22,8 @@ export { RegistryDO } from "./durable-objects/registry.js";
 
 const app = new Hono<AppBindings>();
 
+const ROBOTS_HEADER = "noindex, nofollow, noarchive, nosnippet";
+
 app.onError((err, c) => {
   if (err instanceof HTTPException) {
     return c.json({ error: err.message }, err.status);
@@ -52,6 +54,27 @@ app.onError((err, c) => {
   });
   return c.json({ error: "Internal Server Error" }, 500);
 });
+
+// No crawlers, no backlinks, no referrers: hosted user HTML must not be
+// indexed and must not leak where visitors came from.
+app.use("*", async (c, next) => {
+  await next();
+  if (c.res.status === 101) return; // WebSocket upgrade
+  try {
+    c.res.headers.set("X-Robots-Tag", ROBOTS_HEADER);
+    c.res.headers.set("Referrer-Policy", "no-referrer");
+  } catch {
+    // Immutable headers (e.g. a proxied Durable Object response): copy them.
+    const res = new Response(c.res.body, c.res);
+    res.headers.set("X-Robots-Tag", ROBOTS_HEADER);
+    res.headers.set("Referrer-Policy", "no-referrer");
+    c.res = res;
+  }
+});
+
+app.get("/robots.txt", (c) =>
+  c.text("User-agent: *\nDisallow: /\n", 200, { "Cache-Control": "public, max-age=3600" }),
+);
 
 app.get("/health", (c) => c.json({ status: "ok" }));
 

@@ -47,7 +47,7 @@ interface RecentDocCardProps {
 
 function DocCard({ doc, subtitle }: DocCardProps): JSX.Element {
   return (
-    <a class="doc-card" href={`/d/${doc.id}.html`}>
+    <a class="doc-card" href={`/d/${doc.id}.html`} rel="nofollow">
       <div class="doc-card-top">
         <span class="kind-badge">{formatDocumentKind(doc.source_kind)}</span>
         <span class="doc-card-title">{doc.title}</span>
@@ -64,7 +64,7 @@ function RecentDocCard({ doc }: RecentDocCardProps): JSX.Element {
   const viewedAt = doc.last_viewed_at || doc.created_at;
 
   return (
-    <a class="recent-card" href={`/d/${doc.id}.html`}>
+    <a class="recent-card" href={`/d/${doc.id}.html`} rel="nofollow">
       <div class="recent-card-title">{doc.title}</div>
       <div class="recent-card-filename">{doc.filename}</div>
       <div class="recent-card-meta">viewed {formatRelativeTime(viewedAt)}</div>
@@ -307,6 +307,7 @@ export function HomeView({
       <head>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <meta name="robots" content="noindex, nofollow" />
         <title>sharehtml</title>
         <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
         <PaperFonts />

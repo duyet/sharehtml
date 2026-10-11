@@ -25,6 +25,7 @@ export function LoginView({ assets, redirectUrl = "/", authMode, clerkPublishabl
       <head>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <meta name="robots" content="noindex, nofollow" />
         <title>Sign in - sharehtml</title>
         <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
         <PaperFonts />

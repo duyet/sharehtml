@@ -1,6 +1,5 @@
 import type { Context } from "hono";
 import type { AppBindings } from "../types.js";
-import { getRegistry } from "../utils/registry.js";
 
 // Agent-facing guide served at /llms.txt (https://llmstxt.org).
 // Keep the endpoint list in sync with src/routes/api.ts.
@@ -65,16 +64,11 @@ curl -X POST ${origin}/api/v1/publish \\
 `;
 }
 
-export async function llmsTxtResponse(c: Context<AppBindings>) {
+// Usage guide only. Listing documents here would hand crawlers a link farm.
+export function llmsTxtResponse(c: Context<AppBindings>) {
   const url = new URL(c.req.url);
   const origin = `${url.protocol}//${url.host}`;
-  const docs = await getRegistry(c.env).listPublicDocuments();
-
-  const lines = [llmsGuide(origin), "## Public documents", ""];
-  if (docs.length === 0) lines.push("None yet.");
-  for (const d of docs) lines.push(`- [${d.title}](${origin}/d/${d.id}) (${d.size} bytes)`);
-
-  return c.text(lines.join("\n") + "\n", 200, {
+  return c.text(llmsGuide(origin), 200, {
     "Content-Type": "text/markdown; charset=utf-8",
     "Cache-Control": "public, max-age=300",
   });
