@@ -27,14 +27,15 @@ function getSourceMimeType(kind: string, filename: string): string {
 const CAPABILITY_TTL_SECONDS = 600;
 
 // Raw uploader HTML is served top-level on the app origin. `sandbox` gives it
-// an opaque origin with no scripts, forms, popups or top navigation.
+// an opaque origin with no scripts, forms or top navigation. Popups stay
+// allowed so the rewritten target="_blank" links still open.
 export const RAW_HTML_CSP = [
   "default-src 'none'",
   "style-src 'unsafe-inline'",
   "img-src data:",
   "font-src data:",
   "media-src data:",
-  "sandbox",
+  "sandbox allow-popups allow-popups-to-escape-sandbox",
   "form-action 'none'",
   "base-uri 'none'",
   "frame-ancestors 'self'",
