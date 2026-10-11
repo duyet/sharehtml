@@ -15,7 +15,7 @@ import { readStdin } from "../utils/stdin.js";
 import { deploymentRequiresLogin } from "../auth/capabilities.js";
 import { getDocumentMapping, removeDocumentMapping, setDocumentMapping, getAuthToken } from "../config/store.js";
 import { updateDocumentSharing } from "./share-utils.js";
-import { renderedFilenameToHtml } from "../utils/document-render.js";
+import { renderedFilenameToHtml, type SourceKind } from "../utils/document-render.js";
 
 function confirm(question: string): Promise<boolean> {
   const rl = createInterface({ input: process.stdin, output: process.stdout });
@@ -27,8 +27,22 @@ function confirm(question: string): Promise<boolean> {
   );
 }
 
-function generateFilename(opts: { slug?: string; title?: string; type?: "html" | "markdown" | "code" }): string {
-  const ext = opts.type === "markdown" ? ".md" : opts.type === "code" ? ".txt" : ".html";
+function dataExtension(content: string | undefined): string {
+  const first = content?.trimStart()[0];
+  return first === "[" || first === "{" ? ".json" : ".csv";
+}
+
+function generateFilename(
+  opts: { slug?: string; title?: string; type?: SourceKind },
+  content?: string,
+): string {
+  const ext = opts.type === "markdown"
+    ? ".md"
+    : opts.type === "code"
+    ? ".txt"
+    : opts.type === "data"
+    ? dataExtension(content)
+    : ".html";
   if (opts.slug) {
     return `${opts.slug}${ext}`;
   }
@@ -41,15 +55,15 @@ function generateFilename(opts: { slug?: string; title?: string; type?: "html" |
 
 export const deployCmd = new Command("deploy")
   .aliases(["publish", "public"])
-  .description("Deploy an HTML, Markdown, or code file and get a shareable link")
-  .argument("[file]", "Path to HTML, Markdown, or code file")
+  .description("Deploy an HTML, Markdown, code, or data (CSV/JSON) file and get a shareable link")
+  .argument("[file]", "Path to HTML, Markdown, code, or data (.csv/.json) file")
   .option("-t, --title <title>", "Document title (defaults to filename)")
   .option("-u, --update", "Update existing document without prompting")
   .option("--share", "Make the document shareable after deploy")
   .option("--private", "Keep the document private after deploy")
   .option("--slug <slug>", "Custom slug for the document")
   .option("--content <html>", "HTML content string (alternative to file path)")
-  .option("--type <type>", "Content type: html, markdown, code (default: html)")
+  .option("--type <type>", "Content type: html, markdown, code, data (default: html)")
   .option("--language <lang>", "Language for code highlighting (with --type code)")
   .option("--tags <tags>", "Comma-separated tags for the document")
   .option("--name <name>", "Custom filename (for URL sources)")
@@ -60,7 +74,7 @@ export const deployCmd = new Command("deploy")
     private?: boolean;
     slug?: string;
     content?: string;
-    type?: "html" | "markdown" | "code";
+    type?: SourceKind;
     language?: string;
     tags?: string;
     name?: string;
@@ -114,7 +128,7 @@ export const deployCmd = new Command("deploy")
     if (isNonFileSource) {
       const filename = opts.name ?? (file && (file.startsWith("http://") || file.startsWith("https://"))
         ? new URL(file).pathname.split("/").filter(Boolean).pop() ?? "index.html"
-        : generateFilename(opts));
+        : generateFilename(opts, contentString));
       const sourceKind = opts.type ?? "html";
       const sourceLanguage = opts.language;
 

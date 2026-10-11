@@ -82,13 +82,18 @@ export async function prepareDocumentUpload(
     ? "text/html"
     : sourceKind === "markdown"
     ? "text/markdown"
+    : sourceKind === "data"
+    ? getDataMimeType(sourceFilename)
     : "text/plain";
   const sourceBlobPart = bufferToBlobPart(fileBuffer);
   const sourceBlob = new Blob([sourceBlobPart], { type: sourceMimeType });
 
   let renderedFilename = sourceFilename;
   let renderedBlob: Blob;
-  if (isMarkdownFile(sourceFilename)) {
+  if (sourceKind === "data") {
+    // The server renders data files; send the raw file as both parts.
+    renderedBlob = new Blob([sourceBlobPart], { type: sourceMimeType });
+  } else if (isMarkdownFile(sourceFilename)) {
     const mdText = fileBuffer.toString("utf-8");
     const mdTitle = title || defaultDocumentTitleFromFilename(sourceFilename);
     const html = renderMarkdownToHtml(mdText, mdTitle, filePath);
@@ -137,13 +142,17 @@ export async function prepareContentUpload(
     ? "text/html"
     : sourceKind === "markdown"
     ? "text/markdown"
+    : sourceKind === "data"
+    ? getDataMimeType(filename)
     : "text/plain";
   const sourceBlobPart = bufferToBlobPart(fileBuffer);
   const sourceBlob = new Blob([sourceBlobPart], { type: sourceMimeType });
 
   let renderedFilename = filename;
   let renderedBlob: Blob;
-  if (isMarkdownFile(filename)) {
+  if (sourceKind === "data") {
+    renderedBlob = new Blob([sourceBlobPart], { type: sourceMimeType });
+  } else if (isMarkdownFile(filename)) {
     const mdText = fileBuffer.toString("utf-8");
     const mdTitle = options?.title || defaultDocumentTitleFromFilename(filename);
     const html = renderMarkdownToHtml(mdText, mdTitle, resolve(process.cwd(), filename));
@@ -167,6 +176,10 @@ export async function prepareContentUpload(
     sourceKind,
     sourceLanguage,
   };
+}
+
+function getDataMimeType(filename: string): string {
+  return /\.csv$/i.test(filename) ? "text/csv" : "application/json";
 }
 
 function hasBearerToken(authContext?: AuthContext): boolean {

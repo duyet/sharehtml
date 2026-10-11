@@ -57,11 +57,20 @@ export function isCodeFile(filename: string): boolean {
   return getCodeLanguage(filename) !== null;
 }
 
-export type SourceKind = "html" | "markdown" | "code";
+/** CSV and JSON files deploy as `data`: the server renders them into a table page. */
+export function isDataFile(filename: string): boolean {
+  return /\.(csv|json)$/i.test(filename);
+}
+
+export type SourceKind = "html" | "markdown" | "code" | "data";
 
 export function getSourceKind(filename: string): SourceKind {
   if (isMarkdownFile(filename)) {
     return "markdown";
+  }
+
+  if (isDataFile(filename)) {
+    return "data";
   }
 
   if (isCodeFile(filename)) {
@@ -76,7 +85,7 @@ export function renderedFilenameToHtml(filename: string): string {
     return filename.replace(/\.(md|markdown)$/i, ".html");
   }
 
-  if (isCodeFile(filename)) {
+  if (isDataFile(filename) || isCodeFile(filename)) {
     return `${filename}.html`;
   }
 
@@ -88,7 +97,7 @@ export function defaultDocumentTitleFromFilename(filename: string): string {
     return filename.replace(/\.(md|markdown)$/i, "");
   }
 
-  if (isCodeFile(filename)) {
+  if (isDataFile(filename) || isCodeFile(filename)) {
     return filename.replace(/\.[^.]+$/i, "");
   }
 

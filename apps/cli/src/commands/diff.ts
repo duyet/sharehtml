@@ -104,6 +104,10 @@ function getDiffLanguage(filePath: string): string | undefined {
     return "markdown";
   }
 
+  if (sourceKind === "data") {
+    return /\.json$/i.test(filename) ? "json" : "plaintext";
+  }
+
   return "html";
 }
 

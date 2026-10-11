@@ -8,11 +8,17 @@ import { loadDocWithAccessCheck } from "../utils/document-access.js";
 import { getRenderedObject, getSourceObject } from "../utils/document-storage.js";
 import { createAttachmentHeaders } from "../utils/download.js";
 import { normalizeEmail } from "../utils/email.js";
+import { getDataFormat } from "../utils/data-render.js";
 import { looksLikeHtml, renderMarkdownToHtml } from "../utils/markdown.js";
 import { requireViewerBrowserCapability } from "../utils/request-security.js";
 import { sanitizeDocumentStream } from "../utils/sanitize-html.js";
 
-function getSourceMimeType(kind: string): string {
+function getSourceMimeType(kind: string, filename: string): string {
+  if (kind === "data") {
+    return getDataFormat(filename) === "csv"
+      ? "text/csv; charset=utf-8"
+      : "application/json; charset=utf-8";
+  }
   if (kind === "markdown") return "text/markdown; charset=utf-8";
   if (kind === "html") return "text/html; charset=utf-8";
   return "text/plain; charset=utf-8";
@@ -183,7 +189,7 @@ viewer.get("/d/:id/source", async (c) => {
 
   return new Response(obj.body, {
     headers: createAttachmentHeaders(doc.source_filename, {
-      "Content-Type": getSourceMimeType(sourceKind),
+      "Content-Type": getSourceMimeType(sourceKind, doc.source_filename),
       "Cache-Control": "public, max-age=0, must-revalidate",
     }),
   });
