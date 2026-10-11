@@ -78,4 +78,4 @@ After any PR creation (`/cp`, `/cpr`, or `gh pr create`), immediately start baby
   - Anonymous uploads are off by default when auth is on (`ALLOW_ANONYMOUS_UPLOADS`).
 - **pnpm 11**: pnpm settings (`allowBuilds`, `overrides`, `minimumReleaseAge`) live in `pnpm-workspace.yaml`, not `package.json`.
 - **Vitest flake**: on a busy machine the worker pool can hit `Test timed out in 5000ms` on cold start. Rerun with fewer workers (`npx vitest run --maxWorkers=2` in `apps/worker`) before treating it as a regression.
-- **E2E**: `pnpm e2e` needs `pnpm build` first (it serves `dist/client`).
+- **E2E**: `pnpm test:e2e` builds and serves the worker with `vite preview` (the worker reads the Vite asset manifest, which `vite dev` lacks).
