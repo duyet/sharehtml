@@ -35,7 +35,8 @@ admin.get("/reports", async (c) => {
 
 admin.get("/documents", async (c) => {
   const documents = await getRegistry(c.env).listRecentDocuments(parseLimit(c.req.query("limit")));
-  return c.json({ documents });
+  // Delete tokens let anyone delete a document; never hand them out here.
+  return c.json({ documents: documents.map(({ delete_token: _token, ...doc }) => doc) });
 });
 
 admin.post("/documents/:id/disable", async (c) => {
@@ -55,7 +56,7 @@ admin.post("/documents/:id/disable", async (c) => {
   if (!(await registry.getDocument(id))) {
     return c.json({ error: "not found" }, 404);
   }
-  const document = await registry.setDocumentDisabled(id, reason);
+  const { delete_token: _token, ...document } = (await registry.setDocumentDisabled(id, reason)) ?? {};
   console.warn({ event: "admin_disable", id, reason, admin: c.get("authUser").email });
   return c.json({ ok: true, document });
 });
@@ -66,7 +67,7 @@ admin.post("/documents/:id/enable", async (c) => {
   if (!(await registry.getDocument(id))) {
     return c.json({ error: "not found" }, 404);
   }
-  const document = await registry.setDocumentDisabled(id, null);
+  const { delete_token: _token, ...document } = (await registry.setDocumentDisabled(id, null)) ?? {};
   console.warn({ event: "admin_enable", id, admin: c.get("authUser").email });
   return c.json({ ok: true, document });
 });

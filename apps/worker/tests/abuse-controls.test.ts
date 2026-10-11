@@ -3,6 +3,7 @@ import { env, exports } from "cloudflare:workers";
 import { HomeView } from "../src/frontend/home.js";
 import app from "../src/index.js";
 import { isRecord, type AbuseControlVars, type DocumentRow } from "../src/types.js";
+import type { DocumentDO } from "../src/durable-objects/document.js";
 import type { RegistryDO } from "../src/durable-objects/registry.js";
 import { anonymousUploadsAllowed, isAdminEmail } from "../src/utils/abuse-config.js";
 import { rateLimitKey } from "../src/utils/rate-limit.js";
@@ -140,8 +141,8 @@ describe("upload size and quota", () => {
   it("rejects oversized Content-Length before parsing the body", async () => {
     const res = await fetchWith({ MAX_UPLOAD_BYTES: "10" }, "https://example.com/api/documents", {
       method: "POST",
-      headers: { "Content-Length": String(10 * 1024 * 1024), "Content-Type": "multipart/form-data; boundary=x" },
-      body: "x".repeat(10 * 1024 * 1024),
+      headers: { "Content-Length": String(100 * 1024), "Content-Type": "multipart/form-data; boundary=x" },
+      body: "x".repeat(100 * 1024),
     });
     expect(res.status).toBe(413);
   });
@@ -187,6 +188,26 @@ describe("rate limiting", () => {
       headers: { Upgrade: "websocket" },
     });
     expect(ws.status).toBe(429);
+  });
+
+  it("drops comments over the comment limit inside the document DO", async () => {
+    const stub = env.DOCUMENT_DO.get(env.DOCUMENT_DO.idFromName("rl-comments"));
+    const result = await runInDurableObject(stub, async (instance: DocumentDO) => {
+      const sent: string[] = [];
+      const ws = {
+        send: (message: string) => sent.push(message),
+        deserializeAttachment: () => ({ email: "a@b.com", name: "A", color: "#000", rateLimitKey: "ip:1.1.1.1" }),
+      } as unknown as WebSocket;
+      const message = (id: string) =>
+        JSON.stringify({ type: "comment:create", id, content: "spam", anchor: null, parent_id: null });
+
+      Object.assign(instance, { env: { ...env, COMMENT_RATE_LIMITER: BLOCKED } });
+      await instance.webSocketMessage(ws, message("blocked-comment"));
+      const blocked = instance.sql.exec("SELECT id FROM comments").toArray().length;
+      return { blocked, sent };
+    });
+    expect(result.blocked).toBe(0);
+    expect(result.sent.some((m) => m.includes('"type":"error"'))).toBe(true);
   });
 
   it("keys by verified email or CF-Connecting-IP, never X-Forwarded-For", () => {
